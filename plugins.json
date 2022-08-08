@@ -1,0 +1,583 @@
+[
+    {
+        "iconUrl": "https://9kmovies.claims/m/wp-content/uploads/2019/08/9kmovies.ico",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 13004,
+        "status": 1,
+        "language": "hi",
+        "authors": [
+            "salman731",
+            "Dilip"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "NSFW"
+        ],
+        "version": 6,
+        "internalName": "9kMovies",
+        "description": "Included:10HitMovies",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/9kMovies.cs3",
+        "name": "9kMovies"
+    },
+    {
+        "iconUrl": "https://raw.githubusercontent.com/rockhero1234/extensions/refs/heads/master/Screenshot_20241012-211513_Binged%7E3.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 11324,
+        "status": 1,
+        "authors": [
+            "Dilip"
+        ],
+        "tvTypes": [
+            "Others"
+        ],
+        "version": 3,
+        "internalName": "BingedReview",
+        "description": "Data about streaming and review",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/BingedReview.cs3",
+        "name": "BingedReview"
+    },
+    {
+        "iconUrl": "https://cat3movie.org/wp-content/themes/hnzphim/public/images/MainPoster.f0fe51.webp",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 12616,
+        "status": 0,
+        "language": "en",
+        "authors": [
+            "salman731"
+        ],
+        "tvTypes": [
+            "Movie",
+            "NSFW"
+        ],
+        "version": 2,
+        "internalName": "Cat3Movie",
+        "description": "Movies 18+ ,Rare Movies and selected from all genres online for free, updated daily.",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/Cat3Movie.cs3",
+        "name": "Cat3Movie"
+    },
+    {
+        "iconUrl": "https://cinefreak.net/wp-content/uploads/2024/08/cropped-cgk-192x192.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 14283,
+        "status": 0,
+        "language": "hi",
+        "authors": [
+            "salman731"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries"
+        ],
+        "version": 5,
+        "internalName": "CineFreak",
+        "description": "Free Download All Hollywood, Bollywood, Bangla, TV Series, Turkish/ Chinese Movies | Korean Drama Series In Hindi Dubbed, English (Dual Audio), | HEVC 10bit | X264 300mb | K-Drama | Anime In Hindi | Watch Online",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/CineFreak.cs3",
+        "name": "CineFreak"
+    },
+    {
+        "iconUrl": "http://new.circleftp.net/static/media/logo.fce2c9029060a10687b8.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 18503,
+        "status": 1,
+        "language": "bn",
+        "authors": [
+            "Redowan"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "Anime",
+            "AnimeMovie",
+            "OVA",
+            "Cartoon",
+            "AsianDrama",
+            "Others",
+            "Documentary"
+        ],
+        "version": 22,
+        "internalName": "Circleftp",
+        "description": "Only works in Bangladesh. Works even in internet Shutdown",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/Circleftp.cs3",
+        "name": "Circleftp"
+    },
+    {
+        "iconUrl": "https://dflix.discoveryftp.net/assets/images/icon.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 17514,
+        "status": 1,
+        "language": "bn",
+        "authors": [
+            "Redowan"
+        ],
+        "tvTypes": [
+            "Movie",
+            "AnimeMovie"
+        ],
+        "version": 5,
+        "internalName": "Dflix",
+        "description": "Discovery BDIX Provider",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/Dflix.cs3",
+        "name": "Dflix"
+    },
+    {
+        "iconUrl": "https://www.emwbd.xyz/wp-content/uploads/2024/07/cropped-20240718_170236-192x192.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 19655,
+        "status": 0,
+        "language": "bn",
+        "authors": [
+            "Redowan"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "AnimeMovie",
+            "AsianDrama"
+        ],
+        "version": 11,
+        "internalName": "EmwBD",
+        "description": "Movie website in Bangladesh",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/EmwBD.cs3",
+        "name": "EmwBD"
+    },
+    {
+        "iconUrl": "https://fibwatch.lol/themes/default/img/icon.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 9290,
+        "status": 1,
+        "language": "bn",
+        "authors": [
+            "Redowan"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "AnimeMovie",
+            "AsianDrama"
+        ],
+        "version": 7,
+        "internalName": "FibWatch",
+        "description": "Movie website in Bangladesh",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/FibWatch.cs3",
+        "name": "FibWatch"
+    },
+    {
+        "iconUrl": "https://www.film1k.com/wp-content/uploads/2023/05/cropped-film1k-1.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 10097,
+        "status": 1,
+        "language": "en",
+        "authors": [
+            "Film1K"
+        ],
+        "tvTypes": [
+            "Movie",
+            "NSFW"
+        ],
+        "version": 3,
+        "internalName": "Film1K",
+        "description": "Watch Full Sexiest Movie For Free",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/Film1K.cs3",
+        "name": "Film1K"
+    },
+    {
+        "iconUrl": "https://filmyhunk.click/wp-content/uploads/2023/12/filmyhunk.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 26172,
+        "status": 0,
+        "language": "hi",
+        "authors": [
+            "salman731"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries"
+        ],
+        "version": 6,
+        "internalName": "FilmyHunk",
+        "description": "Bollywood, South, Punjabi, Hollywood Movies Download: Filmyhunk Punjabi Movies, Bollywood Movies, Hollywood Movies Dubbed Hindi Download",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/FilmyHunk.cs3",
+        "name": "FilmyHunk"
+    },
+    {
+        "iconUrl": "https://www.footreplays.com/wp-content/uploads/2024/11/cropped-footreplays-favicon-192x192.webp",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 10412,
+        "status": 1,
+        "language": "en",
+        "authors": [
+            "Redowan"
+        ],
+        "tvTypes": [
+            "Others"
+        ],
+        "version": 3,
+        "internalName": "FootReplays",
+        "description": "FootBall Matches Replays and Highlights",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/FootReplays.cs3",
+        "name": "FootReplays"
+    },
+    {
+        "iconUrl": "https://images.nightcafe.studio/jobs/CoDdYzJ7jvJ8L2NXtPBh/CoDdYzJ7jvJ8L2NXtPBh--2--gflwm.jpg",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 14967,
+        "status": 1,
+        "language": "en",
+        "authors": [
+            "salman731,Redowan"
+        ],
+        "tvTypes": [
+            "Others"
+        ],
+        "version": 4,
+        "internalName": "FullMatch",
+        "description": "Watch FootBall Matches",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/FullMatch.cs3",
+        "name": "FullMatch"
+    },
+    {
+        "iconUrl": "https://www.fullreplays.com/wp-content/uploads/2023/05/logo-ball-150x150.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 10073,
+        "status": 1,
+        "language": "en",
+        "authors": [
+            "Redowan"
+        ],
+        "tvTypes": [
+            "Others"
+        ],
+        "version": 4,
+        "internalName": "FullReplays",
+        "description": "Watch Football Full Match Replay and Shows",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/FullReplays.cs3",
+        "name": "FullReplays"
+    },
+    {
+        "iconUrl": "https://fibwatch.online/themes/default/img/fibwatch-logo-new.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 11029,
+        "status": 1,
+        "language": "en",
+        "authors": [
+            "Redowan"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "AnimeMovie",
+            "Cartoon"
+        ],
+        "version": 4,
+        "internalName": "FullyMaza",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/FullyMaza.cs3",
+        "name": "FullyMaza"
+    },
+    {
+        "iconUrl": "https://fzmovies.net/logo/imageedit_1_4567867331.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 12240,
+        "status": 1,
+        "language": "en",
+        "authors": [
+            "Redowan"
+        ],
+        "tvTypes": [
+            "Movie",
+            "AnimeMovie"
+        ],
+        "version": 13,
+        "internalName": "FzMovies",
+        "description": "Only movie provider",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/FzMovies.cs3",
+        "name": "FzMovies"
+    },
+    {
+        "iconUrl": "https://fztvseries.live/logo/fztvseries2.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 10444,
+        "status": 2,
+        "language": "en",
+        "authors": [
+            "Redowan"
+        ],
+        "tvTypes": [
+            "TvSeries",
+            "Anime",
+            "Cartoon"
+        ],
+        "version": 4,
+        "internalName": "FzTvSeries",
+        "description": "Only TvSeries provider",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/FzTvSeries.cs3",
+        "name": "FzTvSeries"
+    },
+    {
+        "iconUrl": "https://www.hdhub4u.com.mx/templates/favicon.ico",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 13420,
+        "status": 1,
+        "language": "en",
+        "authors": [
+            "Redowan"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "NSFW"
+        ],
+        "version": 5,
+        "internalName": "HDhub4u",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/HDhub4u.cs3",
+        "name": "HDhub4u"
+    },
+    {
+        "iconUrl": "https://hindmoviez.club/wp-content/themes/generate-pro/images/favicon.ico",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 18814,
+        "status": 1,
+        "language": "hi",
+        "authors": [
+            "salman731"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries"
+        ],
+        "version": 2,
+        "internalName": "HindMoviez",
+        "description": "720p Movies, 480p Movies, 300MB Movies",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/HindMoviez.cs3",
+        "name": "HindMoviez"
+    },
+    {
+        "iconUrl": "https://livemovie.org/wp-content/uploads/2023/11/sso.png.webp",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 12844,
+        "status": 1,
+        "language": "hi",
+        "authors": [
+            "salman731"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "NSFW"
+        ],
+        "version": 1,
+        "internalName": "LiveMovie",
+        "description": "watch hindi dubbed movie free download, free download latest bollywood movie, south hindi dubbed free movie , english adult movie, free watch 18+ movie",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/LiveMovie.cs3",
+        "name": "LiveMovie"
+    },
+    {
+        "iconUrl": "https://mlsbd.shop/wp-content/uploads/2020/08/MLSBD-Logo.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 22666,
+        "status": 0,
+        "language": "bn",
+        "authors": [
+            "Redowan"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "NSFW",
+            "AnimeMovie",
+            "AsianDrama"
+        ],
+        "version": 10,
+        "internalName": "Mlsbd",
+        "description": "The largest movie link store in Bangladesh",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/Mlsbd.cs3",
+        "name": "Mlsbd"
+    },
+    {
+        "iconUrl": "https://www.movi.pk/wp-content/uploads/2023/06/apple-touch-icon.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 9921,
+        "status": 1,
+        "language": "en",
+        "authors": [
+            "MoviPK"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries"
+        ],
+        "version": 2,
+        "internalName": "MoviPK",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/MoviPK.cs3",
+        "name": "MoviPK"
+    },
+    {
+        "iconUrl": "https://www.mp4moviez.glass/images/mp4moviez.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 11351,
+        "status": 1,
+        "language": "hi",
+        "authors": [
+            "salman731"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "NSFW"
+        ],
+        "version": 2,
+        "internalName": "Mp4Moviez",
+        "description": "Download Mp4Moviez free full movies, high quality movies, latest movies from Mp4Moviez. Mp4moviez is number one entertainment hollywood bollywood website and provide free Mp4moviez full movie download facility",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/Mp4Moviez.cs3",
+        "name": "Mp4Moviez"
+    },
+    {
+        "iconUrl": "https://www.oomoye.co/favicon.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 10835,
+        "status": 0,
+        "language": "en",
+        "authors": [
+            "Redowan"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "Cartoon",
+            "NSFW"
+        ],
+        "version": 18,
+        "internalName": "Oomoye",
+        "description": "Indian movie site",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/Oomoye.cs3",
+        "name": "Oomoye"
+    },
+    {
+        "iconUrl": "https://rtally.vercel.app/rtally.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 12821,
+        "status": 0,
+        "language": "bn",
+        "authors": [
+            "Redowan"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "Anime",
+            "AnimeMovie",
+            "AsianDrama"
+        ],
+        "version": 15,
+        "internalName": "Rtally",
+        "description": "Movie website in Bangladesh",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/Rtally.cs3",
+        "name": "Rtally"
+    },
+    {
+        "iconUrl": "https://rtally18.vercel.app/rtally18.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 15728,
+        "status": 1,
+        "language": "bn",
+        "authors": [
+            "Redowan"
+        ],
+        "tvTypes": [
+            "Movie",
+            "NSFW"
+        ],
+        "version": 6,
+        "internalName": "Rtally18",
+        "description": "18+ website in Bangladesh",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/Rtally18.cs3",
+        "name": "Rtally18"
+    },
+    {
+        "iconUrl": "https://skymovieshd.diy/images/logo2.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 15214,
+        "status": 1,
+        "language": "en",
+        "authors": [
+            "Redowan"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "NSFW"
+        ],
+        "version": 13,
+        "internalName": "SkymoviesHD",
+        "description": "480p, 720p, 1080p Full Movies In SkymoviesHD",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/SkymoviesHD.cs3",
+        "name": "SkymoviesHD"
+    },
+    {
+        "iconUrl": "https://themoviesflix.it.com/wp-content/uploads/2024/12/cropped-cropped-favicon-32x32-1-180x180.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 22443,
+        "status": 1,
+        "language": "hi",
+        "authors": [
+            "salman731,Redowan"
+        ],
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "NSFW"
+        ],
+        "version": 3,
+        "internalName": "TheMoviesFlix",
+        "description": "720p Movies, 1080p movies, Dual Audio Movies, Hindi Dubbed Series, Hollywood Movies",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/TheMoviesFlix.cs3",
+        "name": "TheMoviesFlix"
+    },
+    {
+        "iconUrl": "https://www.watch-movies.com.pk/wp-content/uploads/2022/05/logo.png",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "fileSize": 11170,
+        "status": 1,
+        "language": "hi",
+        "authors": [
+            "salman731"
+        ],
+        "tvTypes": [
+            "TvSeries",
+            "Movie"
+        ],
+        "version": 1,
+        "internalName": "WatchMoviesPk",
+        "description": "Watch Online Movies in HD Print Quality Free Download,Watch Full Movies Online Bollywood Movies Download Latest Hollywood Movies in DVD Print Quality Free",
+        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/WatchMoviesPk.cs3",
+        "name": "WatchMoviesPk"
+    }
+]
