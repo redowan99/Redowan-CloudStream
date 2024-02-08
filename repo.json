@@ -1,0 +1,8 @@
+{
+    "name": "BDIX repository",
+    "description": "BDIX repository",
+    "manifestVersion": 1,
+    "pluginLists": [
+      "https://raw.githubusercontent.com/redowan99/CS-BDIX/builds/plugins.json"
+    ]
+}
