@@ -4,6 +4,8 @@ import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.SearchResponse
 
+import org.jsoup.Jsoup
+
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -23,34 +25,22 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     @Serializable
     data class Post(
     val id: Int,
-    val title: String,
-    val type: String,
-    val categories: List<Category>,
-    val tags: String,
-    val metaData: String?,
-    val createdAt: String,
-    val updatedAt: String,
     val image: String,
-    val imageSm: String,
-    val cover: String?,
     val name: String,
-    val quality: String?,
-    val watchTime: String?,
-    val year: String,
-    val createdBy: CreatedBy
     )
 
     // this function gets called when you search for something
     override suspend fun search(query: String): List<SearchResponse> {
-        val jsonString = app.get("$mainUrlapi/posts?searchTerm=$query&order=desc", referer = "$mainUrl").document
-        jsondata = jsondata.trimIndent()
+        val jsonString = Jsoup.connect(mainUrl+"api/posts?searchTerm="+query+"&order=desc").get()
+        
+        jsonString = jsonString.trimIndent()
 
         val parsedJson = Json.parseToJsonElement(jsonString)
         for (item in parsedArray) {
             val postJson = item.jsonObject
-            val url ="$mainUrlapi/posts/" + postJson["id"].parseInt()
+            val url =mainUrl+"api/posts/" + postJson["id"].parseInt()
             val name = postJson["name"].toString()
-            val posterUrl = "$mainUrluploads/" + postJson["image"].toString()
+            val posterUrl = mainUrl+"uploads/" + postJson["image"].toString()
             extractedData.add(title, href, TvType.Movie) {
             this.posterUrl = posterUrl
             }
@@ -59,3 +49,4 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         return extractedData
         //return listOf<SearchResponse>()
     }
+}
