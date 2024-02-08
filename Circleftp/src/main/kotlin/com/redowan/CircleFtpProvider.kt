@@ -26,7 +26,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     
     private data class QuickSearchResponse(
         val name: String, 
-        val id: Int,
+        val id: String,
         val image: String,
     )
 
