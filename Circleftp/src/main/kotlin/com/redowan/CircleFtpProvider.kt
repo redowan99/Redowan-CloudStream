@@ -32,20 +32,18 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     // this function gets called when you search for something
     override suspend fun search(query: String): List<SearchResponse> {
         var jsonString = Jsoup.connect(mainUrl+"api/posts?searchTerm="+query+"&order=desc").get()
-        
-        jsonString = jsonString.toString()
 
         val parsedJson = Json.parseToJsonElement(jsonString)
-        val extractedData = mutableListOf<Triple<Int, String, String>>()
-        for (item in parsedJson) {
+
+        for (item in parsedJson.orEmpty()) {
             val postJson = item.jsonObject
             val href =mainUrl+"api/posts/" + postJson["id"].parseInt()
             val title = postJson["name"].toString()
             val posterUrl = mainUrl+"uploads/" + postJson["image"].toString()
-            extractedData.add(Triple((title, href, posterUrl))
+            return (title, href, posterUrl)
         }
 
-        return extractedData
+        
         //return listOf<SearchResponse>()
     }
 }
