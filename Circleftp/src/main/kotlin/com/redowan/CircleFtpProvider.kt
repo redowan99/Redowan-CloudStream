@@ -1,5 +1,6 @@
 package com.redowan
 
+import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.SearchResponse
@@ -22,26 +23,26 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     // enable this when your provider has a main page
     override val hasMainPage = false
 
-    @Serializable
-    data class Post(
-    val id: Int,
-    val image: String,
-    val name: String,
+    
+    private data class QuickSearchResponse(
+        val name: String, 
+        val id: Int,
+        val image: String,
     )
 
     // this function gets called when you search for something
     override suspend fun search(query: String): List<SearchResponse> {
-        var jsonString = Jsoup.connect(mainUrl+"api/posts?searchTerm="+query+"&order=desc").get()
-
-        val parsedJson = Json.parseToJsonElement(jsonString)
-
-        for (item in parsedJson.orEmpty()) {
-            val postJson = item.jsonObject
-            val href =mainUrl+"api/posts/" + postJson["id"].parseInt()
-            val title = postJson["name"].toString()
-            val posterUrl = mainUrl+"uploads/" + postJson["image"].toString()
-            return (title, href, posterUrl)
-        }
+        return app.get(mainUrl+"api/posts?searchTerm="+query+"&order=desc")
+            .parsed<Map<String, QuickSearchResponse>>().map {
+                val res = it.value
+                MovieSearchResponse(
+                    res.name,
+                    res.id,
+                    this.name,
+                    TvType.Movie,
+                    res.image,
+                )
+            }
 
         
         //return listOf<SearchResponse>()
