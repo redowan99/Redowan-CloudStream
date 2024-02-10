@@ -37,12 +37,11 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     private fun Post.toSearchResponse(): SearchResponse? {
 
         return newMovieSearchResponse(
-            title ?: return null,
+            title,
             id,
-            
-            TvType.TvSeries,
+            TvType.Movie,
         ) {
-            this.posterUrl = "$mainUrl/uploads/$imageSm"
+            this.posterUrl = "$mainUrl/uploads/${imageSm}"
         }
     }
 
@@ -56,9 +55,10 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
 
 
     data class Post(
-        @JsonProperty("imageSm") val : String?,
-        @JsonProperty("id") val id: String?,
-        @JsonProperty("title") val title: String?,
+        @JsonProperty("imageSm") val imageSm: String?,
+        @JsonProperty("id") val id: String,
+        @JsonProperty("title") val title: String,
     )
+
 
 }
