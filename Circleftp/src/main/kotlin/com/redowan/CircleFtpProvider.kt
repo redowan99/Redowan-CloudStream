@@ -56,8 +56,8 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     ): HomePageResponse {
         val jsonString = getJson("$mainUrl/api/posts?categoryExact="+request.data+"&page=1&order=desc&limit=50")
         val gson = Gson()
-        val type = object : TypeToken<Map<String, List<Post>>>() {}.type
-        val homeResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, type)
+        val jtype = object : TypeToken<Map<String, List<Post>>>() {}.type
+        val homeResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, jtype)
         val home = homeResponse["posts"]?.map { post ->
             if (post.type == "singleVideo" || post.type == "series"){
                 val title = post.title
@@ -68,6 +68,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
                 }
             }
         }.toList()
+        println(home)
 
         return newHomePageResponse(request.name, home)
     }
