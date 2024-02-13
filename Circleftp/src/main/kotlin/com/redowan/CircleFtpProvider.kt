@@ -47,9 +47,9 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         val searchResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, type)
         return searchResponse["posts"]?.map { post ->
             val title = post.title
-            val poster = post.imageSm
+            val poster = "http://15.1.1.50:5000/uploads/"+ post.imageSm
             val href = post.id
-            newSearchResponse(title, href.toString(), TvType.Movie) {
+            newMovieSearchResponse(title, href.toString(), TvType.Movie) {
                 this.posterUrl = poster
             }
         }
