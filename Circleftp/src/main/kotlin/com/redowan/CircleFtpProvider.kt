@@ -27,35 +27,68 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     override var name = "Circle FTP"
     override val supportedTypes = setOf(
         TvType.Movie
+        TvType.TvSeries
     )
     override var lang = "bn"
 
 
     // enable this when your provider has a main page
-    override val hasMainPage = false
+    override val hasMainPage = true
+
+    override val mainPage = mainPageOf(
+    "80" to "Featured",
+    "6" to "English Movies",
+    "9" to "English & Foreign TV Series",
+    "2" to "Hindi Movies",
+    "5" to "Hindi TV Series",
+    )
 
 
-    override suspend fun search(query: String): List<SearchResponse> {
+    private fun getJson(url: String): String {
         val client = OkHttpClient()
         val request = Request.Builder()
-            .url("http://15.1.1.50:5000/api/posts?searchTerm=batman&order=desc")
+            .url(url)
             .build()
         val response = client.newCall(request).execute()
         val jsonString = response.body.string()
+    }
+
+    override suspend fun getMainPage(
+        page: Int,
+        request : MainPageRequest
+    ): HomePageResponse {
+        jsonString = getJson("$mainUrl/api/posts?categoryExact=$request.data&page=1&order=desc&limit=50")
+        val gson = Gson()
+        val type = object : TypeToken<Map<String, List<Post>>>() {}.type
+        val homeResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, type)
+        val home  homeResponse["posts"]?.map { post ->
+            if post.type == "singleVideo" || "series"{
+                val title = post.title
+                val poster = "$mainUrl/uploads/"+ post.imageSm
+                val href = post.id
+                newMovieSearchResponse(title, href.toString(), TvType.Movie) {
+                    this.posterUrl = poster
+                    }
+                }
+            }
+        }?: listOf()
+        return newHomePageResponse(request.name, home)
+    }
+
+    override suspend fun search(query: String): List<SearchResponse> {
+        jsonString = getJson("$mainUrl/api/posts?searchTerm=$query&order=desc")
         val gson = Gson()
         val type = object : TypeToken<Map<String, List<Post>>>() {}.type
         val searchResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, type)
         return searchResponse["posts"]?.map { post ->
             val title = post.title
-            val poster = "http://15.1.1.50:5000/uploads/"+ post.imageSm
+            val poster = "$mainUrl/uploads/"+ post.imageSm
             val href = post.id
             newMovieSearchResponse(title, href.toString(), TvType.Movie) {
                 this.posterUrl = poster
             }
         }?: listOf()
-
     }
-
 
     data class Post(
     val id: String,
