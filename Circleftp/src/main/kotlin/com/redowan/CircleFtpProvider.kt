@@ -1,6 +1,5 @@
 package com.redowan
 
-import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.SearchResponse
@@ -11,14 +10,12 @@ import com.lagradost.cloudstream3.utils.AppUtils.parseJson
 import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.M3u8Helper
 import com.lagradost.cloudstream3.utils.loadExtractor
 import java.util.ArrayList
 
 
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.io.IOException
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
@@ -26,7 +23,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     override var mainUrl = "http://15.1.1.50:5000" 
     override var name = "Circle FTP"
     override val supportedTypes = setOf(
-        TvType.Movie
+        TvType.Movie,
         TvType.TvSeries
     )
     override var lang = "bn"
@@ -61,10 +58,10 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         val gson = Gson()
         val type = object : TypeToken<Map<String, List<Post>>>() {}.type
         val homeResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, type)
-        val home  homeResponse["posts"]?.map { post ->
+        val home = homeResponse["posts"]?.map { post ->
             if post.type == "singleVideo" || "series"{
                 val title = post.title
-                val poster = "$mainUrl/uploads/"+ post.imageSm
+                val poster = "$mainUrl/uploads/" + post.imageSm
                 val href = post.id
                 newMovieSearchResponse(title, href.toString(), TvType.Movie) {
                     this.posterUrl = poster
@@ -72,6 +69,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
                 }
             }
         }?: listOf()
+        
         return newHomePageResponse(request.name, home)
     }
 

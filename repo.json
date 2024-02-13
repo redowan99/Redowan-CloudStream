@@ -1,6 +1,6 @@
 {
-    "name": "BDIX repository",
-    "description": "BDIX repository",
+    "name": "Redowan's BDIX repository",
+    "description": "Redowan's BDIX repository",
     "manifestVersion": 1,
     "pluginLists": [
       "https://raw.githubusercontent.com/redowan99/CS-BDIX/builds/plugins.json"
