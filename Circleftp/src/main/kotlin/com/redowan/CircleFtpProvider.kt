@@ -54,7 +54,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         page: Int,
         request : MainPageRequest
     ): HomePageResponse {
-        val jsonString = getJson("$mainUrl/api/posts?categoryExact=$request.data&page=1&order=desc&limit=50")
+        val jsonString = getJson("$mainUrl/api/posts?categoryExact="+request.data+"&page=1&order=desc&limit=50")
         val gson = Gson()
         val type = object : TypeToken<Map<String, List<Post>>>() {}.type
         val homeResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, type)
