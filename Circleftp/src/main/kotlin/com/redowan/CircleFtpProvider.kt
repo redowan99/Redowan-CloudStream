@@ -67,7 +67,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
                     this.posterUrl = poster
                 }
             }
-        }?: listOf()
+        }.toList()
 
         return newHomePageResponse(request.name, home)
     }
