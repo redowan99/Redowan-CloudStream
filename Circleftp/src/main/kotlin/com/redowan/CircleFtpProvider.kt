@@ -34,30 +34,33 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     // enable this when your provider has a main page
     override val hasMainPage = false
 
-    private fun Post.toSearchResponse(): SearchResponse? {
-
-        return newMovieSearchResponse(
-            title,
-            id,
-            TvType.Movie,
-        ) {
-            this.posterUrl = "$mainUrl/uploads/${imageSm}"
-        }
-    }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val searchResponse =
-            app.get("$mainUrl/api/posts?searchTerm=$query&order=desc", referer = "$mainUrl/").text
-        return tryParseJson<ArrayList<Post>>(searchResponse)?.mapNotNull { post ->
-            post.toSearchResponse()
-        } ?: throw ErrorLoadingException("Invalid Json reponse")
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url("http://15.1.1.50:5000/api/posts?searchTerm=batman&order=desc")
+            .build()
+        val response = client.newCall(request).execute()
+        val jsonString = response.body.string()
+        val gson = Gson()
+        val type = object : TypeToken<Map<String, List<Post>>>() {}.type
+        val searchResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, type)
+        return searchResponse["posts"]?.forEach.map { post ->
+            val title = post.title
+            val poster = post.imageSm
+            val href = post.id
+            newMovieSearchResponse(title, href, TvType.Movie) {
+                this.posterUrl = poster
+            }
+        } ?: throw ErrorLoadingException($searchResponse["posts"])
+
     }
 
 
     data class Post(
-        @JsonProperty("imageSm") val imageSm: String?,
-        @JsonProperty("id") val id: String,
-        @JsonProperty("title") val title: String,
+    val id: Int,
+    val title: String,
+    val imageSm: String?
     )
 
 
