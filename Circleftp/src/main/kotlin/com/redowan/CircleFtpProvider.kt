@@ -58,13 +58,9 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         val gson = Gson()
         val jtype = object : TypeToken<Map<String, List<Post>>>() {}.type
         val homeResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, jtype)
-        val home = homeResponse["posts"]?.map { post ->
+        val home = homeResponse["posts"]?.mapNotNull { post ->
             if (post.type == "singleVideo" || post.type == "series"){
-                val title = post.title
-                val poster = "$mainUrl/uploads/" + post.imageSm
-                val href = post.id
-                newMovieSearchResponse(title, href.toString(), TvType.Movie) {
-                    this.posterUrl = poster
+                it.toSearchResult()
                 }
             }
         }.toList()
@@ -73,7 +69,11 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         return newHomePageResponse(request.name, home)
     }
 
-        
+    private fun Element.toSearchResult(): SearchResponse? {
+        return newMovieSearchResponse(this.title, this.id.toString(), TvType.Movie) {
+            this.posterUrl = "$mainUrl/uploads/"+ this.imageSm
+        }
+    }
 
     override suspend fun search(query: String): List<SearchResponse> {
         val jsonString = getJson("$mainUrl/api/posts?searchTerm=$query&order=desc")
@@ -81,12 +81,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         val type = object : TypeToken<Map<String, List<Post>>>() {}.type
         val searchResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, type)
         return searchResponse["posts"]?.map { post ->
-            val title = post.title
-            val poster = "$mainUrl/uploads/"+ post.imageSm
-            val href = post.id
-            newMovieSearchResponse(title, href.toString(), TvType.Movie) {
-                this.posterUrl = poster
-            }
+            it.toSearchResult()
         }?: listOf()
     }
 
