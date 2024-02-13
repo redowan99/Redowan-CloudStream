@@ -52,7 +52,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
             newMovieSearchResponse(title, href.toString(), TvType.Movie) {
                 this.posterUrl = poster
             }
-        }
+        }?: listOf()
 
     }
 
