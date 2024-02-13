@@ -67,7 +67,6 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
                     this.posterUrl = poster
                 }
             }
-            else continue
         }?: listOf()
 
         return newHomePageResponse(request.name, home)
@@ -91,8 +90,9 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     }
 
     data class Post(
-    val id: String,
-    val title: String,
-    val imageSm: String?
+        val id: String,
+        val title: String,
+        val imageSm: String?,
+        val type: String?
     )
 }
