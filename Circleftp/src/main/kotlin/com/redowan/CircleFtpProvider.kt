@@ -49,7 +49,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
             val title = post.title
             val poster = post.imageSm
             val href = post.id
-            newMovieSearchResponse(title, href, TvType.Movie) {
+            newSearchResponse(title, href.toString(), TvType.Movie) {
                 this.posterUrl = poster
             }
         }
@@ -58,7 +58,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
 
 
     data class Post(
-    val id: Int,
+    val id: String,
     val title: String,
     val imageSm: String?
     )
