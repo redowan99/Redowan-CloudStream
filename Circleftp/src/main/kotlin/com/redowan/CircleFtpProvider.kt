@@ -1,10 +1,10 @@
 package com.redowan
 
+import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.SearchResponse
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.cloudstream3.mvvm.safeApiCall
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
 import com.lagradost.cloudstream3.utils.AppUtils.toJson
@@ -33,11 +33,11 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     override val hasMainPage = true
 
     override val mainPage = mainPageOf(
-    "80" to "Featured",
-    "6" to "English Movies",
-    "9" to "English & Foreign TV Series",
-    "2" to "Hindi Movies",
-    "5" to "Hindi TV Series",
+        "80" to "Featured",
+        "6" to "English Movies",
+        "9" to "English & Foreign TV Series",
+        "2" to "Hindi Movies",
+        "5" to "Hindi TV Series",
     )
 
 
@@ -47,7 +47,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
             .url(url)
             .build()
         val response = client.newCall(request).execute()
-        val jsonString = response.body.string()
+        return response.body.string()
     }
 
     override suspend fun getMainPage(
@@ -59,7 +59,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         val type = object : TypeToken<Map<String, List<Post>>>() {}.type
         val homeResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, type)
         val home = homeResponse["posts"]?.map { post ->
-            if (post.type == "singleVideo" || "series"){
+            if (post.type == "singleVideo" || post.type == "series"){
                 val title = post.title
                 val poster = "$mainUrl/uploads/" + post.imageSm
                 val href = post.id
@@ -67,6 +67,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
                     this.posterUrl = poster
                 }
             }
+            else continue
         }?: listOf()
 
         return newHomePageResponse(request.name, home)
