@@ -30,7 +30,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
 
 
     // enable this when your provider has a main page
-    override val hasMainPage = true
+    override val hasMainPage = false
 
     override val mainPage = mainPageOf(
         "80" to "Featured",
@@ -50,30 +50,10 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         return response.body.string()
     }
 
-    override suspend fun getMainPage(
-        page: Int,
-        request : MainPageRequest
-    ): HomePageResponse {
-        val jsonString = getJson("$mainUrl/api/posts?categoryExact="+request.data+"&page=1&order=desc&limit=50")
-        val gson = Gson()
-        val jtype = object : TypeToken<Map<String, List<Post>>>() {}.type
-        val homeResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, jtype)
-        //val home: List<String?> = 
-        //}
-        //
-        //println(home)
 
-        return newHomePageResponse(request.name, homeResponse["posts"]?.mapNotNull { post ->
-            if (post.type == "singleVideo" || post.type == "series"){
-                it.toSearchResult()
-                }
-            }?: listOf()
-        )
-    }
-
-    private fun Element.toSearchResult(): SearchResponse? {
-        return newMovieSearchResponse(this.title, this.id.toString(), TvType.Movie) {
-            this.posterUrl = "$mainUrl/uploads/"+ this.imageSm
+    private fun toSearchResult(post): SearchResponse? {
+        return newMovieSearchResponse(post.title, post.id.toString(), TvType.Movie) {
+            this.posterUrl = "$mainUrl/uploads/"+ post.imageSm
         }
     }
 
@@ -83,9 +63,13 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         val type = object : TypeToken<Map<String, List<Post>>>() {}.type
         val searchResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, type)
         return searchResponse["posts"]?.map { post ->
-            it.toSearchResult()
+            toSearchResult(post)
         }?: listOf()
     }
+
+    override suspend fun load(url: String): LoadResponse {
+
+    }    
 
     data class Post(
         val id: String,
