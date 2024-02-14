@@ -50,6 +50,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         if (response.isSuccessful){
             return response.body.string()
         }
+        return null
     }
 
 
@@ -59,6 +60,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
                 this.posterUrl = "$mainUrl/uploads/${post.imageSm}"
             }
         }
+        return null
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
@@ -128,6 +130,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
                     this.plot = description
                 }
             }
+            return null
         }
     }    
 
