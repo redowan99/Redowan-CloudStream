@@ -58,15 +58,17 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         val gson = Gson()
         val jtype = object : TypeToken<Map<String, List<Post>>>() {}.type
         val homeResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, jtype)
-        val home = homeResponse["posts"]?.mapNotNull { post ->
+        //val home: List<String?> = 
+        //}
+        //
+        //println(home)
+
+        return newHomePageResponse(request.name, homeResponse["posts"]?.mapNotNull { post ->
             if (post.type == "singleVideo" || post.type == "series"){
                 it.toSearchResult()
                 }
-            }
-        }.toList()
-        println(home)
-
-        return newHomePageResponse(request.name, home)
+            }?: listOf()
+        )
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
