@@ -161,8 +161,10 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
             mainUrl,
             this.name,
             url = data,
-            mainUrl
-            //quality = 1080,
+            mainUrl,
+            quality = 1080,
+            isM3u8 = false,
+            isDash = false
             )
         )
         return true
