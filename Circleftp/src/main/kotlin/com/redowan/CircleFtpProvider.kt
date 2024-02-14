@@ -47,13 +47,15 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
             .url(url)
             .build()
         val response = client.newCall(request).execute()
-        return response.body.string()
+        if (response.isSuccessful) return response.body.string()
     }
 
 
     private fun toSearchResult(post: Post): SearchResponse? {
-        return newMovieSearchResponse(post.title, post.id.toString(), TvType.Movie) {
-            this.posterUrl = "$mainUrl/uploads/"+ post.imageSm
+        if (post.type == "singleVideo" || post.type == "series"){
+            return newMovieSearchResponse(post.title, post.id.toString(), TvType.Movie) {
+                this.posterUrl = "$mainUrl/uploads/${post.imageSm}"
+            }
         }
     }
 
@@ -67,14 +69,61 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         }?: listOf()
     }
 
-    //override suspend fun load(url: String): LoadResponse {
+    override suspend fun load(url: String): LoadResponse {
+        val jsonString = getJson("$mainUrl/api/posts/$url")
+        val gson = Gson()
+        val type = object : TypeToken<Data>() {}.type
+        val data = gson.fromJson<Data>(jsonString, type)
 
-    //}    
+        val title = data.title
+        val poster ="$mainUrl/uploads/${data.imageSm}"
+        val description = data.metaData
+        val year = data.year.toInt()
+        when (data.content) {
+            is List<*> -> {
+                data.content.forEach { season ->
+                    val episodeslist = season as Map<*, *>
+                    val linksAndNames = extractLinksAndNames(episodeslist["episodes"].toString())
+                    for (pair in linksAndNames) {
+                        println("Link: ${pair.first}")
+                        println("Name: ${pair.second}")
+                    }
+                }
+                return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
+                    this.posterUrl = poster
+                    this.year = year
+                    this.plot = description
+                }
+            }
+
+
+            is String -> {
+                val dataurl = data.content
+                return newMovieLoadResponse(title, url, TvType.Movie, dataurl) {
+                    this.posterUrl = poster
+                    this.year = year
+                    this.plot = description
+                }
+            }
+        }
+    }    
 
     data class Post(
         val id: String,
         val title: String,
         val imageSm: String?,
         val type: String?
+    )
+
+    data class Data(
+        val title: String?,
+        val type: String?,
+        val imageSm: String?,
+        val metaData: String?,
+        val content: Any,
+        val name: String?,
+        val quality: String?,
+        val watchTime: String?,
+        val year: String?
     )
 }
