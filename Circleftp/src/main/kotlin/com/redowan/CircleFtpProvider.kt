@@ -137,6 +137,22 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         }
     }    
 
+    override suspend fun loadLinks(
+        data: String,
+        isCasting: Boolean,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ): Boolean {
+
+        callback.invoke(
+            ExtractorLink(
+                this.name,
+                data
+            )
+        )
+        return true
+    }
+
     data class Post(
         val id: String,
         val title: String,
