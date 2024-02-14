@@ -111,7 +111,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
                         val episodeName = pair.second
                         episodesData.add(Episode(
                                 episodeUrl,
-                                episodeName,
+                                //episodeName,
                                 seasonNum,
                                 episodenum
                             )
@@ -147,7 +147,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         callback.invoke(
             ExtractorLink(
             mainUrl,
-            name = "test",
+            this.name,
             url = data,
             mainUrl,
             quality = 1080,
