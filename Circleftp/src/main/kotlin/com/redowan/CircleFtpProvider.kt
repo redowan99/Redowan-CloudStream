@@ -41,17 +41,19 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     )
 
 
-    private fun getJson(url: String): String {
+    private fun getJson(url: String): String? {
         val client = OkHttpClient()
         val request = Request.Builder()
             .url(url)
             .build()
         val response = client.newCall(request).execute()
-        if (response.isSuccessful){
-            return response.body.string()
+        return if (response.isSuccessful) {
+            response.body?.string()
+        } else {
+            null
         }
-        return null
     }
+
 
 
     private fun toSearchResult(post: Post): SearchResponse? {
