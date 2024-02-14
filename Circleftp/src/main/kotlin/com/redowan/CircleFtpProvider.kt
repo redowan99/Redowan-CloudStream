@@ -51,7 +51,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     }
 
 
-    private fun toSearchResult(post): SearchResponse? {
+    private fun toSearchResult(post: Post): SearchResponse? {
         return newMovieSearchResponse(post.title, post.id.toString(), TvType.Movie) {
             this.posterUrl = "$mainUrl/uploads/"+ post.imageSm
         }
