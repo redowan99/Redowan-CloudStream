@@ -132,6 +132,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
                     this.posterUrl = poster
                     this.year = year
                     this.plot = description
+                    this.backgroundPosterUrl = poster
                 } 
             }
         }
