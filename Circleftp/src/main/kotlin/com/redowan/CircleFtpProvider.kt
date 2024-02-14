@@ -147,7 +147,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         callback.invoke(
             ExtractorLink(
             mainUrl,
-            this.name,
+            name = "test",
             url = data,
             mainUrl,
             quality = 1080,
