@@ -48,7 +48,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
             .build()
         val response = client.newCall(request).execute()
         return if (response.isSuccessful) {
-            response.body?.string()
+            response.body.string()
         } else {
             null
         }
@@ -90,7 +90,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         val type = object : TypeToken<Data>() {}.type
         val data = gson.fromJson<Data>(jsonString, type)
 
-        val title = data.title
+        val title = data.title.toString()
         val poster ="$mainUrl/uploads/${data.imageSm}"
         val description = data.metaData
         val year = data.year?.toInt()
