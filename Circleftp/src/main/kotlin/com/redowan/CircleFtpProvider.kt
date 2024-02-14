@@ -67,9 +67,9 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         }?: listOf()
     }
 
-    override suspend fun load(url: String): LoadResponse {
+    //override suspend fun load(url: String): LoadResponse {
 
-    }    
+    //}    
 
     data class Post(
         val id: String,
