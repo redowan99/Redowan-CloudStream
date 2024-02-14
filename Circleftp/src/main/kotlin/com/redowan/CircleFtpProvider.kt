@@ -30,7 +30,9 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
 
 
     // enable this when your provider has a main page
-    override val hasMainPage = false
+    override val hasMainPage = true
+    override val hasDownloadSupport = true
+
 
     override val mainPage = mainPageOf(
         "80" to "Featured",
@@ -39,6 +41,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         "2" to "Hindi Movies",
         "5" to "Hindi TV Series",
     )
+
 
 
     private fun getJson(url: String): String? {
@@ -53,7 +56,6 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
             null
         }
     }
-
 
 
     private fun toSearchResult(post: Post): SearchResponse? {
@@ -91,9 +93,9 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         val loadData = gson.fromJson<Data>(jsonString, type)
 
         val title = loadData.title.toString()
-        val poster ="$mainUrl/uploads/${loadData.imageSm}"
+        val poster ="$mainUrl/uploads/${loadData.image}"
         val description = loadData.metaData
-        val year = loadData.year?.toInt()
+        val year = loadData.year?.substring(0, 4)
         when (loadData.content) {
             is List<*> -> {
                 val episodesData = mutableListOf<Episode>()
@@ -145,7 +147,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     data class Data(
         val title: String,
         val type: String?,
-        val imageSm: String?,
+        val image: String?,
         val metaData: String?,
         val content: Any,
         val name: String?,
