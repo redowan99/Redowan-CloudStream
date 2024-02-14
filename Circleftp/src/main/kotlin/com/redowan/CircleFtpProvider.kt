@@ -4,13 +4,7 @@ import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.SearchResponse
-
-import com.lagradost.cloudstream3.mvvm.safeApiCall
-import com.lagradost.cloudstream3.utils.AppUtils.parseJson
-import com.lagradost.cloudstream3.utils.AppUtils.toJson
-import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.loadExtractor
 import java.util.ArrayList
 
 
@@ -32,6 +26,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     // enable this when your provider has a main page
     override val hasMainPage = true
     override val hasDownloadSupport = true
+    override val hasQuickSearch = true
 
 
     override val mainPage = mainPageOf(
@@ -42,7 +37,19 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         "5" to "Hindi TV Series",
     )
 
-
+    override suspend fun getMainPage(
+        page: Int,
+        request : MainPageRequest
+    ): HomePageResponse {
+        val jsonString = getJson("$mainUrl/api/posts?categoryExact=${request.data}&page=1&order=desc&limit=50")
+        val gson = Gson()
+        val jtype = object : TypeToken<Map<String, List<Post>>>() {}.type
+        val homeResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, jtype)
+        val home = homeResponse["posts"]?.mapNotNull { post ->
+                toSearchResult(post)
+            }?: listOf()
+        return newHomePageResponse(request.name, home)
+    }
 
     private fun getJson(url: String): String? {
         val client = OkHttpClient()
@@ -62,10 +69,14 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         if (post.type == "singleVideo" || post.type == "series"){
             return newMovieSearchResponse(post.title, "$mainUrl/api/posts/${post.id}", TvType.Movie) {
                 this.posterUrl = "$mainUrl/uploads/${post.imageSm}"
+                this.quality = getQualityFromString(post.quality)
             }
         }
         return null
     }
+
+    override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
+
 
     override suspend fun search(query: String): List<SearchResponse> {
         val jsonString: String? = getJson("$mainUrl/api/posts?searchTerm=$query&order=desc")
@@ -150,8 +161,8 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
             mainUrl,
             this.name,
             url = data,
-            mainUrl,
-            quality = 1080,
+            mainUrl
+            //quality = 1080,
             )
         )
         return true
@@ -161,7 +172,8 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         val id: String,
         val title: String,
         val imageSm: String?,
-        val type: String?
+        val type: String?,
+        val quality: String
     )
 
     data class Data(
