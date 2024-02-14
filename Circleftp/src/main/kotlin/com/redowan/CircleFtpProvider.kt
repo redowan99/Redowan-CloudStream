@@ -62,7 +62,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         val gson = Gson()
         val type = object : TypeToken<Map<String, List<Post>>>() {}.type
         val searchResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, type)
-        return searchResponse["posts"]?.map { post ->
+        return searchResponse["posts"]?.mapNotNull { post ->
             toSearchResult(post)
         }?: listOf()
     }
