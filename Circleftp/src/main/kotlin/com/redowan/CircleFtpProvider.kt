@@ -85,7 +85,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val jsonString = getJson("$mainUrl/api/posts/$url")
+        val jsonString: String? = getJson("$mainUrl/api/posts/$url")
         val gson = Gson()
         val type = object : TypeToken<Data>() {}.type
         val data = gson.fromJson<Data>(jsonString, type)
