@@ -122,7 +122,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
             }
 
 
-            is String -> {
+            else -> {
                 val dataurl = data.content
                 return newMovieLoadResponse(title, url, TvType.Movie, dataurl) {
                     this.posterUrl = poster
@@ -130,7 +130,6 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
                     this.plot = description
                 }
             }
-            return null
         }
     }    
 
