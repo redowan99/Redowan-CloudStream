@@ -144,7 +144,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         callback: (ExtractorLink) -> Unit
     ): Boolean {
 
-        callback.invoke(ExtractorLink(url = data, ...))
+        callback.invoke(ExtractorLink(url = data))
         return true
     }
 
