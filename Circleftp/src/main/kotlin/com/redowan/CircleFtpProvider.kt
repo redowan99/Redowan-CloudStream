@@ -127,12 +127,12 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
 
 
             else -> {
+                val dataurl = loadData.content
                 return newMovieLoadResponse(title, url, TvType.Movie, dataurl) {
                     this.posterUrl = poster
                     this.year = year
                     this.plot = description
-                }val dataurl = loadData.content
-                
+                } 
             }
         }
     }    
@@ -144,7 +144,15 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         callback: (ExtractorLink) -> Unit
     ): Boolean {
 
-        callback.invoke(ExtractorLink(url = data))
+        callback.invoke(
+            ExtractorLink(
+            this.url,
+            this.name,
+            url = data,
+            this.url,
+            quality = 1080,
+            )
+        )
         return true
     }
 
