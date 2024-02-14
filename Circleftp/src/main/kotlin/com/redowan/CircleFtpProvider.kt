@@ -111,7 +111,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
                         val episodeName = pair.second
                         episodesData.add(Episode(
                                 episodeUrl,
-                                //episodeName,
+                                episodeName,
                                 seasonNum,
                                 episodenum
                             )
