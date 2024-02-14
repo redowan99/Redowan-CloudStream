@@ -95,7 +95,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         val title = loadData.title.toString()
         val poster ="$mainUrl/uploads/${loadData.image}"
         val description = loadData.metaData
-        val year = loadData.year?.substring(0, 4)
+        val year = loadData.year?.substring(0, 4)?.toInt()
         when (loadData.content) {
             is List<*> -> {
                 val episodesData = mutableListOf<Episode>()
@@ -127,12 +127,12 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
 
 
             else -> {
-                val dataurl = loadData.content
                 return newMovieLoadResponse(title, url, TvType.Movie, dataurl) {
                     this.posterUrl = poster
                     this.year = year
                     this.plot = description
-                }
+                }val dataurl = loadData.content
+                
             }
         }
     }    
@@ -144,12 +144,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         callback: (ExtractorLink) -> Unit
     ): Boolean {
 
-        callback.invoke(
-            ExtractorLink(
-                this.name,
-                data
-            )
-        )
+        callback.invoke(ExtractorLink(url = data, ...))
         return true
     }
 
