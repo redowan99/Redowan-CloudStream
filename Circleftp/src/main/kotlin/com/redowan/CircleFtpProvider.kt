@@ -69,6 +69,15 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         }?: listOf()
     }
 
+    private fun extractLinksAndNames(input: String): List<Pair<String, String>> {
+        val regex = "\\{(.*?), (.*?)\\}"
+        val matches = Regex(regex).findAll(input)
+
+        return matches.map { match ->
+            Pair(match.groupValues[1].replace("link=", ""), match.groupValues[2].replace("title=", ""))
+        }.toList()
+    }
+
     override suspend fun load(url: String): LoadResponse {
         val jsonString = getJson("$mainUrl/api/posts/$url")
         val gson = Gson()
@@ -81,15 +90,26 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         val year = data.year.toInt()
         when (data.content) {
             is List<*> -> {
+                val episodesData = mutableListOf<Episode>()
+                var seasonNum = 0
                 data.content.forEach { season ->
+                    seasonNum++
                     val episodeslist = season as Map<*, *>
                     val linksAndNames = extractLinksAndNames(episodeslist["episodes"].toString())
+                    var episodenum = 0
                     for (pair in linksAndNames) {
-                        println("Link: ${pair.first}")
-                        println("Name: ${pair.second}")
+                        episodenum ++
+                        val episodeUrl = pair.first
+                        val episodeName = pair.second
+                        episodesData.add = Episode(
+                                episodeUrl,
+                                episodeName,
+                                seasonNum,
+                                episodenum
+                            )
                     }
                 }
-                return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
+                return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
                     this.posterUrl = poster
                     this.year = year
                     this.plot = description
