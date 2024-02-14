@@ -58,7 +58,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
 
     private fun toSearchResult(post: Post): SearchResponse? {
         if (post.type == "singleVideo" || post.type == "series"){
-            return newMovieSearchResponse(post.title, post.id.toString(), TvType.Movie) {
+            return newMovieSearchResponse(post.title, "$mainUrl/api/posts/${post.id}"post.id, TvType.Movie) {
                 this.posterUrl = "$mainUrl/uploads/${post.imageSm}"
             }
         }
@@ -85,20 +85,20 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val jsonString: String? = getJson("$mainUrl/api/posts/$url")
+        val jsonString: String? = getJson(url)
         val gson = Gson()
         val type = object : TypeToken<Data>() {}.type
-        val data = gson.fromJson<Data>(jsonString, type)
+        val loadData = gson.fromJson<Data>(jsonString, type)
 
-        val title = data.title.toString()
-        val poster ="$mainUrl/uploads/${data.imageSm}"
-        val description = data.metaData
-        val year = data.year?.toInt()
-        when (data.content) {
+        val title = loadData.title.toString()
+        val poster ="$mainUrl/uploads/${loadData.imageSm}"
+        val description = loadData.metaData
+        val year = loadData.year?.toInt()
+        when (loadData.content) {
             is List<*> -> {
                 val episodesData = mutableListOf<Episode>()
                 var seasonNum = 0
-                data.content.forEach { season ->
+                loadData.content.forEach { season ->
                     seasonNum++
                     val episodeslist = season as Map<*, *>
                     val linksAndNames = extractLinksAndNames(episodeslist["episodes"].toString())
@@ -125,7 +125,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
 
 
             else -> {
-                val dataurl = data.content
+                val dataurl = loadData.content
                 return newMovieLoadResponse(title, url, TvType.Movie, dataurl) {
                     this.posterUrl = poster
                     this.year = year
