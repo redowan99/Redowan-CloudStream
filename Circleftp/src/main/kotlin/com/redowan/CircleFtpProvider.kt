@@ -47,7 +47,9 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
             .url(url)
             .build()
         val response = client.newCall(request).execute()
-        if (response.isSuccessful) return response.body.string()
+        if (response.isSuccessful){
+            return response.body.string()
+        }
     }
 
 
@@ -87,7 +89,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         val title = data.title
         val poster ="$mainUrl/uploads/${data.imageSm}"
         val description = data.metaData
-        val year = data.year.toInt()
+        val year = data.year?.toInt()
         when (data.content) {
             is List<*> -> {
                 val episodesData = mutableListOf<Episode>()
@@ -101,12 +103,13 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
                         episodenum ++
                         val episodeUrl = pair.first
                         val episodeName = pair.second
-                        episodesData.add = Episode(
+                        episodesData.add(Episode(
                                 episodeUrl,
                                 episodeName,
                                 seasonNum,
                                 episodenum
                             )
+                        )
                     }
                 }
                 return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
@@ -136,7 +139,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     )
 
     data class Data(
-        val title: String?,
+        val title: String,
         val type: String?,
         val imageSm: String?,
         val metaData: String?,
