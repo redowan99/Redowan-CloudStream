@@ -64,7 +64,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val jsonString = getJson("$mainUrl/api/posts?searchTerm=$query&order=desc")
+        val jsonString: String? = getJson("$mainUrl/api/posts?searchTerm=$query&order=desc")
         val gson = Gson()
         val type = object : TypeToken<Map<String, List<Post>>>() {}.type
         val searchResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, type)
