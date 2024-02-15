@@ -21,12 +21,6 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
-suspend fun main() {
-    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(CircleFtpProvider())
-    providerTester.testAll()
-    //val responses = CircleFtpProvider().search("car")
-    //println(responses)
-}
 
 class CircleFtpProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "http://15.1.1.50:5000" 
