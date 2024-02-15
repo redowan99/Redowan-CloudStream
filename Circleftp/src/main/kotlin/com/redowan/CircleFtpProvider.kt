@@ -1,17 +1,32 @@
 package com.redowan
 
-import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.TvType
+
+import com.google.gson.Gson
+import com.google.gson.annotations.SerializedName
+import com.google.gson.reflect.TypeToken
+import com.lagradost.cloudstream3.Episode
+import com.lagradost.cloudstream3.HomePageResponse
+import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
+import com.lagradost.cloudstream3.MainPageRequest
 import com.lagradost.cloudstream3.SearchResponse
+import com.lagradost.cloudstream3.SubtitleFile
+import com.lagradost.cloudstream3.TvType
+import com.lagradost.cloudstream3.mainPageOf
+import com.lagradost.cloudstream3.newHomePageResponse
+import com.lagradost.cloudstream3.newMovieLoadResponse
+import com.lagradost.cloudstream3.newMovieSearchResponse
+import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import java.util.ArrayList
-
-
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+
+suspend fun main() {
+    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(CircleFtpProvider())
+    providerTester.testAll()
+    //val responses = CircleFtpProvider().search("car")
+    //println(responses)
+}
 
 class CircleFtpProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "http://15.1.1.50:5000" 
@@ -41,13 +56,12 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         page: Int,
         request : MainPageRequest
     ): HomePageResponse {
-        val jsonString = getJson("$mainUrl/api/posts?categoryExact=${request.data}&page=1&order=desc&limit=50")
+        val json: String? = getJson("$mainUrl/api/posts?categoryExact=${request.data}&page=1&order=desc&limit=50")
         val gson = Gson()
-        val jtype = object : TypeToken<Map<String, List<Post>>>() {}.type
-        val homeResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, jtype)
-        val home = homeResponse["posts"]?.mapNotNull { post ->
-                toSearchResult(post)
-            }?: listOf()
+        val homeResponse = gson.fromJson(json, PageData::class.java)
+        val home = homeResponse.posts.mapNotNull { post ->
+            toSearchResult(post)
+        }
         return newHomePageResponse(request.name, home)
     }
 
@@ -65,11 +79,11 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     }
 
 
-    private fun toSearchResult(post: Post): SearchResponse? {
+    private fun toSearchResult(post: Posts): SearchResponse? {
         if (post.type == "singleVideo" || post.type == "series"){
             return newMovieSearchResponse(post.title, "$mainUrl/api/posts/${post.id}", TvType.Movie) {
                 this.posterUrl = "$mainUrl/uploads/${post.imageSm}"
-                this.quality = getQualityFromString(post.quality)
+                //this.quality = getQualityFromString(post.quality)
             }
         }
         return null
@@ -81,8 +95,8 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     override suspend fun search(query: String): List<SearchResponse> {
         val jsonString: String? = getJson("$mainUrl/api/posts?searchTerm=$query&order=desc")
         val gson = Gson()
-        val type = object : TypeToken<Map<String, List<Post>>>() {}.type
-        val searchResponse = gson.fromJson<Map<String, List<Post>>>(jsonString, type)
+        val searchResponse = gson.fromJson<Map<String, List<Posts>>>(jsonString,
+            object : TypeToken<Map<String, List<Posts>>>() {}.type)
         return searchResponse["posts"]?.mapNotNull { post ->
             toSearchResult(post)
         }?: listOf()
@@ -103,7 +117,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         val type = object : TypeToken<Data>() {}.type
         val loadData = gson.fromJson<Data>(jsonString, type)
 
-        val title = loadData.title.toString()
+        val title = loadData.title
         val poster ="$mainUrl/uploads/${loadData.image}"
         val description = loadData.metaData
         val year = loadData.year?.substring(0, 4)?.toInt()
@@ -170,12 +184,25 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         return true
     }
 
-    data class Post(
-        val id: String,
-        val title: String,
-        val imageSm: String?,
-        val type: String?,
-        val quality: String
+
+    data class PageData (
+
+        @SerializedName("posts"      ) var posts      : ArrayList<Posts> = arrayListOf(),
+
+    )
+    data class Posts (
+
+        @SerializedName("id"         ) var id         : String,
+        @SerializedName("title"      ) var title      : String,
+        @SerializedName("type"       ) var type       : String?               = null,
+        @SerializedName("image"      ) var image      : String?               = null,
+        @SerializedName("imageSm"    ) var imageSm    : String?               = null,
+        @SerializedName("metaData"   ) var metaData   : String?               = null,
+        @SerializedName("name"       ) var name       : String?               = null,
+        @SerializedName("quality"    ) var quality    : String?               = null,
+        @SerializedName("watchTime"  ) var watchTime  : String?               = null,
+        @SerializedName("year"       ) var year       : String?               = null,
+
     )
 
     data class Data(

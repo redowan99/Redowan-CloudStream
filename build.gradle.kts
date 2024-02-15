@@ -66,11 +66,27 @@ subprojects {
     }
 
     dependencies {
+        val apkTasks = listOf("deployWithAdb", "build")
+        val useApk = gradle.startParameter.taskNames.any { taskName ->
+            apkTasks.any { apkTask ->
+                taskName.contains(apkTask, ignoreCase = true)
+            }
+        }
+
+
         val apk by configurations
         val implementation by configurations
 
-        // Stubs for all Cloudstream classes
-        apk("com.lagradost:cloudstream3:pre-release")
+        // If the task is specifically to compile the app then use the stubs, otherwise us the library.
+        if (useApk) {
+            // Stubs for all Cloudstream classes
+            apk("com.lagradost:cloudstream3:pre-release")
+        } else {
+            // For running locally
+            implementation("com.github.Blatzar:CloudstreamApi:0.1.6")
+        }
+
+        // Rest of your code here...
 
         // these dependencies can include any of those which are added by the app,
         // but you dont need to include any of them if you dont need them
@@ -79,8 +95,8 @@ subprojects {
 
         implementation("com.squareup.okhttp3:okhttp:+") //http
         implementation("com.google.code.gson:gson:+") //json parser
-        implementation("com.github.Blatzar:NiceHttp:0.4.2") // http library
-        implementation("org.jsoup:jsoup:1.15.3") // html parser
+        //implementation("com.github.Blatzar:NiceHttp:0.4.2") // http library
+        //implementation("org.jsoup:jsoup:1.15.3") // html parser
     }
 }
 
