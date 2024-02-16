@@ -44,13 +44,19 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         "9" to "English & Foreign TV Series",
         "2" to "Hindi Movies",
         "5" to "Hindi TV Series",
+        "21" to "Anime Series",
+        "3" to "South Indian Dubbed Movie",
+        "22" to "Dubbed TV Series",
+        "1" to "Animation Movies",
+        "10" to "Islamic",
+        "15" to "WWE"
     )
 
     override suspend fun getMainPage(
         page: Int,
         request : MainPageRequest
     ): HomePageResponse {
-        val json: String? = getJson("$mainUrl/api/posts?categoryExact=${request.data}&page=1&order=desc&limit=50")
+        val json: String? = getJson("$mainUrl/api/posts?categoryExact=${request.data}&page=1&order=desc&limit=10")
         val gson = Gson()
         val homeResponse = gson.fromJson(json, PageData::class.java)
         val home = homeResponse.posts.mapNotNull { post ->
