@@ -54,7 +54,7 @@ class VdomelaProvider : MainAPI() { // all providers must be an instance of Main
                 this.posterUrl = "$mainUrl${movie.select(".browse-img img").attr("src")}"
             }
         }
-        return newHomePageResponse(request.name, home)
+        return newHomePageResponse(request.name, home, false)
     }
 
 

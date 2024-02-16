@@ -62,7 +62,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         val home = homeResponse.posts.mapNotNull { post ->
             toSearchResult(post)
         }
-        return newHomePageResponse(request.name, home)
+        return newHomePageResponse(request.name, home, false)
     }
 
     private fun getJson(url: String): String? {
