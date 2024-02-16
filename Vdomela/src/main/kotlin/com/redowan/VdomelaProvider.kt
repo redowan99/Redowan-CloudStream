@@ -21,13 +21,6 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.jsoup.Jsoup
 
-suspend fun main() {
-    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(VdomelaProvider())
-    providerTester.testAll()
-    //val responses =
-    //VdomelaProvider().test()
-    //println(responses)
-}
 
 class VdomelaProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "http://vdomela.com/"
