@@ -85,8 +85,7 @@ class VdomelaProvider : MainAPI() { // all providers must be an instance of Main
 
         return newMovieLoadResponse(
             movie.selectFirst(".movie_name").text(),
-            url, TvType.Movie,
-            "$mainUrl${movie.selectFirst("a[href^='download_counter.php']")?.attr("href")}")
+            url, TvType.Movie,"$mainUrl${doc.selectFirst("video")?.attr("src")}")
         {
             this.posterUrl = "$mainUrl${movie.selectFirst(".boximg.posthov")?.attr("src")}"
             this.plot = movie.select("[class=movie-info] p:contains(Synopsis)").text().replace(
