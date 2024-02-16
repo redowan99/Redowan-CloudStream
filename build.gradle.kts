@@ -67,10 +67,11 @@ subprojects {
 
     dependencies {
         val apk by configurations
-        val implementation by configurations
-
+		val implementation by configurations
         // Stubs for all Cloudstream classes
         apk("com.lagradost:cloudstream3:pre-release")
+
+        // Rest of your code here...
 
         // these dependencies can include any of those which are added by the app,
         // but you dont need to include any of them if you dont need them
@@ -79,8 +80,8 @@ subprojects {
 
         implementation("com.squareup.okhttp3:okhttp:+") //http
         implementation("com.google.code.gson:gson:+") //json parser
-        implementation("com.github.Blatzar:NiceHttp:0.4.2") // http library
-        implementation("org.jsoup:jsoup:1.15.3") // html parser
+        //implementation("com.github.Blatzar:NiceHttp:0.4.2") // http library
+        //implementation("org.jsoup:jsoup:1.15.3") // html parser
     }
 }
 
