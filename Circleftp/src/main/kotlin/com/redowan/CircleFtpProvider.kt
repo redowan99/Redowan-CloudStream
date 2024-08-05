@@ -23,11 +23,18 @@ import okhttp3.Request
 
 
 class CircleFtpProvider : MainAPI() { // all providers must be an instance of MainAPI
-    override var mainUrl = "http://15.1.1.50:5000" 
+    override var mainUrl = "http://15.1.1.50"
     override var name = "Circle FTP"
     override val supportedTypes = setOf(
         TvType.Movie,
-        TvType.TvSeries
+        TvType.TvSeries,
+        TvType.Anime,
+        TvType.AnimeMovie,
+        TvType.Cartoon,
+        TvType.AsianDrama,
+        TvType.Documentary,
+        TvType.OVA,
+        TvType.Others
     )
     override var lang = "bn"
 
@@ -81,8 +88,8 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
 
     private fun toSearchResult(post: Posts): SearchResponse? {
         if (post.type == "singleVideo" || post.type == "series"){
-            return newMovieSearchResponse(post.title, "$mainUrl/api/posts/${post.id}", TvType.Movie) {
-                this.posterUrl = "$mainUrl/uploads/${post.imageSm}"
+            return newMovieSearchResponse(post.title, "$mainUrl/content/${post.id}", TvType.Movie) {
+                this.posterUrl = "$mainUrl:5000/uploads/${post.imageSm}"
                 //this.quality = getQualityFromString(post.quality)
             }
         }
@@ -93,7 +100,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
 
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val jsonString: String? = getJson("$mainUrl/api/posts?searchTerm=$query&order=desc")
+        val jsonString: String? = getJson("$mainUrl:5000/api/posts?searchTerm=$query&order=desc")
         val gson = Gson()
         val searchResponse = gson.fromJson<Map<String, List<Posts>>>(jsonString,
             object : TypeToken<Map<String, List<Posts>>>() {}.type)
@@ -112,13 +119,13 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val jsonString: String? = getJson(url)
+        val jsonString: String? = getJson(url.replace("http://15.1.1.50/content/","$mainUrl:5000/api/posts/"))
         val gson = Gson()
         val type = object : TypeToken<Data>() {}.type
         val loadData = gson.fromJson<Data>(jsonString, type)
 
         val title = loadData.title
-        val poster ="$mainUrl/uploads/${loadData.image}"
+        val poster ="$mainUrl:5000/uploads/${loadData.image}"
         val description = loadData.metaData
         val year = loadData.year?.substring(0, 4)?.toInt()
         when (loadData.content) {
@@ -127,18 +134,18 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
                 var seasonNum = 0
                 loadData.content.forEach { season ->
                     seasonNum++
-                    val episodeslist = season as Map<*, *>
-                    val linksAndNames = extractLinksAndNames(episodeslist["episodes"].toString())
-                    var episodenum = 0
+                    val episodesList = season as Map<*, *>
+                    val linksAndNames = extractLinksAndNames(episodesList["episodes"].toString())
+                    var episodeNum = 0
                     for (pair in linksAndNames) {
-                        episodenum ++
+                        episodeNum ++
                         val episodeUrl = pair.first
                         val episodeName = pair.second
                         episodesData.add(Episode(
                                 episodeUrl,
                                 episodeName,
                                 seasonNum,
-                                episodenum
+                                episodeNum
                             )
                         )
                     }
@@ -152,8 +159,8 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
 
 
             else -> {
-                val dataurl = loadData.content
-                return newMovieLoadResponse(title, url, TvType.Movie, dataurl) {
+                val dataUrl = loadData.content
+                return newMovieLoadResponse(title, url, TvType.Movie, dataUrl) {
                     this.posterUrl = poster
                     this.year = year
                     this.plot = description
