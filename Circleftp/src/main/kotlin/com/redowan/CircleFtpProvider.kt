@@ -49,12 +49,13 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         "80" to "Featured",
         "6" to "English Movies",
         "9" to "English & Foreign TV Series",
+        "22" to "Dubbed TV Series",
         "2" to "Hindi Movies",
         "5" to "Hindi TV Series",
-        "21" to "Anime Series",
         "3" to "South Indian Dubbed Movie",
-        "22" to "Dubbed TV Series",
+        "21" to "Anime Series",
         "1" to "Animation Movies",
+        "85" to "Documentary",
         "10" to "Islamic",
         "15" to "WWE"
     )
@@ -63,13 +64,13 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         page: Int,
         request : MainPageRequest
     ): HomePageResponse {
-        val json: String? = getJson("$mainUrl/api/posts?categoryExact=${request.data}&page=1&order=desc&limit=10")
+        val json: String? = getJson("$mainUrl:5000/api/posts?categoryExact=${request.data}&page=$page&order=desc&limit=10")
         val gson = Gson()
         val homeResponse = gson.fromJson(json, PageData::class.java)
         val home = homeResponse.posts.mapNotNull { post ->
             toSearchResult(post)
         }
-        return newHomePageResponse(request.name, home, false)
+        return newHomePageResponse(request.name, home, true)
     }
 
     private fun getJson(url: String): String? {
@@ -168,7 +169,31 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
                 } 
             }
         }
-    }    
+    }
+
+    private fun linkToIp(data: String): String {
+        val newUrl: String
+
+        if ("index.circleftp.net" in data) newUrl = data.replace("index.circleftp.net","15.1.4.2")
+        else if ("index2.circleftp.net" in data) newUrl = data.replace("index2.circleftp.net","15.1.4.5")
+        else if ("index1.circleftp.net" in data) newUrl = data.replace("index1.circleftp.net","15.1.4.9")
+        else if ("ftp3.circleftp.net" in data) newUrl = data.replace("ftp3.circleftp.net","15.1.4.7")
+        else if ("ftp4.circleftp.net" in data) newUrl = data.replace("ftp4.circleftp.net","15.1.1.5")
+        else if ("ftp5.circleftp.net" in data) newUrl = data.replace("ftp5.circleftp.net","15.1.1.15")
+        else if ("ftp6.circleftp.net" in data) newUrl = data.replace("ftp6.circleftp.net","15.1.2.3")
+        else if ("ftp7.circleftp.net" in data) newUrl = data.replace("ftp7.circleftp.net","15.1.4.8")
+        else if ("ftp8.circleftp.net" in data) newUrl = data.replace("ftp8.circleftp.net","15.1.2.2")
+        else if ("ftp9.circleftp.net" in data) newUrl = data.replace("ftp9.circleftp.net","15.1.2.12")
+        else if ("ftp10.circleftp.net" in data) newUrl = data.replace("ftp10.circleftp.net","15.1.4.3")
+        else if ("ftp11.circleftp.net" in data) newUrl = data.replace("ftp11.circleftp.net","15.1.2.6")
+        else if ("ftp12.circleftp.net" in data) newUrl = data.replace("ftp12.circleftp.net","15.1.2.1")
+        else if ("ftp13.circleftp.net" in data) newUrl = data.replace("ftp13.circleftp.net","15.1.1.18")
+        else if ("ftp15.circleftp.net" in data) newUrl = data.replace("ftp15.circleftp.net","15.1.4.12")
+        else if ("ftp17.circleftp.net" in data) newUrl = data.replace("ftp17.circleftp.net","15.1.3.8")
+        else newUrl = data
+
+        return newUrl
+    }
 
     override suspend fun loadLinks(
         data: String,
@@ -176,12 +201,12 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-
+        val dataNew = linkToIp(data)
         callback.invoke(
             ExtractorLink(
             mainUrl,
             this.name,
-            url = data,
+            url = dataNew,
             mainUrl,
             quality = 1080,
             isM3u8 = false,
