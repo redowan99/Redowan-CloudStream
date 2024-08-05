@@ -9,9 +9,11 @@ import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageRequest
+import com.lagradost.cloudstream3.SearchQuality
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
+import com.lagradost.cloudstream3.getQualityFromString
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
@@ -56,7 +58,6 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         "21" to "Anime Series",
         "1" to "Animation Movies",
         "85" to "Documentary",
-        "10" to "Islamic",
         "15" to "WWE"
     )
 
@@ -91,7 +92,14 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         if (post.type == "singleVideo" || post.type == "series"){
             return newMovieSearchResponse(post.title, "$mainUrl/content/${post.id}", TvType.Movie) {
                 this.posterUrl = "$mainUrl:5000/uploads/${post.imageSm}"
-                //this.quality = getQualityFromString(post.quality)
+                var quality = getQualityFromString(post.quality)
+                if (quality == null){
+                    if (post.quality?.contains("1080p") == true)
+                        quality = SearchQuality.HD
+                    else if (post.quality?.contains("720p") == true)
+                        quality = SearchQuality.HD
+                }
+                this.quality = quality
             }
         }
         return null
