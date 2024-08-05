@@ -79,7 +79,7 @@ subprojects {
         implementation(kotlin("stdlib")) // adds standard kotlin features, like listOf, mapOf etc
 
         implementation("com.squareup.okhttp3:okhttp:4.12.0") //http
-        implementation("com.google.code.gson:gson:2.10.1") //json parser
+        implementation("com.google.code.gson:gson:2.11.0") //json parser
         implementation("com.github.Blatzar:NiceHttp:0.4.11") // http library
         implementation("org.jsoup:jsoup:1.17.2") // html parser
     }

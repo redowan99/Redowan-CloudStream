@@ -13,7 +13,6 @@ import com.lagradost.cloudstream3.SearchQuality
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
-import com.lagradost.cloudstream3.getQualityFromString
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
@@ -92,12 +91,29 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         if (post.type == "singleVideo" || post.type == "series"){
             return newMovieSearchResponse(post.title, "$mainUrl/content/${post.id}", TvType.Movie) {
                 this.posterUrl = "$mainUrl:5000/uploads/${post.imageSm}"
-                var quality = getQualityFromString(post.quality)
-                if (quality == null){
-                    if (post.quality?.contains("1080p") == true)
-                        quality = SearchQuality.HD
-                    else if (post.quality?.contains("720p") == true)
-                        quality = SearchQuality.HD
+                val check = (post.quality).toString()
+                this.quality = when {
+                    (" webrip " in check) -> SearchQuality.WebRip
+                    ("web-dl" in check) -> SearchQuality.WebRip
+                    ("bluray" in check) -> SearchQuality.BlueRay
+                    (" hdts " in check) -> SearchQuality.HdCam
+                    ("dvd" in check) -> SearchQuality.DVD
+                    (" cam " in check) -> SearchQuality.Cam
+                    (" camrip " in check) -> SearchQuality.CamRip
+                    (" hdcam " in check) -> SearchQuality.HdCam
+                    (" hdtc " in check) -> SearchQuality.HdCam
+                    (" hdrip " in check) -> SearchQuality.HD
+                    (" hd " in check) -> SearchQuality.HD
+                    (" hdtv " in check) -> SearchQuality.HD
+                    (" rip " in check) -> SearchQuality.CamRip
+                    (" telecine " in check) -> SearchQuality.Telecine
+                    (" telesync " in check) -> SearchQuality.Telesync
+                    (" fhd " in check) -> SearchQuality.HD
+                    (" 4k " in check) -> SearchQuality.FourK
+                    (" hdr " in check) -> SearchQuality.HDR
+                    ("1080p" in check) -> SearchQuality.HD
+                    ("720p" in check) -> SearchQuality.HD
+                    else -> null
                 }
                 this.quality = quality
             }
