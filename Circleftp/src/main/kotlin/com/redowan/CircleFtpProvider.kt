@@ -91,7 +91,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         if (post.type == "singleVideo" || post.type == "series"){
             return newMovieSearchResponse(post.title, "$mainUrl/content/${post.id}", TvType.Movie) {
                 this.posterUrl = "$mainUrl:5000/uploads/${post.imageSm}"
-                val check = (post.quality).toString()
+                val check = (post.quality).toString().lowercase()
                 this.quality = when {
                     (" webrip " in check) -> SearchQuality.WebRip
                     ("web-dl" in check) -> SearchQuality.WebRip
