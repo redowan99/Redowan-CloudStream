@@ -5,7 +5,7 @@ version = 6
 cloudstream {
     // All of these properties are optional, you can safely remove them
 
-    description = "Largest FTP In Bangladesh"
+    description = "Only works in Bangladesh. Works even in internet Shutdown"
     authors = listOf("Redowan")
 
     /**
@@ -21,13 +21,17 @@ cloudstream {
     // You can find a list of avaliable types here:
     // https://recloudstream.github.io/cloudstream/html/app/com.lagradost.cloudstream3/-tv-type/index.html
     tvTypes = listOf(
-        "TvSeries",
         "Movie",
-        "AnimeMovie",
+        "TvSeries",
         "Anime",
+        "AnimeMovie",
         "OVA",
+        "Cartoon",
+        "AsianDrama",
+        "Others",
         "Documentary",
     )
+    language = "bn"
 
     iconUrl = "http://new.circleftp.net/static/media/logo.fce2c9029060a10687b8.png"
 }
