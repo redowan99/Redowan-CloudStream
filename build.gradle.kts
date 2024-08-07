@@ -81,7 +81,7 @@ subprojects {
         implementation("com.squareup.okhttp3:okhttp:4.12.0") //http
         implementation("com.google.code.gson:gson:2.11.0") //json parser
         implementation("com.github.Blatzar:NiceHttp:0.4.11") // http library
-        implementation("org.jsoup:jsoup:1.17.2") // html parser
+        //implementation("org.jsoup:jsoup:1.18.1") // html parser
     }
 }
 
