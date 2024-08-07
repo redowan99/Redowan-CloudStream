@@ -11,8 +11,8 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
-import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
+import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.nicehttp.Requests
 import org.jsoup.nodes.Element
@@ -66,7 +66,7 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
         val imageIdPattern = "\\d+".toRegex()
         val imageId = imageIdPattern.find(url)?.value
         val title = post.text().replaceAfter(")", "")
-        return newMovieSearchResponse(title, url, TvType.Movie) {
+        return newTvSeriesSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = "$mainUrl/cover/$imageId.png"
             val check = post.select("font[color=green]").text().lowercase()
             this.quality = when {
@@ -96,13 +96,17 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
         val title = doc.selectXpath("/html/body/div[7]/div").text()
         val year = title.replaceBefore("(","").replace("(","").replace(")","").toIntOrNull()
         val episodesData = mutableListOf<Episode>()
+        var episodenum = 0
         doc.select("a").forEach{item ->
             if ("https://www.oomoye.co/server/" in item.attr("href")){
                 val episodeName = item.text().replaceBefore(")","").replace(") ","")
+                episodenum++
                 episodesData.add(
                     Episode(
                         item.attr("href").replace("/server/","/files/"),
-                        episodeName
+                        episodeName,
+                        1,
+                        episodenum
                     )
                 )
             }
