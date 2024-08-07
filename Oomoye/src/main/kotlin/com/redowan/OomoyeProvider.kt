@@ -111,7 +111,7 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
                 )
             }
         }
-        return newTvSeriesLoadResponse(title, url, TvType.Movie, episodesData) {
+        return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
             this.posterUrl = doc.getElementsByClass("posterss").attr("src")
             this.year = year
             this.plot = doc.getElementsByClass("description").text()
