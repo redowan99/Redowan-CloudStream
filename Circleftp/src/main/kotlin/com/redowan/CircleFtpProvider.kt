@@ -116,7 +116,6 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
                     "720p" in check -> SearchQuality.HD
                     else -> null
                 }
-                this.quality = quality
             }
         }
         return null
@@ -145,7 +144,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val jsonString: String? = getJson(url.replace("http://15.1.1.50/content/","$mainUrl:5000/api/posts/"))
+        val jsonString: String? = getJson(url.replace("/content/",":5000/api/posts/"))
         val gson = Gson()
         val type = object : TypeToken<Data>() {}.type
         val loadData = gson.fromJson<Data>(jsonString, type)
@@ -181,7 +180,6 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
                     this.posterUrl = poster
                     this.year = year
                     this.plot = description
-                    this.duration = duration
                 }
             }
 
