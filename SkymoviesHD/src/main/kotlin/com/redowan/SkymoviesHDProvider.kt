@@ -16,7 +16,15 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.nicehttp.Requests
 import org.jsoup.nodes.Element
 
-
+import com.lagradost.cloudstreamtest.ProviderTester
+suspend fun main() {
+    val providerTester = ProviderTester(SkymoviesHDProvider())
+    //providerTester.testLoad("https://skymovieshd.diy/movie/Haseen-Dillruba-(2021)-Hindi-720p-HEVC-NF-HDRip-x265-AAC-ESubs-Full-Bollywood-Movie-[700MB].html")
+    //providerTester.testMainPage()
+    providerTester.testAll()
+    //providerTester.testLoadLinks("https://howblogs.xyz/bde88c")
+    //providerTester.testSearch("guns akimbo")
+}
 
 class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://skymovieshd.diy"
