@@ -1,6 +1,5 @@
 package com.redowan
 
-import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
@@ -11,7 +10,7 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
-import com.lagradost.cloudstream3.newTvSeriesLoadResponse
+import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.nicehttp.Requests
@@ -27,7 +26,7 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
 
     // enable this when your provider has a main page
     override val hasMainPage = true
-    override val hasDownloadSupport = false
+    override val hasDownloadSupport = true
     override val hasQuickSearch = false
 
 
@@ -49,7 +48,7 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
 
     override suspend fun getMainPage(
         page: Int,
-        request : MainPageRequest
+        request: MainPageRequest
     ): HomePageResponse {
         val requests = Requests()
         val doc = requests.get("$mainUrl/category/${request.data}.html?page=$page").document
@@ -94,24 +93,8 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
         val requests = Requests()
         val doc = requests.get(url).document
         val title = doc.selectXpath("/html/body/div[7]/div").text()
-        val year = title.replaceBefore("(","").replace("(","").replace(")","").toIntOrNull()
-        val episodesData = mutableListOf<Episode>()
-        var episodenum = 0
-        doc.select("a").forEach{item ->
-            if ("https://www.oomoye.co/server/" in item.attr("href")){
-                val episodeName = item.text().replaceBefore(")","").replace(") ","")
-                episodenum++
-                episodesData.add(
-                    Episode(
-                        item.attr("href").replace("/server/","/files/"),
-                        episodeName,
-                        1,
-                        episodenum
-                    )
-                )
-            }
-        }
-        return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
+        val year = "(?<=\\()\\d{4}(?=\\))".toRegex().find(title)?.value?.toIntOrNull()
+        return newMovieLoadResponse(title, url, TvType.Movie, url) {
             this.posterUrl = doc.getElementsByClass("posterss").attr("src")
             this.year = year
             this.plot = doc.getElementsByClass("description").text()
@@ -127,32 +110,24 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
     ): Boolean {
         val requests = Requests()
         val doc = requests.get(data).document
-        doc.getElementsByClass("fastdl").forEach{item ->
-            if ("Start Download from Server 1" in item.text()) {
-                callback.invoke(
-                    ExtractorLink(
-                        this.name,
-                        "Cloudflare",
-                        url = item.select("a").attr("href"),
-                        data,
-                        quality = 0,
-                        isM3u8 = false,
-                        isDash = false
+        doc.select("a").forEach { item ->
+            if ("https://www.oomoye.co/server/" in item.attr("href")) {
+                var quality = "\\d{3,4}(?=p)".toRegex().find(item.text())?.value?.toIntOrNull()
+                if (quality == null) quality = 720
+                val links = requests.get(item.attr("href").replace("/server/", "/files/"))
+                    .document.select("div.fastdl:nth-child(14) > a:nth-child(1)").attr("href")
+                if (links.isNotEmpty())
+                    callback.invoke(
+                        ExtractorLink(
+                            this.name,
+                            "pixeldrain - $quality",
+                            url = links,
+                            data,
+                            quality = quality,
+                            isM3u8 = false,
+                            isDash = false
+                        )
                     )
-                )
-            }
-            else if ("Start Download from Server 2" in item.text()) {
-                callback.invoke(
-                    ExtractorLink(
-                        this.name,
-                        "pixeldrain",
-                        url = item.select("a").attr("href"),
-                        data,
-                        quality = 0,
-                        isM3u8 = false,
-                        isDash = false
-                    )
-                )
             }
         }
         return true
