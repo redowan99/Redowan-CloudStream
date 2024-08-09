@@ -20,9 +20,17 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstreamtest.ProviderTester
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
+suspend fun main() {
+    val providerTester = ProviderTester(CircleFtpProvider())
+    //providerTester.testLoad("http://15.1.1.50/content/99941")
+    //providerTester.testMainPage()
+    providerTester.testAll()
+    //providerTester.testLoadLinks("https://www.filmyzilla.com.ly/downloads/26078/6/server_3/")
+}
 
 class CircleFtpProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "http://15.1.1.50"
