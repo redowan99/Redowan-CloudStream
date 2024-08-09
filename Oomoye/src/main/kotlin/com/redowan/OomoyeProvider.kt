@@ -139,6 +139,4 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
         }
         return true
     }
-
-
 }
