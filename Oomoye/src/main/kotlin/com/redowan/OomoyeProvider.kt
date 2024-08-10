@@ -17,7 +17,7 @@ import com.lagradost.nicehttp.Requests
 import org.jsoup.nodes.Element
 
 class OomoyeProvider : MainAPI() { // all providers must be an instance of MainAPI
-    override var mainUrl = "https://www.oomoye.co"
+    override var mainUrl = "https://www.oomoye.info"
     override var name = "Oomoye"
     //override var lang = "bn"
 
@@ -109,7 +109,7 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
         val requests = Requests()
         val doc = requests.get(data).document
         doc.select("a").forEach { item ->
-            if ("https://www.oomoye.co/server/" in item.attr("href")) {
+            if ("$mainUrl/server/" in item.attr("href")) {
                 var quality = "\\d{3,4}(?=p)".toRegex().find(item.text())?.value?.toIntOrNull()
                 if (quality == null) quality = 720
                 val links = requests.get(item.attr("href").replace("/server/", "/files/"))
