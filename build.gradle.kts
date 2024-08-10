@@ -41,11 +41,11 @@ subprojects {
     }
 
     android {
-        compileSdkVersion(30)
+        compileSdkVersion(34)
 
         defaultConfig {
             minSdk = 21
-            targetSdk = 30
+            targetSdk = 33
         }
 
         compileOptions {
@@ -82,7 +82,7 @@ subprojects {
             apk("com.lagradost:cloudstream3:pre-release")
         } else {
             // For running locally
-            implementation ("com.github.Blatzar:CloudstreamApi:0.1.6")
+            implementation ("com.github.Blatzar:CloudstreamApi:0.1.7")
         }
 
         // these dependencies can include any of those which are added by the app,
