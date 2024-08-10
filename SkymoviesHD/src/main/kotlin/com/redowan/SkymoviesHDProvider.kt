@@ -86,12 +86,14 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         val url = mainUrl + post.select("a").attr("href")
         var title = post.text()
         val size = "\\[\\d(.*?)B]".toRegex().find(title)?.value
-        val newTitle = size?.let { post.text().replace(it, "") }
-        title = "$size $newTitle"
-        val requests = Requests()
-        val doc = requests.get(url).document
+        if (size!=null){
+            val newTitle = title.replace(size, "")
+            title = "$size $newTitle"
+        }
+        //val requests = Requests()
+        //val doc = requests.get(url).document
         return newTvSeriesSearchResponse(title, url, TvType.Movie) {
-            this.posterUrl = doc.select(".movielist > img:nth-child(1)").attr("src")
+            //this.posterUrl = doc.select(".movielist > img:nth-child(1)").attr("src")
         }
     }
 
