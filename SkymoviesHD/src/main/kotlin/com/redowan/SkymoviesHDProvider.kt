@@ -80,10 +80,12 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
             val newTitle = title.replace(size, "")
             title = "$size $newTitle"
         }
-        //val requests = Requests()
-        //val doc = requests.get(url).document
+        val requests = Requests()
+        val doc = requests.get(url).document
         return newTvSeriesSearchResponse(title, url, TvType.Movie) {
-            //this.posterUrl = doc.select(".movielist > img:nth-child(1)").attr("src")
+            this.posterUrl = "https://resize.sardo.work/?imageUrl=" +
+                    doc.select(".movielist > img:nth-child(1)").attr("src") +
+                    "&width=125&height=187&quality=95"
         }
     }
 
