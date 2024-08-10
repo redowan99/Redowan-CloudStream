@@ -8,11 +8,13 @@ import com.lagradost.cloudstream3.MainPageRequest
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
+import com.lagradost.cloudstream3.apmap
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.nicehttp.Requests
 import org.jsoup.nodes.Element
 
@@ -21,8 +23,8 @@ suspend fun main() {
     val providerTester = ProviderTester(SkymoviesHDProvider())
     //providerTester.testLoad("https://skymovieshd.diy/movie/Haseen-Dillruba-(2021)-Hindi-720p-HEVC-NF-HDRip-x265-AAC-ESubs-Full-Bollywood-Movie-[700MB].html")
     //providerTester.testMainPage()
-    providerTester.testAll()
-    //providerTester.testLoadLinks("https://howblogs.xyz/bde88c")
+    //providerTester.testAll()
+    providerTester.testLoadLinks("https://howblogs.xyz/bde88c")
     //providerTester.testSearch("guns akimbo")
 }
 
@@ -125,27 +127,76 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         val requests = Requests()
-        var doc = requests.get(data).document
-        val url = doc.getElementsContainingText("https://fastxyz.in/").last()?.select("a")?.attr("href")
+        val doc = requests.get(data).document
+        val url = doc.getElementsContainingText("https://hubcloud.").last()?.select("a")?.attr("href")
         if (url != null) {
-            doc = requests.get(url).document
-            var server = 0
-            doc.getElementsByClass("flb_download_buttons").mapNotNull {download ->
-                server++
+            hubCloud(url,callback)
+        }
+        return true
+    }
+    private suspend fun hubCloud(
+        data: String,
+        callback: (ExtractorLink) -> Unit){
+        val app = Requests()
+        val doc = app.get(data.replace(".lol",".club")).document
+        val gamerLink: String
+
+        if (data.contains("drive")) {
+            val scriptTag = doc.selectFirst("script:containsData(url)")?.toString()
+            gamerLink =
+                scriptTag?.let { Regex("var url = '([^']*)'").find(it)?.groupValues?.get(1) }
+                    ?: ""
+        } else {
+            gamerLink = doc.selectFirst("div.vd > center > a")?.attr("href") ?: ""
+        }
+
+        val document = app.get(gamerLink).document
+
+        val size = document.selectFirst("i#size")?.text()
+        val div = document.selectFirst("div.card-body")
+        val header = document.selectFirst("div.card-header")?.text()
+        div?.select("a")?.apmap {
+            val link = it.attr("href")
+            val text = it.text()
+            if (link.contains("pixeldra")) {
+                val pixeldrainLink = link.replace("/u/", "/api/file/")
                 callback.invoke(
                     ExtractorLink(
-                        mainUrl,
-                        "Server$server",
-                        url = download.select("a").attr("href"),
-                        data,
-                        quality = 0,
-                        isM3u8 = false,
-                        isDash = false
+                        "Pixeldrain",
+                        "Pixeldrain $size",
+                        pixeldrainLink,
+                        link,
+                        getIndexQuality(header),
+                    )
+                )
+            } else if (text.contains("Download [Server : 10Gbps]")) {
+                val response = app.get(link, allowRedirects = false)
+                val downloadLink =
+                    response.headers["location"].toString().split("link=").getOrNull(1) ?: link
+                callback.invoke(
+                    ExtractorLink(
+                        "Hub-Cloud[Download]",
+                        "Hub-Cloud[Download] $size",
+                        downloadLink,
+                        "",
+                        getIndexQuality(header),
+                    )
+                )
+            } else if (link.contains(".dev")) {
+                callback.invoke(
+                    ExtractorLink(
+                        "Hub-Cloud",
+                        "Hub-Cloud $size",
+                        link,
+                        "",
+                        getIndexQuality(header),
                     )
                 )
             }
         }
-        return true
     }
-
+    private fun getIndexQuality(str: String?): Int {
+        return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
+            ?: Qualities.Unknown.value
+    }
 }
