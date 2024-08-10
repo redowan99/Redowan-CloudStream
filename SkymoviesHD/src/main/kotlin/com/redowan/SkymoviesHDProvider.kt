@@ -82,17 +82,16 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         return newHomePageResponse(request.name, home, false)
     }
 
-    private fun toResult(post: Element): SearchResponse {
+    private suspend fun toResult(post: Element): SearchResponse {
         val url = mainUrl + post.select("a").attr("href")
-        //val imageIdPattern = "\\d+".toRegex()
-        //val imageId = imageIdPattern.find(url)?.value
-
         var title = post.text()
         val size = "\\[\\d(.*?)B]".toRegex().find(title)?.value
         val newTitle = size?.let { post.text().replace(it, "") }
         title = "$size $newTitle"
+        val requests = Requests()
+        val doc = requests.get(url).document
         return newTvSeriesSearchResponse(title, url, TvType.Movie) {
-            //this.posterUrl = "$mainUrl/cover/$imageId.png"
+            this.posterUrl = doc.select(".movielist > img:nth-child(1)").attr("src")
         }
     }
 
@@ -175,8 +174,8 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
                     response.headers["location"].toString().split("link=").getOrNull(1) ?: link
                 callback.invoke(
                     ExtractorLink(
-                        "Hub-Cloud[Download]",
-                        "Hub-Cloud[Download] $size",
+                        "Google[Download]",
+                        "Google[Download] $size",
                         downloadLink,
                         "",
                         getIndexQuality(header),
@@ -185,8 +184,8 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
             } else if (link.contains(".dev")) {
                 callback.invoke(
                     ExtractorLink(
-                        "Hub-Cloud",
-                        "Hub-Cloud $size",
+                        "Cloudflare",
+                        "Cloudflare $size",
                         link,
                         "",
                         getIndexQuality(header),
