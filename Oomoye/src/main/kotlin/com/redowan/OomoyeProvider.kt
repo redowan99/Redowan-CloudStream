@@ -16,15 +16,6 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.nicehttp.Requests
 import org.jsoup.nodes.Element
 
-import com.lagradost.cloudstreamtest.ProviderTester
-suspend fun main() {
-    val providerTester = ProviderTester(OomoyeProvider())
-    //providerTester.testLoad("https://www.oomoye.co/movie/44186/Auron-mein-kahan-dum-tha-2024.html")
-    //providerTester.testMainPage()
-    //providerTester.testAll()
-    providerTester.testLoadLinks("https://www.oomoye.co/movie/44270/Ghudchadi-2024.html")
-}
-
 class OomoyeProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://www.oomoye.co"
     override var name = "Oomoye"
