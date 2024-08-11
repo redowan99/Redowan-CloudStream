@@ -108,25 +108,37 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
     ): Boolean {
         val requests = Requests()
         val doc = requests.get(data).document
-        doc.select("a").forEach { item ->
-            if ("$mainUrl/server/" in item.attr("href")) {
-                var quality = "\\d{3,4}(?=p)".toRegex().find(item.text())?.value?.toIntOrNull()
-                if (quality == null) quality = 720
-                val links = requests.get(item.attr("href").replace("/server/", "/files/"))
-                    .document.select("div.fastdl:nth-child(14) > a:nth-child(1)").attr("href")
-                if (links.isNotEmpty())
-                    callback.invoke(
-                        ExtractorLink(
-                            this.name,
-                            "pixeldrain - ${quality}P",
-                            url = links,
-                            data,
-                            quality = quality,
-                            isM3u8 = false,
-                            isDash = false
-                        )
+        doc.select("a[href*=$mainUrl/server/]").forEach { item ->
+            var quality = "\\d{3,4}(?=p)".toRegex().find(item.text())?.value?.toIntOrNull()
+            if (quality == null) quality = 720
+            val links = requests.get(item.attr("href").replace("/server/", "/files/"))
+            var link = links.document.select("a[href*=pixeldra.in]").attr("href")
+            if (link.isNotEmpty())
+                callback.invoke(
+                    ExtractorLink(
+                        this.name,
+                        "pixeldrain - ${quality}P",
+                        url = link,
+                        data,
+                        quality = quality,
+                        isM3u8 = false,
+                        isDash = false
                     )
-            }
+                )
+            link=""
+            link = links.document.select("a[href*=$mainUrl/download/]").attr("href")
+            if (link.isNotEmpty())
+                callback.invoke(
+                    ExtractorLink(
+                        this.name,
+                        "CloudFlare - ${quality}P",
+                        url = link,
+                        data,
+                        quality = quality,
+                        isM3u8 = false,
+                        isDash = false
+                    )
+                )
         }
         return true
     }
