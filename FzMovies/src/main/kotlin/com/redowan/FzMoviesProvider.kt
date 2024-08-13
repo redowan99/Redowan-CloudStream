@@ -120,9 +120,9 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
             this.year = year
             this.plot = doc.select(".moviedesc > span:nth-child(5) > textcolor1:nth-child(1)").text()
             this.duration = doc.select(".moviedesc > textcolor2:nth-child(7)")
-                .text().substringBefore(" ").toIntOrNull()?.times(60)
+                .text().substringBefore(" ").toIntOrNull()//?.times(60)
             this.rating = doc.select(".moviedesc > textcolor11:nth-child(27)")
-                .text().toFloatOrNull()?.times(1000.0)?.toInt()
+                .text().toFloatOrNull()?.times(100.0)?.toInt()
         }
     }
 
