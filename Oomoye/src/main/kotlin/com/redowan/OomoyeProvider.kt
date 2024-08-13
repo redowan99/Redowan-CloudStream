@@ -111,8 +111,8 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
         doc.select("a[href*=$mainUrl/server/]").forEach { item ->
             var quality = "\\d{3,4}(?=p)".toRegex().find(item.text())?.value?.toIntOrNull()
             if (quality == null) quality = 720
-            val links = requests.get(item.attr("href").replace("/server/", "/files/"))
-            var link = links.document.select("a[href*=pixeldra.in]").attr("href")
+            val links = requests.get(item.attr("href").replace("/server/", "/files/")).document
+            var link = links.select("a[href*=pixeldra.in]").attr("href")
             if (link.isNotEmpty())
                 callback.invoke(
                     ExtractorLink(
@@ -126,7 +126,7 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
                     )
                 )
             link=""
-            link = links.document.select("a[href*=$mainUrl/download/]").attr("href")
+            link = links.select("a[href*=$mainUrl/download/]").attr("href")
             if (link.isNotEmpty())
                 callback.invoke(
                     ExtractorLink(
