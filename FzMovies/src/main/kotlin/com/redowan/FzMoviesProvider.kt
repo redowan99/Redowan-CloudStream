@@ -113,7 +113,7 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
         val requests = Requests()
         val doc = requests.get(url).document
         val year = doc.select(".moviedesc > textcolor1:nth-child(9) > a:nth-child(1)").text().toIntOrNull()
-        val title = doc.select(".moviename > span:nth-child(1)").text() + year
+        val title = doc.select(".moviename > span:nth-child(1)").text() +" "+ year
         return newMovieLoadResponse(title, url, TvType.Movie,url) {
             this.posterUrl = mainUrl + doc.select(".moviedesc > span:nth-child(1) > img:nth-child(1)")
                 .attr("src")
@@ -149,7 +149,7 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
                 callback.invoke(
                     ExtractorLink(
                         this.name,
-                        "Server$server - ${quality}P",
+                        "Server$server",
                         downloadUrl,
                         this.mainUrl,
                         quality,

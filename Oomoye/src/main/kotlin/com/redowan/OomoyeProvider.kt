@@ -117,7 +117,7 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
                 callback.invoke(
                     ExtractorLink(
                         this.name,
-                        "pixeldrain - ${quality}P",
+                        "pixeldrain",
                         url = link,
                         data,
                         quality = quality,
@@ -131,7 +131,7 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
                 callback.invoke(
                     ExtractorLink(
                         this.name,
-                        "CloudFlare - ${quality}P",
+                        "CloudFlare",
                         url = link,
                         data,
                         quality = quality,
