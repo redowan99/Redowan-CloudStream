@@ -12,7 +12,7 @@ import com.lagradost.cloudstream3.apmap
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
-import com.lagradost.cloudstream3.newTvSeriesSearchResponse
+import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.nicehttp.Requests
@@ -82,7 +82,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         }
         val requests = Requests()
         val doc = requests.get(url).document
-        return newTvSeriesSearchResponse(title, url, TvType.Movie) {
+        return newMovieSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = doc.select(".movielist > img:nth-child(1)").attr("src")
         }
     }
