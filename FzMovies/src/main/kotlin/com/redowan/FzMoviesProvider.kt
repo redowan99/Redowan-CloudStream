@@ -68,7 +68,7 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
                 post.selectXpath("table/tbody/tr/td[2]/span/small[1]").text()
         val check = post.selectXpath("table/tbody/tr/td[2]/span/small[2]").text().lowercase()
         return newMovieSearchResponse(title, url, TvType.Movie) {
-            this.posterUrl = mainUrl + post.selectXpath("table/tbody/tr/td[1]/a")
+            this.posterUrl = mainUrl + post.selectXpath("table/tbody/tr/td[1]/a/img")
                 .attr("src")
             this.quality = when {
                 "webrip" in check -> SearchQuality.WebRip
