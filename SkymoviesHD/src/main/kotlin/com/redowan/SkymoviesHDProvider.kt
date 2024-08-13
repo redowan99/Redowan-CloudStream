@@ -119,8 +119,8 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
     ): Boolean {
         val requests = Requests()
         val doc = requests.get(data).document
-        val url = doc.getElementsContainingText("https://hubcloud.").last()?.select("a")?.attr("href")
-        if (url != null) {
+        val url = doc.select("a[href*=https://hubcloud.]").attr("href")
+        if (url.isNullOrEmpty().not()) {
             hubCloud(url,callback)
         }
         return true
