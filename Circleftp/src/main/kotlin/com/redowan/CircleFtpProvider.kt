@@ -24,7 +24,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 
 class CircleFtpProvider : MainAPI() { // all providers must be an instance of MainAPI
-    override var mainUrl = "http://15.1.1.50"
+    override var mainUrl = "http://new.circleftp.net"
     override var name = "Circle FTP"
     override val supportedTypes = setOf(
         TvType.Movie,
@@ -43,7 +43,9 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     // enable this when your provider has a main page
     override val hasMainPage = true
     override val hasDownloadSupport = true
-    override val hasQuickSearch = true
+    override val hasQuickSearch = false
+    override val hasChromecastSupport = true
+    override val instantLinkLoading= true
 
 
     override val mainPage = mainPageOf(
@@ -91,7 +93,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         if (post.type == "singleVideo" || post.type == "series"){
             return newMovieSearchResponse(post.title, "$mainUrl/content/${post.id}", TvType.Movie) {
                 this.posterUrl = "$mainUrl:5000/uploads/${post.imageSm}"
-                val check = (post.quality).toString().lowercase()
+                val check = post.title.lowercase()
                 this.quality = when {
                     " webrip " in check -> SearchQuality.WebRip
                     "web-dl" in check -> SearchQuality.WebRip
@@ -152,7 +154,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         val poster ="$mainUrl:5000/uploads/${loadData.image}"
         val description = loadData.metaData
         val year = loadData.year?.substring(0, 4)?.toInt()
-        val duration = getDurationFromString(loadData.watchTime?.replace("h", "hour")?.replace("m","min"))
+        val duration = getDurationFromString(loadData.watchTime/*?.replace("h", "hour")?.replace("m","min")*/)
         when (loadData.content) {
             is List<*> -> {
                 val episodesData = mutableListOf<Episode>()
@@ -223,12 +225,12 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val dataNew = linkToIp(data)
+        //val dataNew = linkToIp(data)
         callback.invoke(
             ExtractorLink(
             mainUrl,
             this.name,
-            url = dataNew,
+            url = data,
             mainUrl,
             quality = 1080,
             isM3u8 = false,
