@@ -25,6 +25,7 @@ import okhttp3.Request
 
 class CircleFtpProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "http://new.circleftp.net"
+    private val apiUrl = "https://new.circleftp.net:5000"
     override var name = "Circle FTP"
     override val supportedTypes = setOf(
         TvType.Movie,
@@ -66,7 +67,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         page: Int,
         request : MainPageRequest
     ): HomePageResponse {
-        val json: String? = getJson("$mainUrl:5000/api/posts?categoryExact=${request.data}&page=$page&order=desc&limit=10")
+        val json: String? = getJson("$apiUrl/api/posts?categoryExact=${request.data}&page=$page&order=desc&limit=10")
         val gson = Gson()
         val homeResponse = gson.fromJson(json, PageData::class.java)
         val home = homeResponse.posts.mapNotNull { post ->
@@ -126,7 +127,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
 
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val jsonString: String? = getJson("$mainUrl:5000/api/posts?searchTerm=$query&order=desc")
+        val jsonString: String? = getJson("$apiUrl/api/posts?searchTerm=$query&order=desc")
         val gson = Gson()
         val searchResponse = gson.fromJson<Map<String, List<Posts>>>(jsonString,
             object : TypeToken<Map<String, List<Posts>>>() {}.type)
@@ -145,7 +146,7 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val jsonString: String? = getJson(url.replace("/content/",":5000/api/posts/"))
+        val jsonString = getJson(url.replace("$mainUrl/content/","$apiUrl/api/posts/"))
         val gson = Gson()
         val type = object : TypeToken<Data>() {}.type
         val loadData = gson.fromJson<Data>(jsonString, type)
