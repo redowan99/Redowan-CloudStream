@@ -1,9 +1,9 @@
 package com.redowan
 
 
-import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
-import com.google.gson.reflect.TypeToken
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
@@ -20,12 +20,15 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import com.lagradost.nicehttp.Requests
+import com.lagradost.nicehttp.ResponseParser
+import kotlin.reflect.KClass
 
-class CircleFtpProvider : MainAPI() { // all providers must be an instance of MainAPI
-    override var mainUrl = "http://new.circleftp.net"
-    private val apiUrl = "https://new.circleftp.net:5000"
+class CircleFtpProvider : MainAPI() {
+//    override var mainUrl = "http://new.circleftp.net"
+//    private val apiUrl = "https://new.circleftp.net:5000"
+    override var mainUrl = "http://15.1.1.50"
+    private val apiUrl = "https://15.1.1.50:5000"
     override var name = "Circle FTP"
     override val supportedTypes = setOf(
         TvType.Movie,
@@ -41,12 +44,11 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
     override var lang = "bn"
 
 
-    // enable this when your provider has a main page
     override val hasMainPage = true
     override val hasDownloadSupport = true
     override val hasQuickSearch = false
     override val hasChromecastSupport = true
-    override val instantLinkLoading= true
+    override val instantLinkLoading = true
 
 
     override val mainPage = mainPageOf(
@@ -65,33 +67,21 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
 
     override suspend fun getMainPage(
         page: Int,
-        request : MainPageRequest
+        request: MainPageRequest
     ): HomePageResponse {
-        val json: String? = getJson("$apiUrl/api/posts?categoryExact=${request.data}&page=$page&order=desc&limit=10")
-        val gson = Gson()
-        val homeResponse = gson.fromJson(json, PageData::class.java)
-        val home = homeResponse.posts.mapNotNull { post ->
+        val requests = Requests(responseParser = parser)
+        val json = requests.get(
+            "$apiUrl/api/posts?categoryExact=${request.data}&page=$page&order=desc&limit=10",
+            verify = false
+        ).parsed<PageData>()
+        val home = json.posts.mapNotNull { post ->
             toSearchResult(post)
         }
         return newHomePageResponse(request.name, home, true)
     }
 
-    private fun getJson(url: String): String? {
-        val client = OkHttpClient()
-        val request = Request.Builder()
-            .url(url)
-            .build()
-        val response = client.newCall(request).execute()
-        return if (response.isSuccessful) {
-            response.body.string()
-        } else {
-            null
-        }
-    }
-
-
-    private fun toSearchResult(post: Posts): SearchResponse? {
-        if (post.type == "singleVideo" || post.type == "series"){
+    private fun toSearchResult(post: Post): SearchResponse? {
+        if (post.type == "singleVideo" || post.type == "series") {
             return newMovieSearchResponse(post.title, "$mainUrl/content/${post.id}", TvType.Movie) {
                 this.posterUrl = "$mainUrl:5000/uploads/${post.imageSm}"
                 val check = post.title.lowercase()
@@ -127,95 +117,103 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
 
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val jsonString: String? = getJson("$apiUrl/api/posts?searchTerm=$query&order=desc")
-        val gson = Gson()
-        val searchResponse = gson.fromJson<Map<String, List<Posts>>>(jsonString,
-            object : TypeToken<Map<String, List<Posts>>>() {}.type)
-        return searchResponse["posts"]?.mapNotNull { post ->
+        val requests = Requests(responseParser = parser)
+        val searchResponse = requests.get(
+            "$apiUrl/api/posts?searchTerm=$query&order=desc",
+            verify = false
+        ).parsed<PageData>()
+        return searchResponse.posts.mapNotNull { post ->
             toSearchResult(post)
-        }?: listOf()
+        }
     }
+    
+    private val parser = object : ResponseParser {
+        val mapper: ObjectMapper = jacksonObjectMapper().configure(
+            DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+            false
+        )
 
-    private fun extractLinksAndNames(input: String): List<Pair<String, String>> {
-        val regex = "\\{(.*?), (.*?)\\}"
-        val matches = Regex(regex).findAll(input)
+        override fun <T : Any> parse(text: String, kClass: KClass<T>): T {
+            return mapper.readValue(text, kClass.java)
+        }
 
-        return matches.map { match ->
-            Pair(match.groupValues[1].replace("link=", ""), match.groupValues[2].replace("title=", ""))
-        }.toList()
+        override fun <T : Any> parseSafe(text: String, kClass: KClass<T>): T? {
+            return try {
+                mapper.readValue(text, kClass.java)
+            } catch (e: Exception) {
+                null
+            }
+        }
+
+        override fun writeValueAsString(obj: Any): String {
+            return mapper.writeValueAsString(obj)
+        }
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val jsonString = getJson(url.replace("$mainUrl/content/","$apiUrl/api/posts/"))
-        val gson = Gson()
-        val type = object : TypeToken<Data>() {}.type
-        val loadData = gson.fromJson<Data>(jsonString, type)
-
-        val title = loadData.title
-        val poster ="$mainUrl:5000/uploads/${loadData.image}"
+        val requests = Requests(responseParser = parser)
+        val json =
+            requests.get(url.replace("$mainUrl/content/", "$apiUrl/api/posts/"), verify = false)
+        val loadData = json.parsed<Data>()
+        val title = loadData.name
+        val poster = "$mainUrl:5000/uploads/${loadData.image}"
         val description = loadData.metaData
         val year = loadData.year?.substring(0, 4)?.toInt()
-        val duration = getDurationFromString(loadData.watchTime/*?.replace("h", "hour")?.replace("m","min")*/)
-        when (loadData.content) {
-            is List<*> -> {
-                val episodesData = mutableListOf<Episode>()
-                var seasonNum = 0
-                loadData.content.forEach { season ->
-                    seasonNum++
-                    val episodesList = season as Map<*, *>
-                    val linksAndNames = extractLinksAndNames(episodesList["episodes"].toString())
-                    var episodeNum = 0
-                    for (pair in linksAndNames) {
-                        episodeNum ++
-                        val episodeUrl = pair.first
-                        val episodeName = pair.second
-                        episodesData.add(Episode(
-                                episodeUrl,
-                                episodeName,
-                                seasonNum,
-                                episodeNum
-                            )
+        if (loadData.type == "singleVideo") {
+            val movieUrl = json.parsed<Movies>()
+            val duration =
+                getDurationFromString(loadData.watchTime/*?.replace("h", "hour")?.replace("m","min")*/)
+            return newMovieLoadResponse(title, url, TvType.Movie, movieUrl.content) {
+                this.posterUrl = poster
+                this.year = year
+                this.plot = description
+                this.duration = duration
+            }
+        } else {
+            val tvData = json.parsed<TvSeries>()
+            val episodesData = mutableListOf<Episode>()
+            var seasonNum = 0
+            tvData.content.forEach { season ->
+                seasonNum++
+                var episodeNum = 0
+                season.episodes.forEach() {
+                    episodeNum++
+                    episodesData.add(
+                        Episode(
+                            it.link,
+                            name = null,
+                            seasonNum,
+                            episodeNum
                         )
-                    }
-                }
-                return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
-                    this.posterUrl = poster
-                    this.year = year
-                    this.plot = description
+                    )
                 }
             }
-
-
-            else -> {
-                val dataUrl = loadData.content
-                return newMovieLoadResponse(title, url, TvType.Movie, dataUrl) {
-                    this.posterUrl = poster
-                    this.year = year
-                    this.plot = description
-                    this.duration = duration
-                } 
+            return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
+                this.posterUrl = poster
+                this.year = year
+                this.plot = description
             }
         }
     }
 
     private fun linkToIp(data: String): String {
-        return when{
-            "index.circleftp.net" in data -> data.replace("index.circleftp.net","15.1.4.2")
-            "index2.circleftp.net" in data -> data.replace("index2.circleftp.net","15.1.4.5")
-            "index1.circleftp.net" in data -> data.replace("index1.circleftp.net","15.1.4.9")
-            "ftp3.circleftp.net" in data -> data.replace("ftp3.circleftp.net","15.1.4.7")
-            "ftp4.circleftp.net" in data -> data.replace("ftp4.circleftp.net","15.1.1.5")
-            "ftp5.circleftp.net" in data -> data.replace("ftp5.circleftp.net","15.1.1.15")
-            "ftp6.circleftp.net" in data -> data.replace("ftp6.circleftp.net","15.1.2.3")
-            "ftp7.circleftp.net" in data -> data.replace("ftp7.circleftp.net","15.1.4.8")
-            "ftp8.circleftp.net" in data -> data.replace("ftp8.circleftp.net","15.1.2.2")
-            "ftp9.circleftp.net" in data -> data.replace("ftp9.circleftp.net","15.1.2.12")
-            "ftp10.circleftp.net" in data -> data.replace("ftp10.circleftp.net","15.1.4.3")
-            "ftp11.circleftp.net" in data -> data.replace("ftp11.circleftp.net","15.1.2.6")
-            "ftp12.circleftp.net" in data -> data.replace("ftp12.circleftp.net","15.1.2.1")
-            "ftp13.circleftp.net" in data -> data.replace("ftp13.circleftp.net","15.1.1.18")
-            "ftp15.circleftp.net" in data -> data.replace("ftp15.circleftp.net","15.1.4.12")
-            "ftp17.circleftp.net" in data -> data.replace("ftp17.circleftp.net","15.1.3.8")
+        return when {
+            "index.circleftp.net" in data -> data.replace("index.circleftp.net", "15.1.4.2")
+            "index2.circleftp.net" in data -> data.replace("index2.circleftp.net", "15.1.4.5")
+            "index1.circleftp.net" in data -> data.replace("index1.circleftp.net", "15.1.4.9")
+            "ftp3.circleftp.net" in data -> data.replace("ftp3.circleftp.net", "15.1.4.7")
+            "ftp4.circleftp.net" in data -> data.replace("ftp4.circleftp.net", "15.1.1.5")
+            "ftp5.circleftp.net" in data -> data.replace("ftp5.circleftp.net", "15.1.1.15")
+            "ftp6.circleftp.net" in data -> data.replace("ftp6.circleftp.net", "15.1.2.3")
+            "ftp7.circleftp.net" in data -> data.replace("ftp7.circleftp.net", "15.1.4.8")
+            "ftp8.circleftp.net" in data -> data.replace("ftp8.circleftp.net", "15.1.2.2")
+            "ftp9.circleftp.net" in data -> data.replace("ftp9.circleftp.net", "15.1.2.12")
+            "ftp10.circleftp.net" in data -> data.replace("ftp10.circleftp.net", "15.1.4.3")
+            "ftp11.circleftp.net" in data -> data.replace("ftp11.circleftp.net", "15.1.2.6")
+            "ftp12.circleftp.net" in data -> data.replace("ftp12.circleftp.net", "15.1.2.1")
+            "ftp13.circleftp.net" in data -> data.replace("ftp13.circleftp.net", "15.1.1.18")
+            "ftp15.circleftp.net" in data -> data.replace("ftp15.circleftp.net", "15.1.4.12")
+            "ftp17.circleftp.net" in data -> data.replace("ftp17.circleftp.net", "15.1.3.8")
             else -> data
         }
     }
@@ -226,51 +224,61 @@ class CircleFtpProvider : MainAPI() { // all providers must be an instance of Ma
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        //val dataNew = linkToIp(data)
+        val dataNew = linkToIp(data)
         callback.invoke(
             ExtractorLink(
-            mainUrl,
-            this.name,
-            url = data,
-            mainUrl,
-            quality = 1080,
-            isM3u8 = false,
-            isDash = false
+                mainUrl,
+                this.name,
+                url = dataNew,
+                mainUrl,
+                quality = 1080,
+                isM3u8 = false,
+                isDash = false
             )
         )
         return true
     }
 
-
-    data class PageData (
-
-        @SerializedName("posts"      ) var posts      : ArrayList<Posts> = arrayListOf(),
-
+    data class PageData(
+        val posts: List<Post>
     )
-    data class Posts (
 
-        @SerializedName("id"         ) var id         : String,
-        @SerializedName("title"      ) var title      : String,
-        @SerializedName("type"       ) var type       : String?               = null,
-        @SerializedName("image"      ) var image      : String?               = null,
-        @SerializedName("imageSm"    ) var imageSm    : String?               = null,
-        @SerializedName("metaData"   ) var metaData   : String?               = null,
-        @SerializedName("name"       ) var name       : String?               = null,
-        @SerializedName("quality"    ) var quality    : String?               = null,
-        @SerializedName("watchTime"  ) var watchTime  : String?               = null,
-        @SerializedName("year"       ) var year       : String?               = null,
-
+    data class Post(
+        val id: Int,
+        val type: String,
+        val imageSm: String,
+        val title: String,
+        val name: String?,
     )
 
     data class Data(
+        val type: String,
+        val imageSm: String,
         val title: String,
-        val type: String?,
-        val image: String?,
+        val image: String,
         val metaData: String?,
-        val content: Any,
-        val name: String?,
+        val name: String,
         val quality: String?,
-        val watchTime: String?,
-        val year: String?
+        val year: String?,
+        val watchTime: String?
     )
+
+    data class TvSeries(
+        val content: List<Content>,
+    )
+
+    data class Content(
+        val episodes: List<EpisodeData>,
+        val seasonName: String
+    )
+
+    data class EpisodeData(
+        val link: String,
+        val title: String
+    )
+
+    data class Movies(
+        val content: String?
+    )
+
 }
