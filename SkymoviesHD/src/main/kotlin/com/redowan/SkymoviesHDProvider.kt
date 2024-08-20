@@ -72,18 +72,18 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         return newHomePageResponse(request.name, home, false)
     }
 
-    private suspend fun toResult(post: Element): SearchResponse {
-        val url = mainUrl + post.select("a").attr("href")
+    private fun toResult(post: Element): SearchResponse {
         var title = post.text()
         val size = "\\[\\d(.*?)B]".toRegex().find(title)?.value
         if (size!=null){
             val newTitle = title.replace(size, "")
             title = "$size $newTitle"
         }
-        val requests = Requests()
-        val doc = requests.get(url).document
+        val url = mainUrl + post.select("a").attr("href")
+        /*val requests = Requests()
+        val doc = requests.get(url).document*/
         return newMovieSearchResponse(title, url, TvType.Movie) {
-            this.posterUrl = doc.select(".movielist > img:nth-child(1)").attr("src")
+            //this.posterUrl = doc.select(".movielist > img:nth-child(1)").attr("src")
         }
     }
 
