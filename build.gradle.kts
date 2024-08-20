@@ -77,6 +77,7 @@ subprojects {
         implementation(kotlin("stdlib")) // adds standard kotlin features, like listOf, mapOf etc
 
         implementation("com.github.Blatzar:NiceHttp:0.4.11") // http library
+        implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2")
     }
 }
 
