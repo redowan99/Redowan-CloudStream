@@ -29,7 +29,8 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
     override var mainUrl = "https://fzmovies.net"
     override var name = "FzMovies"
     override val supportedTypes = setOf(
-        TvType.Movie
+        TvType.Movie,
+        TvType.AnimeMovie
     )
 
 
@@ -97,7 +98,7 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
         val mediaType = "application/x-www-form-urlencoded".toMediaType()
         val body = "searchname=$query&Search=Search&searchby=Name&category=All".toRequestBody(mediaType)
         val request = Request.Builder()
-            .url("https://fzmovies.net/csearch.php")
+            .url("$mainUrl/csearch.php")
             .post(body)
             .addHeader("Content-Type", "application/x-www-form-urlencoded")
             .build()
