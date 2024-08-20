@@ -102,7 +102,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
     override suspend fun load(url: String): LoadResponse {
         val requests = Requests()
         val doc = requests.get(url).document
-        val title = doc.select("div.Robiul").first().text()
+        val title = doc.select("div.Robiul").first()!!.text()
         val year = "(?<=\\()\\d{4}(?=\\))".toRegex().find(title)?.value?.toIntOrNull()
         return newMovieLoadResponse(title, url, TvType.Movie,doc.select(".Bolly > a:nth-child(3)").attr("href")) {
             this.posterUrl = doc.select(".movielist > img:nth-child(1)").attr("src")
