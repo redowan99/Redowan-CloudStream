@@ -126,7 +126,7 @@ class CircleFtpProvider : MainAPI() {
             toSearchResult(post)
         }
     }
-    
+
     private val parser = object : ResponseParser {
         val mapper: ObjectMapper = jacksonObjectMapper().configure(
             DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
@@ -176,7 +176,7 @@ class CircleFtpProvider : MainAPI() {
             tvData.content.forEach { season ->
                 seasonNum++
                 var episodeNum = 0
-                season.episodes.forEach() {
+                season.episodes.forEach {
                     episodeNum++
                     episodesData.add(
                         Episode(

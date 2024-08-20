@@ -125,7 +125,6 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
                         isDash = false
                     )
                 )
-            link=""
             link = links.select("a[href*=$mainUrl/download/]").attr("href")
             if (link.isNotEmpty())
                 callback.invoke(
