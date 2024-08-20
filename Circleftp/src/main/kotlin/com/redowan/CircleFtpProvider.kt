@@ -83,7 +83,7 @@ class CircleFtpProvider : MainAPI() {
     private fun toSearchResult(post: Post): SearchResponse? {
         if (post.type == "singleVideo" || post.type == "series") {
             return newMovieSearchResponse(post.title, "$mainUrl/content/${post.id}", TvType.Movie) {
-                this.posterUrl = "$mainUrl:5000/uploads/${post.imageSm}"
+                this.posterUrl = "$apiUrl/uploads/${post.imageSm}"
                 val check = post.title.lowercase()
                 this.quality = when {
                     " webrip " in check -> SearchQuality.WebRip
@@ -156,7 +156,7 @@ class CircleFtpProvider : MainAPI() {
             requests.get(url.replace("$mainUrl/content/", "$apiUrl/api/posts/"), verify = false)
         val loadData = json.parsed<Data>()
         val title = loadData.name
-        val poster = "$mainUrl:5000/uploads/${loadData.image}"
+        val poster = "$apiUrl/uploads/${loadData.image}"
         val description = loadData.metaData
         val year = loadData.year?.substring(0, 4)?.toInt()
         if (loadData.type == "singleVideo") {
