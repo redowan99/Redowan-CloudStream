@@ -155,7 +155,7 @@ class CircleFtpProvider : MainAPI() {
         val json =
             requests.get(url.replace("$mainUrl/content/", "$apiUrl/api/posts/"), verify = false)
         val loadData = json.parsed<Data>()
-        val title = loadData.name
+        val title = loadData.title
         val poster = "$apiUrl/uploads/${loadData.image}"
         val description = loadData.metaData
         val year = loadData.year?.substring(0, 4)?.toInt()
