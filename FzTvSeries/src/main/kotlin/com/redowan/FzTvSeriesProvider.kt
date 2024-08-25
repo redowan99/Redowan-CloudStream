@@ -39,7 +39,6 @@ class FzTvSeriesProvider : MainAPI() { // all providers must be an instance of M
         "freshseries.php?&pg=" to "Latest Series",
         "miniseries.php?&pg=" to "Top Rated Miniseries",
         "cartoon.php?&pg=" to "Cartoon/Anime"
-
     )
 
     override suspend fun getMainPage(
