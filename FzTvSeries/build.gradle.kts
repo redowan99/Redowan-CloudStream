@@ -1,11 +1,11 @@
 // use an integer for version numbers
-version = 7
+version = 1
 
 
 cloudstream {
     // All of these properties are optional, you can safely remove them
 
-    description = "Only movie provider"
+    description = "Only TvSeries provider"
     authors = listOf("Redowan")
 
     /**
@@ -21,10 +21,11 @@ cloudstream {
     // You can find a list of avaliable types here:
     // https://recloudstream.github.io/cloudstream/html/app/com.lagradost.cloudstream3/-tv-type/index.html
     tvTypes = listOf(
-        "Movie",
-        "AnimeMovie"
+        "TvSeries",
+        "Anime",
+        "Cartoon"
     )
     language = "en"
 
-    iconUrl = "https://fzmovies.net/logo/imageedit_1_4567867331.png"
+    iconUrl = "https://fztvseries.live/logo/fztvseries2.png"
 }
