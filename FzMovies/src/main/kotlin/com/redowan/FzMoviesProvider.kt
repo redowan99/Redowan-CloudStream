@@ -3,6 +3,8 @@ package com.redowan
 
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
+import com.lagradost.cloudstream3.LoadResponse.Companion.addImdbUrl
+import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageRequest
 import com.lagradost.cloudstream3.SearchQuality
@@ -22,6 +24,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import com.lagradost.cloudstream3.toRatingInt
 
 
 
@@ -121,9 +124,11 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
             this.year = year
             this.plot = doc.select(".moviedesc > span:nth-child(5) > textcolor1:nth-child(1)").text()
             this.duration = doc.select(".moviedesc > textcolor2:nth-child(7)")
-                .text().substringBefore(" ").toIntOrNull()//?.times(60)
-            this.rating = doc.select(".moviedesc > textcolor11:nth-child(27)")
-                .text().toFloatOrNull()?.times(100.0)?.toInt()
+                .text().substringBefore(" ").toIntOrNull()
+            this.rating = doc.select(".moviedesc > textcolor11:nth-child(82)").text().toRatingInt()
+            this.tags = doc.select("[itemprop=genre]").map { it.text() }
+            addTrailer(doc.select(".fieldset-auto-width > iframe:nth-child(2)").attr("src"))
+            addImdbUrl(doc.select(".moviedesc > textcolor2:nth-child(162) > span:nth-child(1)").text())
         }
     }
 
