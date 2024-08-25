@@ -58,7 +58,7 @@ class FzTvSeriesProvider : MainAPI() { // all providers must be an instance of M
         val url = "$mainUrl/"+ post.selectXpath("td[1]/a").attr("href")
         val title = post.selectXpath("td[2]/span/a/small/b").text()
         return newMovieSearchResponse(title, url, TvType.Movie) {
-            this.posterUrl = "$mainUrl/" + post.selectXpath("tr/td[1]/div/a/img")
+            this.posterUrl = "$mainUrl/" + post.selectXpath("td[1]/div/a/img")
                 .attr("src")
         }
     }
