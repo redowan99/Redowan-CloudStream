@@ -13,11 +13,12 @@ import com.lagradost.cloudstream3.SearchQuality
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
+import com.lagradost.cloudstream3.addDubStatus
 import com.lagradost.cloudstream3.getDurationFromString
 import com.lagradost.cloudstream3.mainPageOf
+import com.lagradost.cloudstream3.newAnimeSearchResponse
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
-import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.nicehttp.Requests
@@ -82,7 +83,7 @@ class CircleFtpProvider : MainAPI() {
 
     private fun toSearchResult(post: Post): SearchResponse? {
         if (post.type == "singleVideo" || post.type == "series") {
-            return newMovieSearchResponse(post.title, "$mainUrl/content/${post.id}", TvType.Movie) {
+            return newAnimeSearchResponse(post.title, "$mainUrl/content/${post.id}", TvType.Movie) {
                 this.posterUrl = "$apiUrl/uploads/${post.imageSm}"
                 val check = post.title.lowercase()
                 this.quality = when {
@@ -108,6 +109,15 @@ class CircleFtpProvider : MainAPI() {
                     "720p" in check -> SearchQuality.HD
                     else -> null
                 }
+                addDubStatus(
+                    dubExist = when {
+                        "dubbed" in check -> true
+                        "dual audio" in check -> true
+                        "multi audio" in check -> true
+                        else -> false
+                    },
+                    subExist = false
+                )
             }
         }
         return null
