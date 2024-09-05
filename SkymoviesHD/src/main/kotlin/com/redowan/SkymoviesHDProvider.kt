@@ -8,7 +8,6 @@ import com.lagradost.cloudstream3.MainPageRequest
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
-import com.lagradost.cloudstream3.apmap
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
@@ -17,6 +16,7 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.nicehttp.Requests
 import org.jsoup.nodes.Element
+import com.lagradost.cloudstream3.app
 
 class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://skymovieshd.diy"
@@ -63,8 +63,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         page: Int,
         request : MainPageRequest
     ): HomePageResponse {
-        val requests = Requests()
-        val doc = requests.get("$mainUrl/category/${request.data}/$page.html").document
+        val doc = app.get("$mainUrl/category/${request.data}/$page.html").document
         val homeResponse = doc.select("div.L")
         val home = homeResponse.mapNotNull { post ->
             toResult(post)
@@ -91,8 +90,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
 
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val requests = Requests()
-        val doc = requests.get("$mainUrl/search.php?search=$query&cat=All").document
+        val doc = app.get("$mainUrl/search.php?search=$query&cat=All").document
         val searchResponse = doc.select("div.L")
         return searchResponse.mapNotNull { post ->
             toResult(post)
@@ -100,11 +98,10 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val requests = Requests()
-        val doc = requests.get(url).document
+        val doc = app.get(url).document
         val title = doc.select("div.Robiul").first()!!.text()
         val year = "(?<=\\()\\d{4}(?=\\))".toRegex().find(title)?.value?.toIntOrNull()
-        return newMovieLoadResponse(title, url, TvType.Movie,doc.select(".Bolly > a:nth-child(3)").attr("href")) {
+        return newMovieLoadResponse(title, url, TvType.Movie,url) {
             this.posterUrl = doc.select(".movielist > img:nth-child(1)").attr("src")
             this.year = year
             this.plot = doc.select("div.Let:nth-child(8)").text()
@@ -122,14 +119,41 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         val url = doc.select("a[href*=https://hubcloud.]").attr("href")
         if (url.isNullOrEmpty().not()) {
             hubCloud(url,callback)
+        var doc = app.get(data).document
+
+        doc = Requests().get(doc.select(".Bolly > a:nth-child(3)").attr("href")).document
+        doc.select(".cotent-box > a").forEach {
+            val link = it.attr("href")
+            if("fastxyz" in link) fastxyz(link,callback)
+            else if("hubcloud" in link) hubCloud(link, callback)
         }
         return true
     }
+
+    private suspend fun fastxyz(
+        data: String,
+        callback: (ExtractorLink) -> Unit) {
+        val doc = app.get(data).document
+        val server = listOf("Fastxyz-MediaFire", "Fastxyz-Cloudflare")
+        var count = 0
+        doc.select(".flb_download_buttons > a:nth-child(1)").forEach {
+            callback.invoke(
+                ExtractorLink(
+                    "Fastxyz",
+                    server[count],
+                    it.attr("href"),
+                    "",
+                    Qualities.Unknown.value,
+                )
+            )
+            count++
+        }
+    }
+
     private suspend fun hubCloud(
         data: String,
         callback: (ExtractorLink) -> Unit){
-        val app = Requests()
-        val doc = app.get(data.replace(".lol",".club")).document
+        val doc = app.get(data.replaceBefore("/drive/","https://hubcloud.club")).document
         val gamerLink: String
 
         if (data.contains("drive")) {
@@ -143,10 +167,9 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
 
         val document = app.get(gamerLink).document
 
-        val size = document.selectFirst("i#size")?.text()
         val div = document.selectFirst("div.card-body")
         val header = document.selectFirst("div.card-header")?.text()
-        div?.select("a")?.apmap {
+        div?.select("a")?.forEach {
             val link = it.attr("href")
             val text = it.text()
             if (link.contains("pixeldra")) {
@@ -154,7 +177,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
                 callback.invoke(
                     ExtractorLink(
                         "Pixeldrain",
-                        "Pixeldrain $size",
+                        "Pixeldrain",
                         pixeldrainLink,
                         link,
                         getIndexQuality(header),
@@ -167,17 +190,17 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
                 callback.invoke(
                     ExtractorLink(
                         "Google[Download]",
-                        "Google[Download] $size",
+                        "Google[Download]",
                         downloadLink,
                         "",
                         getIndexQuality(header),
                     )
                 )
-            } else if (link.contains(".dev")) {
+            } else if (link.contains("fastdl")) {
                 callback.invoke(
                     ExtractorLink(
-                        "Cloudflare",
-                        "Cloudflare $size",
+                        "Fastdl",
+                        "Fastdl",
                         link,
                         "",
                         getIndexQuality(header),
