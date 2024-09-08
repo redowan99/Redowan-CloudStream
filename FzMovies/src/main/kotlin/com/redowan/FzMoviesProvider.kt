@@ -17,7 +17,6 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
-import com.lagradost.nicehttp.Requests
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -25,6 +24,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.toRatingInt
+import com.lagradost.cloudstream3.app
 
 
 
@@ -57,8 +57,7 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
         page: Int,
         request : MainPageRequest
     ): HomePageResponse {
-        val requests = Requests()
-        val doc = requests.get("$mainUrl/${request.data}$page").document
+        val doc = app.get("$mainUrl/${request.data}$page").document
         val homeResponse = doc.select("div.mainbox")
         val home = homeResponse.mapNotNull { post ->
             toResult(post)
@@ -114,8 +113,7 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val requests = Requests()
-        val doc = requests.get(url).document
+        val doc = app.get(url).document
         val year = doc.select(".moviedesc > textcolor1:nth-child(9) > a:nth-child(1)").text().toIntOrNull()
         val title = doc.select(".moviename > span:nth-child(1)").text() +" "+ year
         var rating: Int? = null
@@ -142,16 +140,15 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val requests = Requests()
-        val html = requests.get(data)
+        val html = app.get(data)
         val doc = html.document
         val cookie = html.cookies
         doc.select(".moviesfiles").forEach{item ->
             val quality = getIndexQuality(item.select("#downloadoptionslink2").text())
             val qualityUrl = "$mainUrl/" + item.select("#downloadoptionslink2").attr("href")
-            var newDoc = requests.get(qualityUrl, cookies = cookie).document
+            var newDoc = app.get(qualityUrl, cookies = cookie).document
             val sudoDlUrl = "$mainUrl/" + newDoc.select("#downloadlink").attr("href")
-            newDoc = requests.get(sudoDlUrl, cookies = cookie).document
+            newDoc = app.get(sudoDlUrl, cookies = cookie).document
             var server = 0
             newDoc.select("ul.downloadlinks:nth-child(5) > li").forEach{newItem ->
                 val downloadUrl = newItem.select("p:nth-child(3) > input:nth-child(1)").attr("value")
