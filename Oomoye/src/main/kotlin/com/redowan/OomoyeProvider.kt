@@ -1,5 +1,6 @@
 package com.redowan
 
+import android.util.Log
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
@@ -15,6 +16,9 @@ import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.nicehttp.Requests
 import org.jsoup.nodes.Element
+import java.net.URL
+
+
 
 class OomoyeProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://www.oomoye.info"
@@ -112,12 +116,14 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
             var quality = "\\d{3,4}(?=p)".toRegex().find(item.text())?.value?.toIntOrNull()
             if (quality == null) quality = 720
             val links = requests.get(item.attr("href").replace("/server/", "/files/")).document
-            var link = links.select("a[href*=pixeldra.in]").attr("href")
+            var link = links.select(".fastdl a").attr("href")
+            val url = URL(link)
+            var hostName = url.host.replace("www","").substringBefore(".")
             if (link.isNotEmpty())
                 callback.invoke(
                     ExtractorLink(
                         this.name,
-                        "pixeldrain",
+                        hostName,
                         url = link,
                         data,
                         quality = quality,
@@ -125,7 +131,7 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
                         isDash = false
                     )
                 )
-            link = links.select("a[href*=$mainUrl/download/]").attr("href")
+            /*link = links.select("a[href*=$mainUrl/download/]").attr("href")
             if (link.isNotEmpty())
                 callback.invoke(
                     ExtractorLink(
@@ -137,7 +143,7 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
                         isM3u8 = false,
                         isDash = false
                     )
-                )
+                )*/
         }
         return true
     }
