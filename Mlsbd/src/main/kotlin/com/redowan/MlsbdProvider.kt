@@ -33,14 +33,13 @@ class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAP
         TvType.AnimeMovie,
     )
 
-
-    // enable this when your provider has a main page
+    override var lang = "bn"
     override val hasMainPage = true
     override val hasDownloadSupport = true
     override val hasQuickSearch = false
 
     override val mainPage = mainPageOf(
-        "/" to "Latest Movies",
+        "" to "Latest Movies",
         "/category/bangla-dubbed/page/" to "Bangla Dubbed",
         "/category/dual-audio-movies/page/" to "Multi Audio Movies",
         "/category/tv-series/page/" to "TV Series",
@@ -56,15 +55,15 @@ class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAP
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        val url = if(request.data == "/") "$mainUrl${request.data}"
+        val url = if(request.data == "") mainUrl
         else "$mainUrl${request.data}$page/"
-        //, cacheTime = 60
-        val doc = app.get(url, timeout = 10, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
+        //val doc = app.get(url, allowRedirects = true).document
+        val doc = app.get(url, cacheTime = 60, allowRedirects = true, timeout = 10, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
         val homeResponse = doc.select("div.single-post")
         val home = homeResponse.mapNotNull { post ->
             toResult(post)
         }
-        return newHomePageResponse(HomePageList(request.name,home,isHorizontalImages = false), false)
+        return newHomePageResponse(HomePageList(request.name,home,isHorizontalImages = false), true)
     }
 
     private fun toResult(post: Element): SearchResponse {
@@ -101,7 +100,8 @@ class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAP
         var link = ""
         when (episodeDivs.size) {
             1 -> {
-                episodeDivs[0].nextElementSibling()?.nextElementSibling()?.select("a.Dbtn.hd, a.Dbtn.sd")
+                episodeDivs[0].nextElementSibling()?.nextElementSibling()
+                    ?.select("a.Dbtn.hd, a.Dbtn.sd, a.Dbtn.hevc")
                     ?.forEach {
                         link += it.attr("href") + " ; "
                     }
