@@ -24,7 +24,7 @@ import org.jsoup.nodes.Element
 
 class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://mlsbd.shop"
-    override var name = "Mlsbd"
+    override var name = "Mlsbd(Only Download)"
     override val supportedTypes = setOf(
         TvType.Movie,
         TvType.TvSeries,
@@ -63,7 +63,7 @@ class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAP
         val home = homeResponse.mapNotNull { post ->
             toResult(post)
         }
-        return newHomePageResponse(HomePageList(request.name,home,isHorizontalImages = false), true)
+        return newHomePageResponse(HomePageList(request.name,home,isHorizontalImages = true), true)
     }
 
     private fun toResult(post: Element): SearchResponse {
@@ -148,7 +148,7 @@ class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAP
                         )
                     )
                 }
-                return newTvSeriesLoadResponse(title, url, TvType.Movie, episodesData) {
+                return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
                     this.posterUrl = image
                     this.year = year
                     this.plot = plot
