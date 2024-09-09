@@ -1,11 +1,11 @@
 // use an integer for version numbers
-version = 8
+version = 9
 
 
 cloudstream {
     // All of these properties are optional, you can safely remove them
 
-    description = "300MB, 480p, 720p, 1080p Full Movies In SkymoviesHD"
+    description = "480p, 720p, 1080p Full Movies In SkymoviesHD"
     authors = listOf("Redowan")
 
     /**

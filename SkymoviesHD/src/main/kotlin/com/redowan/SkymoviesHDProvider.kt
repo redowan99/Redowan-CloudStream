@@ -1,6 +1,5 @@
 package com.redowan
 
-
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
@@ -33,7 +32,6 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
     override val hasDownloadSupport = true
     override val hasQuickSearch = true
 
-
     override val mainPage = mainPageOf(
         "Bollywood-Movies" to "Bollywood Movies",
         "South-Indian-Hindi-Dubbed-Movies" to "South Indian Hindi Dubbed Movies",
@@ -63,7 +61,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         page: Int,
         request : MainPageRequest
     ): HomePageResponse {
-        val doc = app.get("$mainUrl/category/${request.data}/$page.html").document
+        val doc = app.get("$mainUrl/category/${request.data}/$page.html", cacheTime = 60, allowRedirects = true, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
         val homeResponse = doc.select("div.L")
         val home = homeResponse.mapNotNull { post ->
             toResult(post)
@@ -98,7 +96,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val doc = app.get(url).document
+        val doc = app.get(url, cacheTime = 60, allowRedirects = true, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
         val title = doc.select("div.Robiul").first()!!.text()
         val year = "(?<=\\()\\d{4}(?=\\))".toRegex().find(title)?.value?.toIntOrNull()
         return newMovieLoadResponse(title, url, TvType.Movie,url) {
@@ -175,7 +173,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
                         "Pixeldrain",
                         pixeldrainLink,
                         link,
-                        getIndexQuality(header),
+                        getVideoQuality(header),
                     )
                 )
             } else if (text.contains("Download [Server : 10Gbps]")) {
@@ -188,7 +186,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
                         "Google[Download]",
                         downloadLink,
                         "",
-                        getIndexQuality(header),
+                        getVideoQuality(header),
                     )
                 )
             } else if (link.contains("fastdl")) {
@@ -198,13 +196,13 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
                         "Fastdl",
                         link,
                         "",
-                        getIndexQuality(header),
+                        getVideoQuality(header),
                     )
                 )
             }
         }
     }
-    private fun getIndexQuality(str: String?): Int {
+    private fun getVideoQuality(str: String?): Int {
         return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
             ?: Qualities.Unknown.value
     }
