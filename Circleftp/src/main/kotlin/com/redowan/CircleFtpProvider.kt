@@ -42,15 +42,13 @@ class CircleFtpProvider : MainAPI() {
         TvType.OVA,
         TvType.Others
     )
+
     override var lang = "bn"
-
-
     override val hasMainPage = true
     override val hasDownloadSupport = true
     override val hasQuickSearch = false
     override val hasChromecastSupport = true
     override val instantLinkLoading = true
-
 
     override val mainPage = mainPageOf(
         "80" to "Featured",
