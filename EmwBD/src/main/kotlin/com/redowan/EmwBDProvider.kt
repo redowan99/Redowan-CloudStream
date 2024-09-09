@@ -39,15 +39,16 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
 
     override val mainPage = mainPageOf(
         "/" to "Latest Movies",
-        /*"/category/bangla-dubbed/page/" to "Bangla Dubbed",
-        "/category/dual-audio-movies/page/" to "Multi Audio Movies",
-        "/category/tv-series/page/" to "TV Series",
-        "/category/foreign-language-film/page/" to "Foreign Language Film",
-        "/category/bollywood-movies/page/" to "Bollywood Movies",
-        "/category/bangla-movies/page/" to "Bengali Movies",
-        "/category/hollywood-movies/page/" to "Hollywood Movies",
-        "/category/natok-teleflim/page/" to "Natok & Teleflim",
-        "/category/unrated/page/" to "UnRated"*/
+        "/category/bangladeshi-movies/" to "Bangladeshi Movies",
+        "/category/bengali-dub-drama/" to "Bangla Dub Drama",
+        "/category/bengali-dub-movies/" to "Bangla Dub Movies",
+        "/category/kolkata-bengali-movies/" to "Bengali Movies",
+        "/category/bengali-web-series/" to "Bengali Web Series",
+        "/category/web-series/" to "Web Series",
+        "/category/hollywood-movies/" to "Hollywood Movies",
+        "/category/bollywood-movies/" to "Bollywood Movies",
+        "/category/south-indian-movies/" to "South Indian Movies",
+        "/category/tv-shows/" to "TV Shows"
     )
 
     override suspend fun getMainPage(
@@ -63,36 +64,37 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
 
     private fun toResult(post: Element): SearchResponse {
         val title = post.select(".titl").text()
+        val check =  title.lowercase()
         val url = post.select(".thumb > div > a").attr("href")
         return newAnimeSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = post.select(".thumb > figure > img")
                 .attr("src")
             this.quality = when {
-                "webrip" in title -> SearchQuality.WebRip
-                "web-dl" in title -> SearchQuality.WebRip
-                "bluray" in title -> SearchQuality.BlueRay
-                "hdts" in title -> SearchQuality.HdCam
-                "dvd" in title -> SearchQuality.DVD
-                "cam" in title -> SearchQuality.Cam
-                "camrip" in title -> SearchQuality.CamRip
-                "hdcam" in title -> SearchQuality.HdCam
-                "hdtc" in title -> SearchQuality.HdCam
-                "hdrip" in title -> SearchQuality.HD
-                "hd" in title -> SearchQuality.HD
-                "hdtv" in title -> SearchQuality.HD
-                "rip" in title -> SearchQuality.CamRip
+                "webrip" in check -> SearchQuality.WebRip
+                "web-dl" in check -> SearchQuality.WebRip
+                "bluray" in check -> SearchQuality.BlueRay
+                "hdts" in check -> SearchQuality.HdCam
+                "dvd" in check -> SearchQuality.DVD
+                "cam" in check -> SearchQuality.Cam
+                "camrip" in check -> SearchQuality.CamRip
+                "hdcam" in check -> SearchQuality.HdCam
+                "hdtc" in check -> SearchQuality.HdCam
+                "hdrip" in check -> SearchQuality.HD
+                "hd" in check -> SearchQuality.HD
+                "hdtv" in check -> SearchQuality.HD
+                "rip" in check -> SearchQuality.CamRip
                 else -> null
             }
             addDubStatus(
                 dubExist = when {
-                    "dubbed" in title -> true
-                    "dual audio" in title -> true
-                    "multi audio" in title -> true
+                    "dubbed" in check -> true
+                    "dual audio" in check -> true
+                    "multi audio" in check -> true
                     else -> false
                 },
                 subExist = when {
-                    "Esub" in title -> true
-                    "Esubs" in title -> true
+                    "Esub" in check -> true
+                    "Esubs" in check -> true
                     else -> false
                 }
             )
@@ -108,7 +110,7 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
         val doc = app.get(url, cacheTime = 60, allowRedirects = true, timeout = 5, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
         val title = doc.select("h1.page-title > span").text()
         val year = "(?<=\\()\\d{4}(?=\\))".toRegex().find(title)?.value?.toIntOrNull()
-        val image = doc.select("div.block-head:nth-child(1) > p > img").attr("src")
+        val image = doc.select("div.block-head:nth-child(2) > p:nth-child(1) > img:nth-child(1)").attr("src")
         val link = doc.select("div.block-head:nth-child(3) > h5 > a").attr("href")
         return newMovieLoadResponse(title, url, TvType.Movie, link) {
             this.posterUrl = image
@@ -123,7 +125,7 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         val link = if (data.contains("playerwish"))data.replace("playerwish.com","mwish.pro")
-                    else ""
+                    else data
         loadExtractor(link, subtitleCallback, callback)
         return true
     }
