@@ -56,7 +56,7 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
     ): HomePageResponse {
         val url = if(page == 1) mainUrl + request.data
         else "$mainUrl${request.data}page/$page/"
-        val doc = app.get(url, cacheTime = 60, allowRedirects = true, timeout = 5, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
+        val doc = app.get(url, cacheTime = 60, allowRedirects = true, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
         val home = doc.select(".thumb.col-md-2.col-sm-4.col-xs-6").mapNotNull {toResult(it)}
         return newHomePageResponse(request.name,home, true)
     }
@@ -92,8 +92,7 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
                     else -> false
                 },
                 subExist = when {
-                    "Esub" in check -> true
-                    "Esubs" in check -> true
+                    "esub" in check -> true
                     else -> false
                 }
             )
@@ -101,12 +100,12 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val doc = app.get("$mainUrl/?s=$query", cacheTime = 60, allowRedirects = true, timeout = 5, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
+        val doc = app.get("$mainUrl/?s=$query", cacheTime = 60, allowRedirects = true, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
         return doc.select(".thumb.col-md-2.col-sm-4.col-xs-6").mapNotNull {toResult(it)}
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val doc = app.get(url, cacheTime = 60, allowRedirects = true, timeout = 5, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
+        val doc = app.get(url, cacheTime = 60, allowRedirects = true, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
         val title = doc.select("h1.page-title > span").text()
         val year = "(?<=\\()\\d{4}(?=\\))".toRegex().find(title)?.value?.toIntOrNull()
         val image = doc.select("div.block-head:nth-child(2) > p:nth-child(1) > img:nth-child(1)").attr("src")
