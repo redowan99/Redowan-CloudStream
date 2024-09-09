@@ -30,7 +30,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
     // enable this when your provider has a main page
     override val hasMainPage = true
     override val hasDownloadSupport = true
-    override val hasQuickSearch = true
+    override val hasQuickSearch = false
 
     override val mainPage = mainPageOf(
         "Bollywood-Movies" to "Bollywood Movies",
@@ -69,7 +69,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         return newHomePageResponse(request.name, home, false)
     }
 
-    private fun toResult(post: Element): SearchResponse {
+    private suspend fun toResult(post: Element): SearchResponse {
         var title = post.text()
         val size = "\\[\\d(.*?)B]".toRegex().find(title)?.value
         if (size!=null){
@@ -77,15 +77,11 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
             title = "$size $newTitle"
         }
         val url = mainUrl + post.select("a").attr("href")
-        /*val requests = Requests()
-        val doc = requests.get(url).document*/
+        val doc = app.get(url, cacheTime = 60, allowRedirects = true, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
         return newMovieSearchResponse(title, url, TvType.Movie) {
-            //this.posterUrl = doc.select(".movielist > img:nth-child(1)").attr("src")
+            this.posterUrl = doc.select(".movielist > img:nth-child(1)").attr("src")
         }
     }
-
-    override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
-
 
     override suspend fun search(query: String): List<SearchResponse> {
         val doc = app.get("$mainUrl/search.php?search=$query&cat=All").document
