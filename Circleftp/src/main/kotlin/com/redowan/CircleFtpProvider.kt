@@ -121,9 +121,6 @@ class CircleFtpProvider : MainAPI() {
         return null
     }
 
-    override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
-
-
     override suspend fun search(query: String): List<SearchResponse> {
         val requests = Requests(responseParser = parser)
         val searchResponse = requests.get(
