@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 2
+version = 3
 
 cloudstream {
     description = "Movie website in Bangladesh"
@@ -17,7 +17,6 @@ cloudstream {
     tvTypes = listOf(
         "Movie",
         "TvSeries",
-        "NSFW",
         "AnimeMovie",
         "AsianDrama"
     )

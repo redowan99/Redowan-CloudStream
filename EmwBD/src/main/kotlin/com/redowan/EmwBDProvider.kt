@@ -27,7 +27,6 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
     override val supportedTypes = setOf(
         TvType.Movie,
         TvType.TvSeries,
-        TvType.NSFW,
         TvType.AsianDrama,
         TvType.AnimeMovie,
     )
