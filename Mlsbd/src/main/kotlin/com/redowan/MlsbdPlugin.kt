@@ -8,5 +8,8 @@ import android.content.Context
 class MlsbdPlugin: Plugin() {
     override fun load(context: Context) {
         registerMainAPI(MlsbdProvider())
+        registerExtractorAPI(GDFlix())
+        registerExtractorAPI(GDFlix1())
+        registerExtractorAPI(GDFlix2())
     }
 }

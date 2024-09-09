@@ -18,6 +18,7 @@ import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
 
@@ -168,7 +169,7 @@ class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAP
                 val doc = app.get(link).document
                 doc.select("div.col-sm-8:nth-child(4) > a").forEach{
                     if (it.attr("href").contains("gdflix")){
-                        gdflix(it.attr("href"),callback)
+                        loadExtractor(it.attr("href"), subtitleCallback, callback)
                     }
                 }
             }
