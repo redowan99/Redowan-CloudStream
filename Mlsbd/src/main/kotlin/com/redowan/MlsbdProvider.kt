@@ -25,7 +25,7 @@ import org.jsoup.nodes.Element
 
 class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://mlsbd.shop"
-    override var name = "Mlsbd(Only Download)"
+    override var name = "Mlsbd"
     override val supportedTypes = setOf(
         TvType.Movie,
         TvType.TvSeries,
