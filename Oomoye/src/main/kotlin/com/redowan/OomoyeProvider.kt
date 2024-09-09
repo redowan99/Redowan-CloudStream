@@ -118,7 +118,7 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
             val links = requests.get(item.attr("href").replace("/server/", "/files/")).document
             var link = links.select(".fastdl a").attr("href")
             val url = URL(link)
-            var hostName = url.host.replace("www","").substringBefore(".")
+            var hostName = url.host.replace("www.","").substringBefore(".")
             if (link.isNotEmpty())
                 callback.invoke(
                     ExtractorLink(
