@@ -64,7 +64,8 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
     private fun toResult(post: Element): SearchResponse {
         val title = post.select(".titl").text()
         val check =  title.lowercase()
-        val url = post.select(".thumb > div > a").attr("href")
+        val url = post.select(".thumb > div:nth-child(2) > a:nth-child(1)")
+            .attr("href")
         return newAnimeSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = post.select(".thumb > figure > img")
                 .attr("src")
@@ -109,7 +110,7 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
         val title = doc.select("h1.page-title > span").text()
         val year = "(?<=\\()\\d{4}(?=\\))".toRegex().find(title)?.value?.toIntOrNull()
         val image = doc.select("div.block-head:nth-child(2) > p:nth-child(1) > img:nth-child(1)").attr("src")
-        val link = doc.select("div.block-head:nth-child(3) > h5 > a").attr("href")
+        val link = doc.getElementsContainingText("Watch Online Now").attr("href")
         return newMovieLoadResponse(title, url, TvType.Movie, link) {
             this.posterUrl = image
             this.year = year
