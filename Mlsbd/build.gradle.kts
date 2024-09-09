@@ -1,11 +1,11 @@
 // use an integer for version numbers
-version = 9
+version = 3
 
 
 cloudstream {
     // All of these properties are optional, you can safely remove them
 
-    description = "Only movie provider"
+    description = "The largest movie link store in Bangladesh"
     authors = listOf("Redowan")
 
     /**
@@ -22,9 +22,12 @@ cloudstream {
     // https://recloudstream.github.io/cloudstream/html/app/com.lagradost.cloudstream3/-tv-type/index.html
     tvTypes = listOf(
         "Movie",
-        "AnimeMovie"
+        "TvSeries",
+        "NSFW",
+        "AnimeMovie",
+        "AsianDrama"
     )
-    language = "en"
+    language = "bn"
 
-    iconUrl = "https://fzmovies.net/logo/imageedit_1_4567867331.png"
+    iconUrl = "https://mlsbd.shop/wp-content/uploads/2020/08/MLSBD-Logo.png"
 }
