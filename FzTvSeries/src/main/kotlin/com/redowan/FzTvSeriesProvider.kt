@@ -9,13 +9,13 @@ import com.lagradost.cloudstream3.MainPageRequest
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
+import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
-import com.lagradost.nicehttp.Requests
 import org.jsoup.nodes.Element
 
 class FzTvSeriesProvider : MainAPI() { // all providers must be an instance of MainAPI
@@ -45,8 +45,7 @@ class FzTvSeriesProvider : MainAPI() { // all providers must be an instance of M
         page: Int,
         request : MainPageRequest
     ): HomePageResponse {
-        val requests = Requests()
-        val doc = requests.get("$mainUrl/${request.data}$page").document
+        val doc = app.get("$mainUrl/${request.data}$page").document
         val homeResponse = doc.select("div.mainbox3 > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1)")
         val home = homeResponse.mapNotNull { post ->
             toResult(post)
@@ -63,12 +62,8 @@ class FzTvSeriesProvider : MainAPI() { // all providers must be an instance of M
         }
     }
 
-    override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
-
-
     override suspend fun search(query: String): List<SearchResponse> {
-        val requests = Requests()
-        val doc = requests.get("$mainUrl/search.php?search=${query}&beginsearch=Search&vsearch=&by=series").document
+        val doc = app.get("$mainUrl/search.php?search=${query}&beginsearch=Search&vsearch=&by=series").document
         val searchResponse = doc.select("div.mainbox3 > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1)")
         return searchResponse.mapNotNull { post ->
             toResult(post)
@@ -76,7 +71,7 @@ class FzTvSeriesProvider : MainAPI() { // all providers must be an instance of M
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val doc = Requests().get(url).document
+        val doc = app.get(url).document
         val title = doc.selectXpath("/html/body/div[9]/div[1]/table/tbody/tr/td[2]/span/a/small/b").text()
         var season = 1
         val episodesData = mutableListOf<Episode>()
@@ -85,7 +80,7 @@ class FzTvSeriesProvider : MainAPI() { // all providers must be an instance of M
 
                 var episodeNum = 0
                 val newUrl = "$mainUrl/" + item.select("a").attr("href")
-                val newDoc = Requests().get(newUrl).document
+                val newDoc = app.get(newUrl).document
                 newDoc.select("div.mainbox > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) >" +
                         " td:nth-child(2) > span:nth-child(1)").forEach{episode->
                     episodeNum ++
@@ -116,11 +111,11 @@ class FzTvSeriesProvider : MainAPI() { // all providers must be an instance of M
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val html = Requests().get(data)
+        val html = app.get(data)
         var doc = html.document
         val cookie = html.cookies
         val sudoDlUrl = "$mainUrl/" + doc.select("#dlink2").attr("href")
-        doc = Requests().get(sudoDlUrl, cookies = cookie).document
+        doc = app.get(sudoDlUrl, cookies = cookie).document
         var server = 0
         doc.select(".downloadlinks2").forEach{newItem ->
             server++
