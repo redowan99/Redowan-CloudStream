@@ -4,6 +4,7 @@ import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageRequest
+import com.lagradost.cloudstream3.SearchQuality
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
@@ -110,5 +111,26 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
                     else data
         loadExtractor(link, subtitleCallback, callback)
         return true
+    }
+
+    private fun getSearchQuality(check: String): SearchQuality? {
+        return when(check.lowercase()){
+            in "webrip" -> SearchQuality.WebRip
+            in "web-dl" -> SearchQuality.WebRip
+            in "bluray" -> SearchQuality.BlueRay
+            in "hdts" -> SearchQuality.HdCam
+            in "dvd" -> SearchQuality.DVD
+            in "cam" -> SearchQuality.Cam
+            in "camrip" -> SearchQuality.CamRip
+            in "hdcam" -> SearchQuality.HdCam
+            in "hdtc" -> SearchQuality.HdCam
+            in "hdrip" -> SearchQuality.HD
+            in "hd" -> SearchQuality.HD
+            in "hdtv" -> SearchQuality.HD
+            in "rip" -> SearchQuality.CamRip
+            in "telecine" -> SearchQuality.Telecine
+            in "telesync" -> SearchQuality.Telesync
+            else -> null
+        }
     }
 }
