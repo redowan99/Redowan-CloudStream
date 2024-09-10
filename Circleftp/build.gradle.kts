@@ -1,10 +1,7 @@
 // use an integer for version numbers
-version = 16
-
+version = 17
 
 cloudstream {
-    // All of these properties are optional, you can safely remove them
-
     description = "Only works in Bangladesh. Works even in internet Shutdown"
     authors = listOf("Redowan")
 
@@ -17,9 +14,6 @@ cloudstream {
     * */
     status = 1 // will be 3 if unspecified
 
-    // List of video source types. Users are able to filter for extensions in a given category.
-    // You can find a list of avaliable types here:
-    // https://recloudstream.github.io/cloudstream/html/app/com.lagradost.cloudstream3/-tv-type/index.html
     tvTypes = listOf(
         "Movie",
         "TvSeries",
