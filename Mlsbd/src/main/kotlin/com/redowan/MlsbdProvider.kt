@@ -17,7 +17,6 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
@@ -181,7 +180,6 @@ class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAP
         data: String,
         callback: (ExtractorLink) -> Unit){
         val doc = app.get(data).document
-        val qualities = getVideoQuality(doc.select("li.list-group-item:nth-child(1)").text())
         //Instant DL
         val instantDlLink = doc.select("a.btn.btn-danger").attr("href")
         val instantDL = app.get(instantDlLink).url.replace("https://instantdl.pages.dev/?url=","")
@@ -191,15 +189,10 @@ class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAP
                 "Instant DL",
                 url = instantDL,
                 data,
-                quality = qualities,
+                quality = getVideoQuality(doc.select("li.list-group-item:nth-child(1)").text()),
                 isM3u8 = false,
                 isDash = false
             )
         )
-    }
-
-    private fun getVideoQuality(str: String?): Int {
-        return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
-            ?: Qualities.Unknown.value
     }
 }
