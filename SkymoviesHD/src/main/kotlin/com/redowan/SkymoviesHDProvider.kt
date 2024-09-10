@@ -16,6 +16,7 @@ import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.nicehttp.Requests
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.utils.loadExtractor
 
 class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://skymovieshd.diy"
@@ -109,7 +110,8 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         var doc = app.get(data).document
-
+        val watchOnline = doc.select(".Bolly > a:nth-child(1)").attr("href")
+        loadExtractor(watchOnline, subtitleCallback, callback)
         doc = Requests().get(doc.select(".Bolly > a:nth-child(3)").attr("href")).document
         doc.select(".cotent-box > a").forEach {
             val link = it.attr("href")
@@ -198,6 +200,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
             }
         }
     }
+
     private fun getVideoQuality(str: String?): Int {
         return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
             ?: Qualities.Unknown.value
