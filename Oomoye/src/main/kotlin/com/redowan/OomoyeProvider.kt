@@ -4,7 +4,6 @@ import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageRequest
-import com.lagradost.cloudstream3.SearchQuality
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
@@ -14,7 +13,6 @@ import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.Qualities
 import org.jsoup.nodes.Element
 import java.net.URL
 
@@ -59,7 +57,7 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
         val title = post.text().replaceAfter(")", "")
         return newMovieSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = "$mainUrl/cover/$imageId.png"
-            this.quality = getQuality(post.select("font[color=green]").text())
+            this.quality = getSearchQuality(post.select("font[color=green]").text())
         }
     }
 
@@ -94,37 +92,12 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
                         hostName,
                         url = link,
                         data,
-                        quality = getIndexQuality(item.text()),
+                        quality = getVideoQuality(item.text()),
                         isM3u8 = false,
                         isDash = false
                     )
                 )
         }
         return true
-    }
-
-    private fun getIndexQuality(str: String?): Int {
-        return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
-            ?: Qualities.Unknown.value
-    }
-    private fun getQuality(check: String): SearchQuality? {
-        return when(check.lowercase()){
-            in "webrip" -> SearchQuality.WebRip
-            in "web-dl" -> SearchQuality.WebRip
-            in "bluray" -> SearchQuality.BlueRay
-            in "hdts" -> SearchQuality.HdCam
-            in "dvd" -> SearchQuality.DVD
-            in "cam" -> SearchQuality.Cam
-            in "camrip" -> SearchQuality.CamRip
-            in "hdcam" -> SearchQuality.HdCam
-            in "hdtc" -> SearchQuality.HdCam
-            in "hdrip" -> SearchQuality.HD
-            in "hd" -> SearchQuality.HD
-            in "hdtv" -> SearchQuality.HD
-            in "rip" -> SearchQuality.CamRip
-            in "telecine" -> SearchQuality.Telecine
-            in "telesync" -> SearchQuality.Telesync
-            else -> null
-        }
     }
 }
