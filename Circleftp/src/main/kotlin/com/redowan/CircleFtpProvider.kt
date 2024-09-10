@@ -1,15 +1,10 @@
 package com.redowan
 
-
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageRequest
-import com.lagradost.cloudstream3.SearchQuality
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
@@ -84,29 +79,7 @@ class CircleFtpProvider : MainAPI() {
             return newAnimeSearchResponse(post.title, "$mainUrl/content/${post.id}", TvType.Movie) {
                 this.posterUrl = "$apiUrl/uploads/${post.imageSm}"
                 val check = post.title.lowercase()
-                this.quality = when {
-                    " webrip " in check -> SearchQuality.WebRip
-                    "web-dl" in check -> SearchQuality.WebRip
-                    "bluray" in check -> SearchQuality.BlueRay
-                    " hdts " in check -> SearchQuality.HdCam
-                    "dvd" in check -> SearchQuality.DVD
-                    " cam " in check -> SearchQuality.Cam
-                    " camrip " in check -> SearchQuality.CamRip
-                    " hdcam " in check -> SearchQuality.HdCam
-                    " hdtc " in check -> SearchQuality.HdCam
-                    " hdrip " in check -> SearchQuality.HD
-                    " hd " in check -> SearchQuality.HD
-                    " hdtv " in check -> SearchQuality.HD
-                    " rip " in check -> SearchQuality.CamRip
-                    " telecine " in check -> SearchQuality.Telecine
-                    " telesync " in check -> SearchQuality.Telesync
-                    " fhd " in check -> SearchQuality.HD
-                    " 4k " in check -> SearchQuality.FourK
-                    " hdr " in check -> SearchQuality.HDR
-                    "1080p" in check -> SearchQuality.HD
-                    "720p" in check -> SearchQuality.HD
-                    else -> null
-                }
+                this.quality = getSearchQuality(check)
                 addDubStatus(
                     dubExist = when {
                         "dubbed" in check -> true
@@ -132,38 +105,15 @@ class CircleFtpProvider : MainAPI() {
         }
     }
 
-    private val parser = object : ResponseParser {
-        val mapper: ObjectMapper = jacksonObjectMapper().configure(
-            DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-            false
-        )
-
-        override fun <T : Any> parse(text: String, kClass: KClass<T>): T {
-            return mapper.readValue(text, kClass.java)
-        }
-
-        override fun <T : Any> parseSafe(text: String, kClass: KClass<T>): T? {
-            return try {
-                mapper.readValue(text, kClass.java)
-            } catch (e: Exception) {
-                null
-            }
-        }
-
-        override fun writeValueAsString(obj: Any): String {
-            return mapper.writeValueAsString(obj)
-        }
-    }
-
     override suspend fun load(url: String): LoadResponse {
         val requests = Requests(responseParser = parser)
-        val json =
-            requests.get(url.replace("$mainUrl/content/", "$apiUrl/api/posts/"), verify = false)
+        val json = requests.get(url.replace("$mainUrl/content/", "$apiUrl/api/posts/"),
+            verify = false)
         val loadData = json.parsed<Data>()
         val title = loadData.title
         val poster = "$apiUrl/uploads/${loadData.image}"
         val description = loadData.metaData
-        val year = loadData.year?.substring(0, 4)?.toInt()
+        val year = loadData.year?.toInt()
         if (loadData.type == "singleVideo") {
             val movieUrl = json.parsed<Movies>()
             val duration =
@@ -236,7 +186,7 @@ class CircleFtpProvider : MainAPI() {
                 this.name,
                 url = dataNew,
                 mainUrl,
-                quality = 1080,
+                quality = getVideoQuality(dataNew),
                 isM3u8 = false,
                 isDash = false
             )
