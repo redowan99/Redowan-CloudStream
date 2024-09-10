@@ -7,6 +7,7 @@ import com.lagradost.cloudstream3.LoadResponse.Companion.addImdbUrl
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageRequest
+import com.lagradost.cloudstream3.SearchQuality
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
@@ -23,6 +24,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.toRatingInt
 import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.utils.Qualities
 
 
 
@@ -141,12 +143,34 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
                         quality,
                     )
                 )
-
             }
-
-
         }
-
         return true
+    }
+
+    private fun getSearchQuality(check: String): SearchQuality? {
+        return when(check.lowercase()){
+            in "webrip" -> SearchQuality.WebRip
+            in "web-dl" -> SearchQuality.WebRip
+            in "bluray" -> SearchQuality.BlueRay
+            in "hdts" -> SearchQuality.HdCam
+            in "dvd" -> SearchQuality.DVD
+            in "cam" -> SearchQuality.Cam
+            in "camrip" -> SearchQuality.CamRip
+            in "hdcam" -> SearchQuality.HdCam
+            in "hdtc" -> SearchQuality.HdCam
+            in "hdrip" -> SearchQuality.HD
+            in "hd" -> SearchQuality.HD
+            in "hdtv" -> SearchQuality.HD
+            in "rip" -> SearchQuality.CamRip
+            in "telecine" -> SearchQuality.Telecine
+            in "telesync" -> SearchQuality.Telesync
+            else -> null
+        }
+    }
+
+    private fun getVideoQuality(str: String?): Int {
+        return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
+            ?: Qualities.Unknown.value
     }
 }

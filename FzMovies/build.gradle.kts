@@ -1,9 +1,5 @@
 // use an integer for version numbers
-version = 10
-dependencies {
-    implementation(project(":Circleftp"))
-}
-
+version = 11
 
 cloudstream {
     // All of these properties are optional, you can safely remove them
