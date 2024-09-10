@@ -1,11 +1,9 @@
 package com.redowan
 
-
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageRequest
-import com.lagradost.cloudstream3.SearchQuality
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
@@ -69,22 +67,7 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
         return newAnimeSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = post.select(".thumb > figure > img")
                 .attr("src")
-            this.quality = when {
-                "webrip" in check -> SearchQuality.WebRip
-                "web-dl" in check -> SearchQuality.WebRip
-                "bluray" in check -> SearchQuality.BlueRay
-                "hdts" in check -> SearchQuality.HdCam
-                "dvd" in check -> SearchQuality.DVD
-                "cam" in check -> SearchQuality.Cam
-                "camrip" in check -> SearchQuality.CamRip
-                "hdcam" in check -> SearchQuality.HdCam
-                "hdtc" in check -> SearchQuality.HdCam
-                "hdrip" in check -> SearchQuality.HD
-                "hd" in check -> SearchQuality.HD
-                "hdtv" in check -> SearchQuality.HD
-                "rip" in check -> SearchQuality.CamRip
-                else -> null
-            }
+            this.quality = getSearchQuality(check)
             addDubStatus(
                 dubExist = when {
                     "dubbed" in check -> true

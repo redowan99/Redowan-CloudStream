@@ -1,5 +1,8 @@
 // use an integer for version numbers
-version = 4
+version = 5
+dependencies {
+    implementation(project(":Circleftp"))
+}
 
 cloudstream {
     description = "Movie website in Bangladesh"
