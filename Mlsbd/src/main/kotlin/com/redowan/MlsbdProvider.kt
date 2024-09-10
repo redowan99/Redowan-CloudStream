@@ -17,6 +17,7 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
@@ -143,7 +144,7 @@ class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAP
                         Episode(
                             episodeUrl,
                             "Episode $episodeNum",
-                            null,
+                            1,
                             episodeNum
                         )
                     )
@@ -194,5 +195,10 @@ class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAP
                 isDash = false
             )
         )
+    }
+
+    private fun getVideoQuality(str: String?): Int {
+        return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
+            ?: Qualities.Unknown.value
     }
 }
