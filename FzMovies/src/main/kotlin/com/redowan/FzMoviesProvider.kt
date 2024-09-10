@@ -7,7 +7,6 @@ import com.lagradost.cloudstream3.LoadResponse.Companion.addImdbUrl
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageRequest
-import com.lagradost.cloudstream3.SearchQuality
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
@@ -16,7 +15,6 @@ import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.Qualities
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -69,31 +67,12 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
         val url = "$mainUrl/"+ post.selectXpath("table/tbody/tr/td[1]/a").attr("href")
         val title = post.selectXpath("table/tbody/tr/td[2]/span/a/small/b").text() + " " +
                 post.selectXpath("table/tbody/tr/td[2]/span/small[1]").text()
-        val check = post.selectXpath("table/tbody/tr/td[2]/span/small[2]").text().lowercase()
         return newMovieSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = mainUrl + post.selectXpath("table/tbody/tr/td[1]/a/img")
                 .attr("src")
-            this.quality = when {
-                "webrip" in check -> SearchQuality.WebRip
-                "web-dl" in check -> SearchQuality.WebRip
-                "bluray" in check -> SearchQuality.BlueRay
-                "hdts" in check -> SearchQuality.HdCam
-                "dvd" in check -> SearchQuality.DVD
-                "cam" in check -> SearchQuality.Cam
-                "camrip" in check -> SearchQuality.CamRip
-                "hdcam" in check -> SearchQuality.HdCam
-                "hdtc" in check -> SearchQuality.HdCam
-                "hdrip" in check -> SearchQuality.HD
-                "hd" in check -> SearchQuality.HD
-                "hdtv" in check -> SearchQuality.HD
-                "rip" in check -> SearchQuality.CamRip
-                else -> null
-            }
+            this.quality = getSearchQuality(post.selectXpath("table/tbody/tr/td[2]/span/small[2]").text())
         }
     }
-
-    override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
-
 
     override suspend fun search(query: String): List<SearchResponse> {
         val client = OkHttpClient()
@@ -144,7 +123,7 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
         val doc = html.document
         val cookie = html.cookies
         doc.select(".moviesfiles").forEach{item ->
-            val quality = getIndexQuality(item.select("#downloadoptionslink2").text())
+            val quality = getVideoQuality(item.select("#downloadoptionslink2").text())
             val qualityUrl = "$mainUrl/" + item.select("#downloadoptionslink2").attr("href")
             var newDoc = app.get(qualityUrl, cookies = cookie).document
             val sudoDlUrl = "$mainUrl/" + newDoc.select("#downloadlink").attr("href")
@@ -169,9 +148,5 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
         }
 
         return true
-    }
-    private fun getIndexQuality(str: String?): Int {
-        return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
-            ?: Qualities.Unknown.value
     }
 }
