@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 11
+version = 1
 dependencies {
     implementation("androidx.core:core:1.13.1")
     implementation("com.google.code.gson:gson:2.8.9")
@@ -27,5 +27,5 @@ cloudstream {
     )
     language = "en"
 
-    iconUrl = "https://www.oomoye.co/favicon.png"
+    iconUrl = "https://images.nightcafe.studio/jobs/CoDdYzJ7jvJ8L2NXtPBh/CoDdYzJ7jvJ8L2NXtPBh--2--gflwm.jpg"
 }
