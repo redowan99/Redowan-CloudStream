@@ -1,14 +1,9 @@
 // use an integer for version numbers
-version = 1
-dependencies {
-    implementation("androidx.core:core:1.13.1")
-    implementation("com.google.code.gson:gson:2.8.9")
-}
+version = 2
 
 cloudstream {
-    // All of these properties are optional, you can safely remove them
     description = "Watch Full Matches"
-    authors = listOf("salman731")
+    authors = listOf("salman731,Redowan")
 
     /**
     * Status int as the following:
