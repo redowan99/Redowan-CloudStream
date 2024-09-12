@@ -194,7 +194,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         data: String,
         callback: (ExtractorLink) -> Unit
     ) {
-        val doc = app.get(data.replaceBefore("/drive/", "https://hubcloud.club")).document
+        val doc = app.get(data, allowRedirects = true).document
         val gamerLink: String
 
         if (data.contains("drive")) {
