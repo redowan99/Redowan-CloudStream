@@ -1,5 +1,6 @@
 package com.redowan
 
+import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
@@ -13,6 +14,7 @@ import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
+import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import okhttp3.FormBody
@@ -108,10 +110,28 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
         val doc = app.get(url).document
         val title = doc.select(".entry-header h1").text()
         val imageUrl = doc.select(".single-featured-image img").attr("src")
-        val videoUrl = doc.select(".tabcontent iframe").attr("src")
-            .replace("//", "https://")
-        return newMovieLoadResponse(title, url, TvType.Movie, videoUrl) {
-            this.posterUrl = imageUrl
+        val videoUrls = doc.select(".tabcontent iframe")
+        if(videoUrls.size > 1)
+        {
+            val episodesData = mutableListOf<Episode>()
+            var episodeNo = 1
+            videoUrls.forEach{item ->
+                val videoUrl = item.attr("src")
+                    .replace("//", "https://")
+                episodesData.add(Episode(videoUrl, season = 1, episode =  episodeNo))
+                episodeNo++
+            }
+            return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
+                this.posterUrl = imageUrl
+            }
+
+        }
+        else {
+            val videoUrl = doc.select(".tabcontent iframe").attr("src")
+                .replace("//", "https://")
+            return newMovieLoadResponse(title, url, TvType.Movie, videoUrl) {
+                this.posterUrl = imageUrl
+            }
         }
     }
 
