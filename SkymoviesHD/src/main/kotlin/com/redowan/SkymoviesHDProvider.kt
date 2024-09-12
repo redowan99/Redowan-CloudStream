@@ -172,7 +172,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ) {
-        val doc = app.get(data).document
+        val doc = app.get(data.replaceBefore("/drive/", "https://hubcloud.club")).document
         val url1 = doc.selectFirst("div.box:nth-child(1)  a")?.attr("href")
         if (url1 != null) loadExtractor(app.get(url1).url, subtitleCallback, callback)
 
