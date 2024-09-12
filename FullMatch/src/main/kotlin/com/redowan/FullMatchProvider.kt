@@ -21,17 +21,6 @@ import okhttp3.FormBody
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 
-import com.lagradost.cloudstreamtest.ProviderTester
-
-suspend fun main() {
-    val providerTester = ProviderTester(FullMatchProvider())
-    //providerTester.testLoad("https://fullmatch.info/2024/09/06/argentina-vs-chile-fifa-world-cup-2026-qualification-05-september-2024/")
-    providerTester.testMainPage()
-    //providerTester.testAll()
-    //providerTester.testLoadLinks("")
-    //providerTester.testSearch("godfather")
-}
-
 class FullMatchProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://fullmatch.info"
     override var name = "FullMatch"
