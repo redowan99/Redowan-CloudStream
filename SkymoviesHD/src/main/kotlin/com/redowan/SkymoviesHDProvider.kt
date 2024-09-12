@@ -1,5 +1,6 @@
 package com.redowan
 
+import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
@@ -13,9 +14,9 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
-import com.lagradost.nicehttp.Requests
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.loadExtractor
 
 class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of MainAPI
@@ -35,6 +36,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
 
     override val mainPage = mainPageOf(
         "Bollywood-Movies" to "Bollywood Movies",
+        "Bangladeshi-Movies" to "Bangladeshi Movies",
         "South-Indian-Hindi-Dubbed-Movies" to "South Indian Hindi Dubbed Movies",
         "Bengali-Movies" to "Bengali Movies",
         "Pakistani-Movies" to "Pakistani Movies",
@@ -44,7 +46,6 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         "Telugu-Movies" to "Telugu Movies",
         "Punjabi-Movies" to "Punjabi Movies",
         "Bhojpuri-Movies" to "Bhojpuri Movies",
-        "Bangladeshi-Movies" to "Bangladeshi Movies",
         "Marathi-Movies" to "Marathi Movies",
         "Kannada-Movies" to "Kannada Movies",
         "WWE-TV-Shows" to "WWE TV Shows",
@@ -60,9 +61,10 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
 
     override suspend fun getMainPage(
         page: Int,
-        request : MainPageRequest
+        request: MainPageRequest
     ): HomePageResponse {
-        val doc = app.get("$mainUrl/category/${request.data}/$page.html", cacheTime = 60, allowRedirects = true, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
+        val doc = app.get(
+            "$mainUrl/category/${request.data}/$page.html", cacheTime = 60).document
         val homeResponse = doc.select("div.L")
         val home = homeResponse.mapNotNull { post ->
             toResult(post)
@@ -73,12 +75,12 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
     private suspend fun toResult(post: Element): SearchResponse {
         var title = post.text()
         val size = "\\[\\d(.*?)B]".toRegex().find(title)?.value
-        if (size!=null){
+        if (size != null) {
             val newTitle = title.replace(size, "")
             title = "$size $newTitle"
         }
         val url = mainUrl + post.select("a").attr("href")
-        val doc = app.get(url, cacheTime = 60, allowRedirects = true, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
+        val doc = app.get(url, cacheTime = 60).document
         return newMovieSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = doc.select(".movielist > img:nth-child(1)").attr("src")
         }
@@ -93,13 +95,38 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val doc = app.get(url, cacheTime = 60, allowRedirects = true, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
+        val doc = app.get(url, cacheTime = 60).document
         val title = doc.select("div.Robiul").first()!!.text()
         val year = "(?<=\\()\\d{4}(?=\\))".toRegex().find(title)?.value?.toIntOrNull()
-        return newMovieLoadResponse(title, url, TvType.Movie,url) {
-            this.posterUrl = doc.select(".movielist > img:nth-child(1)").attr("src")
-            this.year = year
-            this.plot = doc.select("div.Let:nth-child(8)").text()
+        val imageUrl = doc.select(".movielist > img:nth-child(1)").attr("src")
+        val plot = doc.select("div.Let:nth-child(8)").text()
+        val links = doc.select(".Bolly")
+        if (links.text().contains("Episode") || links.text().contains("720p Links")) {
+            val episodesData = mutableListOf<Episode>()
+            links.select("a").forEach {
+                if (it.text() != "") episodesData.add(Episode(it.attr("href"), it.text()))
+            }
+            return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
+                this.posterUrl = imageUrl
+                this.year = year
+                this.plot = plot
+            }
+        } else {
+            var link = ""
+            val aLinks = links.select("a")
+            for (i in aLinks.indices) {
+                if (aLinks[i].text() != "") {
+                    link += aLinks[i].attr("href") + " ; "
+                    if (aLinks[i].attr("href")
+                            .contains("howblogs")
+                    ) break
+                }
+            }
+            return newMovieLoadResponse(title, url, TvType.Movie, link) {
+                this.posterUrl = imageUrl
+                this.year = year
+                this.plot = plot
+            }
         }
     }
 
@@ -109,42 +136,65 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        var doc = app.get(data).document
-        val watchOnline = doc.select(".Bolly > a:nth-child(1)").attr("href")
-        loadExtractor(watchOnline, subtitleCallback, callback)
-        doc = Requests().get(doc.select(".Bolly > a:nth-child(3)").attr("href")).document
-        doc.select(".cotent-box > a").forEach {
-            val link = it.attr("href")
-            if("fastxyz" in link) fastxyz(link,callback)
-            else if("hubcloud" in link) hubCloud(link, callback)
+        data.split(" ; ").forEach { link ->
+            if (link != "") postMan(link, subtitleCallback, callback)
         }
         return true
     }
 
+    private suspend fun postMan(
+        url: String,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ) {
+        if (url.contains("howblogs")) howBlogs(url, subtitleCallback, callback)
+        else if (url.contains("fastxyz")) fastxyz(url, subtitleCallback, callback)
+        else if (url.contains("hubcloud")) hubCloud(url, callback)
+        else loadExtractor(url, subtitleCallback, callback)
+    }
+
+    private suspend fun howBlogs(
+        url: String,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ) {
+        val doc = app.get(url).document
+        var link: String
+        doc.select(".cotent-box > a").forEach {
+            link = it.attr("href")
+            if ("fastxyz" in link) fastxyz(link, subtitleCallback, callback)
+            else if ("hubcloud" in link) hubCloud(link, callback)
+        }
+    }
+
     private suspend fun fastxyz(
         data: String,
-        callback: (ExtractorLink) -> Unit) {
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ) {
         val doc = app.get(data).document
-        val server = listOf("Fastxyz-MediaFire", "Fastxyz-Cloudflare")
-        var count = 0
-        doc.select(".flb_download_buttons > a:nth-child(1)").forEach {
+        val url1 = doc.selectFirst("div.box:nth-child(1)  a")?.attr("href")
+        if (url1 != null) loadExtractor(app.get(url1).url, subtitleCallback, callback)
+
+        val url2 = doc.selectFirst("div.box:nth-child(2)  a")?.attr("href")
+        if (url2 != null) {
             callback.invoke(
                 ExtractorLink(
                     "Fastxyz",
-                    server[count],
-                    it.attr("href"),
+                    "Fastxyz-Cloudflare",
+                    url2,
                     "",
                     Qualities.Unknown.value,
                 )
             )
-            count++
         }
     }
 
     private suspend fun hubCloud(
         data: String,
-        callback: (ExtractorLink) -> Unit){
-        val doc = app.get(data.replaceBefore("/drive/","https://hubcloud.club")).document
+        callback: (ExtractorLink) -> Unit
+    ) {
+        val doc = app.get(data.replaceBefore("/drive/", "https://hubcloud.club")).document
         val gamerLink: String
 
         if (data.contains("drive")) {
@@ -177,7 +227,8 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
             } else if (text.contains("Download [Server : 10Gbps]")) {
                 val response = app.get(link, allowRedirects = false)
                 val downloadLink =
-                    response.headers["location"].toString().split("link=").getOrNull(1) ?: link
+                    response.headers["location"].toString().split("link=").getOrNull(1)
+                        ?: link
                 callback.invoke(
                     ExtractorLink(
                         "Google[Download]",
@@ -202,7 +253,8 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
     }
 
     private fun getVideoQuality(str: String?): Int {
-        return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
+        return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)
+            ?.toIntOrNull()
             ?: Qualities.Unknown.value
     }
 }
