@@ -21,17 +21,6 @@ import okhttp3.FormBody
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 
-import com.lagradost.cloudstreamtest.ProviderTester
-
-suspend fun main() {
-    val providerTester = ProviderTester(FullMatchProvider())
-    //providerTester.testLoad("https://fullmatch.info/2024/09/06/argentina-vs-chile-fifa-world-cup-2026-qualification-05-september-2024/")
-    providerTester.testMainPage()
-    //providerTester.testAll()
-    //providerTester.testLoadLinks("")
-    //providerTester.testSearch("godfather")
-}
-
 class FullMatchProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://fullmatch.info"
     override var name = "FullMatch"
@@ -107,10 +96,9 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
     private fun toResult(post: Element): SearchResponse {
         val url = post.select(".post-title a").attr("href")
         val title = post.select(".post-title a").text()
-        //.Avif type image format isn't in Android. Might Try something in the future
-        //val imageUrl = post.select(".wp-post-image").attr("src")
+        val imageUrl = post.select(".wp-post-image").attr("src")
         return newMovieSearchResponse(title, url, TvType.Movie) {
-            //this.posterUrl = imageUrl
+            this.posterUrl = imageUrl
         }
     }
 
@@ -123,26 +111,28 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
     override suspend fun load(url: String): LoadResponse {
         val doc = app.get(url).document
         val title = doc.select(".entry-header h1").text()
-        //.Avif type image format isn't in Android. Might Try something in the future
-        //val imageUrl = doc.select(".single-featured-image img").attr("src")
+        val imageUrl = doc.select(".single-featured-image img").attr("src")
         val videoUrls = doc.select(".tabcontent iframe")
-        if (videoUrls.size > 1) {
+        if(videoUrls.size > 1)
+        {
             val episodesData = mutableListOf<Episode>()
             var episodeNo = 1
-            videoUrls.forEach { item ->
+            videoUrls.forEach{item ->
                 val videoUrl = item.attr("src")
                     .replace("//", "https://")
-                episodesData.add(Episode(videoUrl, season = 1, episode = episodeNo))
+                episodesData.add(Episode(videoUrl, season = 1, episode =  episodeNo))
                 episodeNo++
             }
             return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
-                //this.posterUrl = imageUrl
+                this.posterUrl = imageUrl
             }
-        } else {
+
+        }
+        else {
             val videoUrl = doc.select(".tabcontent iframe").attr("src")
                 .replace("//", "https://")
             return newMovieLoadResponse(title, url, TvType.Movie, videoUrl) {
-                //this.posterUrl = imageUrl
+                this.posterUrl = imageUrl
             }
         }
     }
