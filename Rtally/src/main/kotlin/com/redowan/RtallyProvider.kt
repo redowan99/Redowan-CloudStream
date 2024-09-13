@@ -64,8 +64,9 @@ class RtallyProvider : MainAPI() {
     private fun toResult(post: Element): SearchResponse {
         val title = post.selectFirst(".line-clamp-1")?.text() ?: ""
         val check = post.select("span.absolute:nth-child(5)").text().lowercase()
-        val url = mainUrl + post.select("a.relative")
-            .attr("href")
+        val link = post.select("a.relative").attr("href")
+        val url = if (link.contains("https"))link
+            else mainUrl + link
         return newAnimeSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = post.select(".object-cover")
                 .attr("src")
