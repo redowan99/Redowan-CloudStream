@@ -15,6 +15,7 @@ import com.lagradost.cloudstream3.newAnimeSearchResponse
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.Qualities
 import org.jsoup.nodes.Element
 
 class FibWatchProvider : MainAPI() {
@@ -101,6 +102,17 @@ class FibWatchProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
+        callback.invoke(
+            ExtractorLink(
+                mainUrl,
+                this.name,
+                url = data,
+                mainUrl,
+                quality = Qualities.Unknown.value,
+                isM3u8 = false,
+                isDash = false
+            )
+        )
         return true
     }
 
