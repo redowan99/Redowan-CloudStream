@@ -1,5 +1,6 @@
 package com.redowan
 
+import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
@@ -57,7 +58,7 @@ class FibWatchProvider : MainAPI() {
     ): HomePageResponse {
         val doc = app.get("$mainUrl${request.data}?page_id=$page", cacheTime = 60).document
         val home = doc.select(".video-thumb > a").mapNotNull {toResult(it)}
-        return newHomePageResponse(request.name,home, true)
+        return newHomePageResponse(HomePageList(request.name,home,isHorizontalImages = true), true)
     }
 
     private fun toResult(post: Element): SearchResponse {
