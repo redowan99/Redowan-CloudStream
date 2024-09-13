@@ -60,12 +60,12 @@ class FibWatchProvider : MainAPI() {
     }
 
     private fun toResult(post: Element): SearchResponse {
-        val title = post.selectFirst("a > img").attr("alt")
-        val url = post.selectFirst("a:nth-child(1)").attr("href")
+        val title = post.selectFirst("a > img")?.attr("alt") ?: ""
+        val url = post.selectFirst("a:nth-child(1)")?.attr("href") ?: ""
         val check = title.lowercase()
         return newAnimeSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = post.selectFirst("a > img")
-                .attr("src")
+                ?.attr("src")
             this.quality = getSearchQuality(check)
             addDubStatus(
                 dubExist = when {
@@ -85,10 +85,10 @@ class FibWatchProvider : MainAPI() {
     }
     override suspend fun load(url: String): LoadResponse {
         val doc = app.get(url, cacheTime = 60).document
-        val title = doc.select(".hptag").text()
+        val title = doc.selectFirst(".hptag")?.text() ?: ""
         val year = "(?<=\\()\\d{4}(?=\\))".toRegex().find(title)?.value?.toIntOrNull()
-        val image = doc.selectFirst("#my-video").attr("poster")
-        val link = doc.selectFirst(".download-placement > a").attr("href")
+        val image = doc.selectFirst("#my-video")?.attr("poster")
+        val link = doc.selectFirst(".download-placement > a")?.attr("href")
         return newMovieLoadResponse(title, url, TvType.Movie, link) {
             this.posterUrl = image
             this.year = year
