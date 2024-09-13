@@ -148,7 +148,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         callback: (ExtractorLink) -> Unit
     ) {
         if (url.contains("howblogs")) howBlogs(url, subtitleCallback, callback)
-        else if (url.contains("fastxyz")) fastxyz(url, subtitleCallback, callback)
+        //else if (url.contains("fastxyz")) fastxyz(url, subtitleCallback, callback)
         else if (url.contains("hubcloud")) hubCloud(url, callback)
         else loadExtractor(url, subtitleCallback, callback)
     }
@@ -162,8 +162,8 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         var link: String
         doc.select(".cotent-box > a").forEach {
             link = it.attr("href")
-            if ("fastxyz" in link) fastxyz(link, subtitleCallback, callback)
-            else if ("hubcloud" in link) hubCloud(link, callback)
+            if ("hubcloud" in link) hubCloud(link, callback)
+            //else if ("fastxyz" in link) fastxyz(link, subtitleCallback, callback)
         }
     }
 
@@ -217,7 +217,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
                 val pixeldrainLink = link.replace("/u/", "/api/file/")
                 callback.invoke(
                     ExtractorLink(
-                        "Pixeldrain",
+                        "Pixeldrain[Watch]",
                         "Pixeldrain",
                         pixeldrainLink,
                         link,
@@ -242,7 +242,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
                 callback.invoke(
                     ExtractorLink(
                         "Fastdl",
-                        "Fastdl",
+                        "Fastdl[Download]",
                         link,
                         "",
                         getVideoQuality(header),
