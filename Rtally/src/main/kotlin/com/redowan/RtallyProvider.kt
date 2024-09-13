@@ -58,7 +58,7 @@ class RtallyProvider : MainAPI() {
         ).document
         val categories = doc.select("div.p-2.space-y-10:nth-child(${request.data})")
         val home = categories.select("a.relative.space-y-2").mapNotNull { toResult(it) }
-        return newHomePageResponse(request.name, home, true)
+        return newHomePageResponse(request.name, home, false)
     }
 
     private fun toResult(post: Element): SearchResponse {
