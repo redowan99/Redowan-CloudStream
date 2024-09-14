@@ -1,5 +1,8 @@
 package com.redowan
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
@@ -27,7 +30,6 @@ class RtallyProvider : MainAPI() {
         TvType.TvSeries,
         TvType.AsianDrama,
         TvType.AnimeMovie,
-        TvType.NSFW,
         TvType.Anime
     )
 
@@ -37,35 +39,50 @@ class RtallyProvider : MainAPI() {
     override val hasQuickSearch = false
 
     override val mainPage = mainPageOf(
-        "5" to "Trending",
-        "6" to "Featured",
-        "7" to "TV-Drama",
-        "8" to "Adult 18+",
-        "9" to "Anime",
-        "10" to "Bangladeshi",
-        "11" to "Indian",
-        "12" to "Hollywood"
+        "Trending" to "Trending",
+        "Featured" to "Featured",
+        "Tv-Shows" to "Tv Shows",
+        "Anime" to "Anime",
+        "Bengali" to "Bangladeshi",
+        "Bollywood" to "Indian",
+        "Hollywood" to "Hollywood"
     )
 
     override suspend fun getMainPage(
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
+        val url = "https://12wlmtcp.api.sanity.io/v2023-03-01/data/query/production?query=%0A*%5B_type+%3D%3D+%22movie%22+%26%26+%24keyword+in+categories%5B%5D-%3Etitle%5D+%7C++order%28_createdAt++desc%29+%7C+order%28released++desc%29%5B0...%24end%5D%7B%0A++++...%2C%0A++++type%5B%5D-%3E%2C%0A++++categories%5B%5D-%3E%2C%0A++++%2F%2F+genres%5B%5D-%3E%2C%0A++++language%5B%5D-%3E%2C%0A++++quality%5B%5D-%3E%2C%0A++++year%5B%5D-%3E%2C%0A++++dramasLink%5B%5D-%3E%2C%0A++++%22count%22%3A+count%28*%5B_type+%3D%3D+%22movie%22+%26%26+%24keyword+in+categories%5B%5D-%3Etitle%5D%29%0A%7D&%24keyword=%22${request.data}%22&%24end=28"
         val doc = app.get(
-            mainUrl,
+            url,
             cacheTime = 60,
+            responseParser = parser,
             headers = mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
-        ).document
-        val categories = doc.select("div.p-2.space-y-10:nth-child(${request.data})")
-        val home = categories.select("a.relative.space-y-2").mapNotNull { toResult(it) }
-        return newHomePageResponse(request.name, home, false)
+        ).parsed<Post>()
+        val home = doc.result.map { toHomeResult(it) }
+        return newHomePageResponse(request.name, home, true)
     }
 
-    private fun toResult(post: Element): SearchResponse {
+    private fun toHomeResult(post: Result): SearchResponse {
+        val url = if (post.slug.current.contains("https")) post.slug.current
+            else "$mainUrl/post/${post.slug.current}"
+        return newAnimeSearchResponse(post.title, url, TvType.Movie) {
+            this.posterUrl = post.otherImg
+            addDubStatus(
+                dubExist = when {
+                    "dual" in post.language.first().title -> true
+                    else -> false
+                },
+                subExist = false
+            )
+        }
+    }
+
+    private fun toSearchResult(post: Element): SearchResponse {
         val title = post.selectFirst(".line-clamp-1")?.text() ?: ""
         val check = post.select("span.absolute:nth-child(5)").text().lowercase()
         val link = post.select("a.relative").attr("href")
-        val url = if (link.contains("https"))link
+        val url = if (link.contains("https")) link
             else mainUrl + link
         return newAnimeSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = post.select(".object-cover")
@@ -75,10 +92,7 @@ class RtallyProvider : MainAPI() {
                     "dual" in check -> true
                     else -> false
                 },
-                subExist = when {
-                    "sub" in check -> true
-                    else -> false
-                }
+                subExist = false
             )
         }
     }
@@ -89,7 +103,7 @@ class RtallyProvider : MainAPI() {
             cacheTime = 60,
             headers = mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
         ).document
-        return doc.select("a.relative.space-y-2").mapNotNull { toResult(it) }
+        return doc.select("a.relative.space-y-2").mapNotNull { toSearchResult(it) }
     }
 
     override suspend fun load(url: String): LoadResponse {
@@ -151,5 +165,47 @@ class RtallyProvider : MainAPI() {
             )
         }
         return true
+    }
+
+    data class Post(
+        val result: List<Result>
+    )
+
+    data class Result(
+        val language: List<Language>,
+        val otherImg: String,
+        val slug: Slug,
+        val title: String
+    )
+
+    data class Language(
+        val title: String
+    )
+
+    data class Slug(
+        val current: String
+    )
+
+    private val parser = object : ResponseParser {
+        val mapper: ObjectMapper = jacksonObjectMapper().configure(
+            DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+            false
+        )
+
+        override fun <T : Any> parse(text: String, kClass: KClass<T>): T {
+            return mapper.readValue(text, kClass.java)
+        }
+
+        override fun <T : Any> parseSafe(text: String, kClass: KClass<T>): T? {
+            return try {
+                mapper.readValue(text, kClass.java)
+            } catch (e: Exception) {
+                null
+            }
+        }
+
+        override fun writeValueAsString(obj: Any): String {
+            return mapper.writeValueAsString(obj)
+        }
     }
 }
