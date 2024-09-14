@@ -50,24 +50,25 @@ class RtallyProvider : MainAPI() {
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        val url = "https://12wlmtcp.api.sanity.io/v2023-03-01/data/query/production?query=%0A*%5B_type+%3D%3D+%22movie%22+%26%26+%24keyword+in+categories%5B%5D-%3Etitle%5D+%7C++order%28_createdAt++desc%29+%7C+order%28released++desc%29%5B0...%24end%5D%7B%0A++++...%2C%0A++++type%5B%5D-%3E%2C%0A++++categories%5B%5D-%3E%2C%0A++++%2F%2F+genres%5B%5D-%3E%2C%0A++++language%5B%5D-%3E%2C%0A++++quality%5B%5D-%3E%2C%0A++++year%5B%5D-%3E%2C%0A++++dramasLink%5B%5D-%3E%2C%0A++++%22count%22%3A+count%28*%5B_type+%3D%3D+%22movie%22+%26%26+%24keyword+in+categories%5B%5D-%3Etitle%5D%29%0A%7D&%24keyword=%22${request.data}%22&%24end=96"
+        val pageId = page * 12
+        val url = "https://12wlmtcp.api.sanity.io/v2023-03-01/data/query/production?query=%0A*%5B_type+%3D%3D+%22movie%22+%26%26+%24keyword+in+categories%5B%5D-%3Etitle%5D+%7C++order%28_createdAt++desc%29+%7C+order%28released++desc%29%5B${pageId-12}...%24end%5D%7B%0A++++...%2C%0A++++type%5B%5D-%3E%2C%0A++++categories%5B%5D-%3E%2C%0A++++%2F%2F+genres%5B%5D-%3E%2C%0A++++language%5B%5D-%3E%2C%0A++++quality%5B%5D-%3E%2C%0A++++year%5B%5D-%3E%2C%0A++++dramasLink%5B%5D-%3E%2C%0A++++%22count%22%3A+count%28*%5B_type+%3D%3D+%22movie%22+%26%26+%24keyword+in+categories%5B%5D-%3Etitle%5D%29%0A%7D&%24keyword=%22${request.data}%22&%24end=$pageId"
         val doc = app.get(
             url,
             cacheTime = 60,
             headers = mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
         )
         val home = AppUtils.parseJson<Post>(doc.text).result.map { toHomeResult(it) }
-        return newHomePageResponse(request.name, home, false)
+        return newHomePageResponse(request.name, home, true)
     }
 
     private fun toHomeResult(post: Result): SearchResponse {
-        val url = if (post.slug.current.contains("https")) post.slug.current
-            else "$mainUrl/post/${post.slug.current}"
-        return newAnimeSearchResponse(post.title, url, TvType.Movie) {
+        val url = if (post.slug?.current?.contains("https") == true) post.slug.current
+            else "$mainUrl/post/${post.slug?.current}"
+        return newAnimeSearchResponse(post.title ?: "", url, TvType.Movie) {
             this.posterUrl = post.otherImg
             addDubStatus(
                 dubExist = when {
-                    "dual" in post.language.first().title -> true
+                    "dual" in (post.language?.first()?.title ?: "") -> true
                     else -> false
                 },
                 subExist = false
@@ -175,18 +176,18 @@ class RtallyProvider : MainAPI() {
     )
 
     data class Result(
-        val language: List<Language>,
-        val otherImg: String,
-        val slug: Slug,
-        val title: String
+        val language: List<Language>?,
+        val otherImg: String?,
+        val slug: Slug?,
+        val title: String?
     )
 
     data class Language(
-        val title: String
+        val title: String?
     )
 
     data class Slug(
-        val current: String
+        val current: String?
     )
 
     private fun selectUntilNonInt(string: String): Int?{
