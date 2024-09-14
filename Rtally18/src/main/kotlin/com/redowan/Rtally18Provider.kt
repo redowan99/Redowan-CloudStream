@@ -32,7 +32,6 @@ class Rtally18Provider : MainAPI() {
     override val hasMainPage = true
     override val hasDownloadSupport = true
     override val hasQuickSearch = false
-
     override val mainPage = mainPageOf(
         "Adult+18%2B" to "Adult 18+",
         "Philippines" to "Philippines",
@@ -44,7 +43,7 @@ class Rtally18Provider : MainAPI() {
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        val url = "https://xotpxf3q.api.sanity.io/v2023-03-01/data/query/rtally?query=%0A*%5B_type+%3D%3D+%22movie%22+%26%26+%24keyword+in+categories%5B%5D-%3Etitle%5D+%7C++order%28_createdAt++desc%29+%7C+order%28released++desc%29%5B0...%24end%5D%7B%0A++++...%2C%0A++++type%5B%5D-%3E%2C%0A++++categories%5B%5D-%3E%2C%0A++++genres%5B%5D-%3E%2C%0A++++language%5B%5D-%3E%2C%0A++++quality%5B%5D-%3E%2C%0A++++year%5B%5D-%3E%2C%0A++++%22count%22%3A+count%28*%5B_type+%3D%3D+%22movie%22+%26%26+%24keyword+in+categories%5B%5D-%3Etitle%5D%29%0A%7D&%24keyword=%22${request.data}%22&%24end=14"
+        val url = "https://xotpxf3q.api.sanity.io/v2023-03-01/data/query/rtally?query=%0A*%5B_type+%3D%3D+%22movie%22+%26%26+%24keyword+in+categories%5B%5D-%3Etitle%5D+%7C++order%28_createdAt++desc%29+%7C+order%28released++desc%29%5B0...%24end%5D%7B%0A++++...%2C%0A++++type%5B%5D-%3E%2C%0A++++categories%5B%5D-%3E%2C%0A++++genres%5B%5D-%3E%2C%0A++++language%5B%5D-%3E%2C%0A++++quality%5B%5D-%3E%2C%0A++++year%5B%5D-%3E%2C%0A++++%22count%22%3A+count%28*%5B_type+%3D%3D+%22movie%22+%26%26+%24keyword+in+categories%5B%5D-%3Etitle%5D%29%0A%7D&%24keyword=%22${request.data}%22&%24end=96"
         val doc = app.get(
             url,
             cacheTime = 60,
@@ -54,7 +53,7 @@ class Rtally18Provider : MainAPI() {
             )
         )
         val home = AppUtils.parseJson<Post>(doc.text).result.map { toHomeResult(it) }
-        return newHomePageResponse(request.name, home, true)
+        return newHomePageResponse(request.name, home, false)
     }
 
     private fun toHomeResult(post: Result): SearchResponse {
