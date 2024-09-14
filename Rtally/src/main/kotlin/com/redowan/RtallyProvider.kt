@@ -1,8 +1,5 @@
 package com.redowan
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
@@ -18,11 +15,10 @@ import com.lagradost.cloudstream3.newAnimeSearchResponse
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
+import com.lagradost.cloudstream3.utils.AppUtils
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
-import com.lagradost.nicehttp.ResponseParser
-import kotlin.reflect.KClass
 
 class RtallyProvider : MainAPI() {
     override var mainUrl = "https://rtally.vercel.app"
@@ -58,10 +54,9 @@ class RtallyProvider : MainAPI() {
         val doc = app.get(
             url,
             cacheTime = 60,
-            responseParser = parser,
             headers = mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
-        ).parsed<Post>()
-        val home = doc.result.map { toHomeResult(it) }
+        )
+        val home = AppUtils.parseJson<Post>(doc.text).result.map { toHomeResult(it) }
         return newHomePageResponse(request.name, home, true)
     }
 
@@ -193,29 +188,6 @@ class RtallyProvider : MainAPI() {
     data class Slug(
         val current: String
     )
-
-    private val parser = object : ResponseParser {
-        val mapper: ObjectMapper = jacksonObjectMapper().configure(
-            DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-            false
-        )
-
-        override fun <T : Any> parse(text: String, kClass: KClass<T>): T {
-            return mapper.readValue(text, kClass.java)
-        }
-
-        override fun <T : Any> parseSafe(text: String, kClass: KClass<T>): T? {
-            return try {
-                mapper.readValue(text, kClass.java)
-            } catch (e: Exception) {
-                null
-            }
-        }
-
-        override fun writeValueAsString(obj: Any): String {
-            return mapper.writeValueAsString(obj)
-        }
-    }
 
     private fun selectUntilNonInt(string: String): Int?{
         return Regex("^.*?(?=\\D|\$)").find(string)?.value?.toIntOrNull()
