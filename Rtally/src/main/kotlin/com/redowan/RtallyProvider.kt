@@ -116,12 +116,16 @@ class RtallyProvider : MainAPI() {
         val image = doc.select(".p-\\[5px\\]").attr("src")
         val plot = doc.selectFirst("p.text-sm:nth-child(3)")?.text()
         val download = doc.select(".gap-4 > div > a:nth-child(1)")
+        val duration = selectUntilNonInt(doc.select("div.space-x-4:nth-child(2) > span:nth-child(3)").text())
+        val year = selectUntilNonInt(doc.select("div.grid:nth-child(3) > p:nth-child(2) > a:nth-child(1) > span:nth-child(1)").text())
         if (download.isNotEmpty()) {
             var links = ""
             download.forEach { links += it.attr("href") + " ; " }
             return newMovieLoadResponse(title, url, TvType.Movie, links) {
                 this.posterUrl = image
                 this.plot = plot
+                this.duration = duration
+                this.year = year
             }
         } else {
             val episodesData = mutableListOf<Episode>()
@@ -142,6 +146,8 @@ class RtallyProvider : MainAPI() {
             return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
                 this.posterUrl = image
                 this.plot = plot
+                this.duration = duration
+                this.year = year
             }
         }
     }
@@ -207,5 +213,9 @@ class RtallyProvider : MainAPI() {
         override fun writeValueAsString(obj: Any): String {
             return mapper.writeValueAsString(obj)
         }
+    }
+
+    private fun selectUntilNonInt(string: String): Int?{
+        return Regex("^.*?(?=\\D|\$)").find(string)?.value?.toInt()
     }
 }
