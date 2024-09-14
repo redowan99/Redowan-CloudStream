@@ -193,6 +193,16 @@ class CircleFtpProvider : MainAPI() {
     }
 
     /**
+     * Extracts the initial numeric part of a string and returns it as an integer.
+     *
+     * @param string The input string.
+     * @return The initial numeric part as an integer, or `null` if the string doesn't start with a number or is null.
+     */
+    private fun selectUntilNonInt(string: String?): Int? {
+        return string?.let { Regex("^.*?(?=\\D|\$)").find(it)?.value?.toIntOrNull() }
+    }
+
+    /**
      * Determines the search quality based on the presence of specific keywords in the input string.
      *
      * @param check The string to check for keywords.
@@ -220,11 +230,11 @@ class CircleFtpProvider : MainAPI() {
     /**
      * Extracts the video resolution (in pixels) from a string.
      *
-     * @param str The input string containing the resolution (e.g., "720p", "1080P").
+     * @param string The input string containing the resolution (e.g., "720p", "1080P").
      * @return The resolution as an integer, or `Qualities.Unknown.value` if no resolution is found.
      */
-    private fun getVideoQuality(str: String?): Int {
-        return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
+    private fun getVideoQuality(string: String?): Int {
+        return Regex("(\\d{3,4})[pP]").find(string ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
             ?: Qualities.Unknown.value
     }
 
