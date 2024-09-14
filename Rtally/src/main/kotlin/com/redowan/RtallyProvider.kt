@@ -218,6 +218,6 @@ class RtallyProvider : MainAPI() {
     }
 
     private fun selectUntilNonInt(string: String): Int?{
-        return Regex("^.*?(?=\\D|\$)").find(string)?.value?.toInt()
+        return Regex("^.*?(?=\\D|\$)").find(string)?.value?.toIntOrNull()
     }
 }
