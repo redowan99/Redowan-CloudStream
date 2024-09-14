@@ -111,7 +111,7 @@ class CircleFtpProvider : MainAPI() {
         val title = loadData.title
         val poster = "$apiUrl/uploads/${loadData.image}"
         val description = loadData.metaData
-        val year = loadData.year?.toInt()
+        val year = selectUntilNonInt(loadData.year)
         if (loadData.type == "singleVideo") {
             val movieUrl = json.parsed<Movies>()
             val duration =
@@ -192,26 +192,6 @@ class CircleFtpProvider : MainAPI() {
         return true
     }
 
-    private fun getSearchQuality(check: String): SearchQuality? {
-        return when(check.lowercase()){
-            in "webrip" -> SearchQuality.WebRip
-            in "web-dl" -> SearchQuality.WebRip
-            in "bluray" -> SearchQuality.BlueRay
-            in "hdts" -> SearchQuality.HdCam
-            in "dvd" -> SearchQuality.DVD
-            in "cam" -> SearchQuality.Cam
-            in "camrip" -> SearchQuality.CamRip
-            in "hdcam" -> SearchQuality.HdCam
-            in "hdtc" -> SearchQuality.HdCam
-            in "hdrip" -> SearchQuality.HD
-            in "hd" -> SearchQuality.HD
-            in "hdtv" -> SearchQuality.HD
-            in "rip" -> SearchQuality.CamRip
-            in "telecine" -> SearchQuality.Telecine
-            in "telesync" -> SearchQuality.Telesync
-            else -> null
-        }
-
     /**
      * Determines the search quality based on the presence of specific keywords in the input string.
      *
@@ -237,6 +217,12 @@ class CircleFtpProvider : MainAPI() {
         return null
     }
 
+    /**
+     * Extracts the video resolution (in pixels) from a string.
+     *
+     * @param str The input string containing the resolution (e.g., "720p", "1080P").
+     * @return The resolution as an integer, or `Qualities.Unknown.value` if no resolution is found.
+     */
     private fun getVideoQuality(str: String?): Int {
         return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
             ?: Qualities.Unknown.value
