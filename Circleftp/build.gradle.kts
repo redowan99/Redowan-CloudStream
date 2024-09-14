@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 17
+version = 18
 
 cloudstream {
     description = "Only works in Bangladesh. Works even in internet Shutdown"

@@ -211,6 +211,30 @@ class CircleFtpProvider : MainAPI() {
             in "telesync" -> SearchQuality.Telesync
             else -> null
         }
+
+    /**
+     * Determines the search quality based on the presence of specific keywords in the input string.
+     *
+     * @param check The string to check for keywords.
+     * @return The corresponding `SearchQuality` enum value, or `null` if no match is found.
+     */
+    private fun getSearchQuality(check: String?): SearchQuality? {
+        val lowercaseCheck = check?.lowercase()
+        if (lowercaseCheck != null) {
+            return when {
+                lowercaseCheck.contains("webrip") || lowercaseCheck.contains("web-dl") -> SearchQuality.WebRip
+                lowercaseCheck.contains("bluray") -> SearchQuality.BlueRay
+                lowercaseCheck.contains("hdts") || lowercaseCheck.contains("hdcam") || lowercaseCheck.contains("hdtc") -> SearchQuality.HdCam
+                lowercaseCheck.contains("dvd") -> SearchQuality.DVD
+                lowercaseCheck.contains("cam") -> SearchQuality.Cam
+                lowercaseCheck.contains("camrip") || lowercaseCheck.contains("rip") -> SearchQuality.CamRip
+                lowercaseCheck.contains("hdrip") || lowercaseCheck.contains("hd") || lowercaseCheck.contains("hdtv") -> SearchQuality.HD
+                lowercaseCheck.contains("telesync") -> SearchQuality.Telesync
+                lowercaseCheck.contains("telecine") -> SearchQuality.Telecine
+                else -> null
+            }
+        }
+        return null
     }
 
     private fun getVideoQuality(str: String?): Int {

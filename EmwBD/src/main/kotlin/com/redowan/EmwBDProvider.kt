@@ -113,24 +113,28 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
         return true
     }
 
-    private fun getSearchQuality(check: String): SearchQuality? {
-        return when(check.lowercase()){
-            in "webrip" -> SearchQuality.WebRip
-            in "web-dl" -> SearchQuality.WebRip
-            in "bluray" -> SearchQuality.BlueRay
-            in "hdts" -> SearchQuality.HdCam
-            in "dvd" -> SearchQuality.DVD
-            in "cam" -> SearchQuality.Cam
-            in "camrip" -> SearchQuality.CamRip
-            in "hdcam" -> SearchQuality.HdCam
-            in "hdtc" -> SearchQuality.HdCam
-            in "hdrip" -> SearchQuality.HD
-            in "hd" -> SearchQuality.HD
-            in "hdtv" -> SearchQuality.HD
-            in "rip" -> SearchQuality.CamRip
-            in "telecine" -> SearchQuality.Telecine
-            in "telesync" -> SearchQuality.Telesync
-            else -> null
+    /**
+     * Determines the search quality based on the presence of specific keywords in the input string.
+     *
+     * @param check The string to check for keywords.
+     * @return The corresponding `SearchQuality` enum value, or `null` if no match is found.
+     */
+    private fun getSearchQuality(check: String?): SearchQuality? {
+        val lowercaseCheck = check?.lowercase()
+        if (lowercaseCheck != null) {
+            return when {
+                lowercaseCheck.contains("webrip") || lowercaseCheck.contains("web-dl") -> SearchQuality.WebRip
+                lowercaseCheck.contains("bluray") -> SearchQuality.BlueRay
+                lowercaseCheck.contains("hdts") || lowercaseCheck.contains("hdcam") || lowercaseCheck.contains("hdtc") -> SearchQuality.HdCam
+                lowercaseCheck.contains("dvd") -> SearchQuality.DVD
+                lowercaseCheck.contains("cam") -> SearchQuality.Cam
+                lowercaseCheck.contains("camrip") || lowercaseCheck.contains("rip") -> SearchQuality.CamRip
+                lowercaseCheck.contains("hdrip") || lowercaseCheck.contains("hd") || lowercaseCheck.contains("hdtv") -> SearchQuality.HD
+                lowercaseCheck.contains("telesync") -> SearchQuality.Telesync
+                lowercaseCheck.contains("telecine") -> SearchQuality.Telecine
+                else -> null
+            }
         }
+        return null
     }
 }
