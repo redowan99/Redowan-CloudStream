@@ -61,7 +61,7 @@ class Rtally18Provider : MainAPI() {
         val url = if (post.slug?.current?.contains("https") == true) post.slug.current
             else "$mainUrl/post/${post.slug?.current}"
         val imageId = post.mainImage?.asset?._ref?.replaceFirst("image-","")
-            ?.replace("-jpg",".jpg")
+            ?.replace("-jpg",".jpg")?.replace("-webp",".webp")
         val image = "https://rtally18.vercel.app/_next/image?url=https%3A%2F%2Fcdn.sanity.io%2Fimages%2Fxotpxf3q%2Frtally%2F${imageId}&w=1080&q=75"
         return newAnimeSearchResponse(post.title ?: "", url, TvType.Movie) {
             this.posterUrl = image
