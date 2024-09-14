@@ -21,6 +21,8 @@ import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
+import com.lagradost.nicehttp.ResponseParser
+import kotlin.reflect.KClass
 
 class RtallyProvider : MainAPI() {
     override var mainUrl = "https://rtally.vercel.app"
