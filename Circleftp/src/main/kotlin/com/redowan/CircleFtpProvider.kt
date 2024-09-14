@@ -1,8 +1,5 @@
 package com.redowan
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
@@ -13,17 +10,16 @@ import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.addDubStatus
+import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.getDurationFromString
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newAnimeSearchResponse
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
+import com.lagradost.cloudstream3.utils.AppUtils
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
-import com.lagradost.nicehttp.Requests
-import com.lagradost.nicehttp.ResponseParser
-import kotlin.reflect.KClass
 
 class CircleFtpProvider : MainAPI() {
 //    override var mainUrl = "http://new.circleftp.net"
@@ -68,12 +64,11 @@ class CircleFtpProvider : MainAPI() {
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        val requests = Requests(responseParser = parser)
-        val json = requests.get(
+        val json = app.get(
             "$apiUrl/api/posts?categoryExact=${request.data}&page=$page&order=desc&limit=10",
             verify = false
-        ).parsed<PageData>()
-        val home = json.posts.mapNotNull { post ->
+        )
+        val home = AppUtils.parseJson<PageData>(json.text).posts.mapNotNull { post ->
             toSearchResult(post)
         }
         return newHomePageResponse(request.name, home, true)
@@ -100,21 +95,19 @@ class CircleFtpProvider : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val requests = Requests(responseParser = parser)
-        val searchResponse = requests.get(
+        val json = app.get(
             "$apiUrl/api/posts?searchTerm=$query&order=desc",
             verify = false
-        ).parsed<PageData>()
-        return searchResponse.posts.mapNotNull { post ->
+        )
+        return AppUtils.parseJson<PageData>(json.text).posts.mapNotNull { post ->
             toSearchResult(post)
         }
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val requests = Requests(responseParser = parser)
-        val json = requests.get(url.replace("$mainUrl/content/", "$apiUrl/api/posts/"),
+        val json = app.get(url.replace("$mainUrl/content/", "$apiUrl/api/posts/"),
             verify = false)
-        val loadData = json.parsed<Data>()
+        val loadData = AppUtils.parseJson<Data>(json.text)
         val title = loadData.title
         val poster = "$apiUrl/uploads/${loadData.image}"
         val description = loadData.metaData
@@ -223,29 +216,6 @@ class CircleFtpProvider : MainAPI() {
     private fun getVideoQuality(str: String?): Int {
         return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
             ?: Qualities.Unknown.value
-    }
-
-    private val parser = object : ResponseParser {
-        val mapper: ObjectMapper = jacksonObjectMapper().configure(
-            DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-            false
-        )
-
-        override fun <T : Any> parse(text: String, kClass: KClass<T>): T {
-            return mapper.readValue(text, kClass.java)
-        }
-
-        override fun <T : Any> parseSafe(text: String, kClass: KClass<T>): T? {
-            return try {
-                mapper.readValue(text, kClass.java)
-            } catch (e: Exception) {
-                null
-            }
-        }
-
-        override fun writeValueAsString(obj: Any): String {
-            return mapper.writeValueAsString(obj)
-        }
     }
 
     data class PageData(
