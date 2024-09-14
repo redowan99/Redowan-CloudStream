@@ -1,8 +1,5 @@
 package com.redowan
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
@@ -18,11 +15,10 @@ import com.lagradost.cloudstream3.newAnimeSearchResponse
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
+import com.lagradost.cloudstream3.utils.AppUtils
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
-import com.lagradost.nicehttp.ResponseParser
-import kotlin.reflect.KClass
 
 class Rtally18Provider : MainAPI() {
     override var mainUrl = "https://rtally18.vercel.app"
@@ -52,13 +48,12 @@ class Rtally18Provider : MainAPI() {
         val doc = app.get(
             url,
             cacheTime = 60,
-            responseParser = parser,
             headers = mapOf(
                 "Authorization" to "Bearer skBUVA1slvpATNipV4aNZnOfX6P8caCWUw8TGpqX340ror14OvULZvk6eJRx83KLM7GH1cFAWajBO7dlBQaBPjpKK3ZpTqUOJYp8Gmdmg1pLoUbrIaudAHGeQqDFe5E74zN2bEtD2xUqujp2YVp2wxgFk3i6CVhIE0p7aauoRK7LmDeVjq8o",
                 "user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
             )
-        ).parsed<Post>()
-        val home = doc.result.map { toHomeResult(it) }
+        )
+        val home = AppUtils.parseJson<Post>(doc.text).result.map { toHomeResult(it) }
         return newHomePageResponse(request.name, home, true)
     }
 
@@ -117,7 +112,7 @@ class Rtally18Provider : MainAPI() {
         val title = doc.select("h3.text-3xl.font-semibold").text()
         val image = doc.select(".p-\\[5px\\]").attr("src")
         val plot = doc.selectFirst("p.text-sm:nth-child(3)")?.text()
-        val download = doc.select(".gap-4 > div > a:nth-child(1)")
+        val download = doc.select("section.max-w-\\[90rem\\]:nth-child(2) > div:nth-child(1) > div > a:nth-child(1)")
         val duration = selectUntilNonInt(doc.select("div.space-x-4:nth-child(2) > span:nth-child(3)").text())
         val year = selectUntilNonInt(doc.select("div.grid:nth-child(3) > p:nth-child(2) > span:nth-child(1)").text())
         if (download.isNotEmpty()) {
@@ -171,6 +166,11 @@ class Rtally18Provider : MainAPI() {
                 subtitleCallback,
                 callback
             )
+            else if (it.contains("vidguard")) loadExtractor(
+                it.replace("/d/", "/e/"),
+                subtitleCallback,
+                callback
+            )
         }
         return true
     }
@@ -201,29 +201,6 @@ class Rtally18Provider : MainAPI() {
     data class Asset(
         val _ref: String
     )
-
-    private val parser = object : ResponseParser {
-        val mapper: ObjectMapper = jacksonObjectMapper().configure(
-            DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-            false
-        )
-
-        override fun <T : Any> parse(text: String, kClass: KClass<T>): T {
-            return mapper.readValue(text, kClass.java)
-        }
-
-        override fun <T : Any> parseSafe(text: String, kClass: KClass<T>): T? {
-            return try {
-                mapper.readValue(text, kClass.java)
-            } catch (e: Exception) {
-                null
-            }
-        }
-
-        override fun writeValueAsString(obj: Any): String {
-            return mapper.writeValueAsString(obj)
-        }
-    }
 
     private fun selectUntilNonInt(string: String): Int?{
         return Regex("^.*?(?=\\D|\$)").find(string)?.value?.toIntOrNull()
