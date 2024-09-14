@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 2
+version = 4
 
 cloudstream {
     description = "Movie website in Bangladesh"
@@ -19,8 +19,7 @@ cloudstream {
         "TvSeries",
         "Anime",
         "AnimeMovie",
-        "AsianDrama",
-        "Nsfw"
+        "AsianDrama"
     )
     language = "bn"
 
