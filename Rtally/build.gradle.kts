@@ -1,8 +1,8 @@
 // use an integer for version numbers
-version = 18
+version = 7
 
 cloudstream {
-    description = "Only works in Bangladesh. Works even in internet Shutdown"
+    description = "Movie website in Bangladesh"
     authors = listOf("Redowan")
 
     /**
@@ -19,13 +19,9 @@ cloudstream {
         "TvSeries",
         "Anime",
         "AnimeMovie",
-        "OVA",
-        "Cartoon",
-        "AsianDrama",
-        "Others",
-        "Documentary",
+        "AsianDrama"
     )
     language = "bn"
 
-    iconUrl = "http://new.circleftp.net/static/media/logo.fce2c9029060a10687b8.png"
+    iconUrl = "https://rtally.vercel.app/rtally.png"
 }

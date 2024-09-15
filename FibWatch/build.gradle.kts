@@ -1,8 +1,8 @@
 // use an integer for version numbers
-version = 18
+version = 4
 
 cloudstream {
-    description = "Only works in Bangladesh. Works even in internet Shutdown"
+    description = "Movie website in Bangladesh"
     authors = listOf("Redowan")
 
     /**
@@ -17,15 +17,10 @@ cloudstream {
     tvTypes = listOf(
         "Movie",
         "TvSeries",
-        "Anime",
         "AnimeMovie",
-        "OVA",
-        "Cartoon",
         "AsianDrama",
-        "Others",
-        "Documentary",
     )
     language = "bn"
 
-    iconUrl = "http://new.circleftp.net/static/media/logo.fce2c9029060a10687b8.png"
+    iconUrl = "https://fibwatch.online/themes/default/img/fibwatch-logo-new.png"
 }

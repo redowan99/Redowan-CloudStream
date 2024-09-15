@@ -1,8 +1,8 @@
 // use an integer for version numbers
-version = 2
+version = 3
 
 cloudstream {
-    description = "Watch Full Matches"
+    description = "Watch FootBall Matches"
     authors = listOf("salman731,Redowan")
 
     /**

@@ -1,8 +1,8 @@
 // use an integer for version numbers
-version = 7
+version = 4
 
 cloudstream {
-    description = "Movie website in Bangladesh"
+    description = "18+ website in Bangladesh"
     authors = listOf("Redowan")
 
     /**
@@ -16,11 +16,9 @@ cloudstream {
 
     tvTypes = listOf(
         "Movie",
-        "TvSeries",
-        "AnimeMovie",
-        "AsianDrama"
+        "NSFW"
     )
     language = "bn"
 
-    iconUrl = "https://www.emwbd.xyz/wp-content/uploads/2024/07/cropped-20240718_170236-192x192.png"
+    iconUrl = "https://rtally18.vercel.app/rtally18.png"
 }

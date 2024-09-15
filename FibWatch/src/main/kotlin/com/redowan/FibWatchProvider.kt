@@ -1,5 +1,6 @@
 package com.redowan
 
+import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
@@ -15,59 +16,58 @@ import com.lagradost.cloudstream3.newAnimeSearchResponse
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.loadExtractor
+import com.lagradost.cloudstream3.utils.Qualities
 import org.jsoup.nodes.Element
 
-
-
-class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAPI
-    override var mainUrl = "https://www.emwbd.xyz"
-    override var name = "EmwBD"
+class FibWatchProvider : MainAPI() {
+    override var mainUrl = "https://fibwatch.online"
+    override var name = "FibWatch"
     override val supportedTypes = setOf(
         TvType.Movie,
         TvType.TvSeries,
         TvType.AsianDrama,
         TvType.AnimeMovie,
+        TvType.NSFW
     )
 
     override var lang = "bn"
     override val hasMainPage = true
     override val hasDownloadSupport = true
     override val hasQuickSearch = false
+    override val instantLinkLoading = true
 
     override val mainPage = mainPageOf(
-        "/" to "Latest Movies",
-        "/category/bangladeshi-movies/" to "Bangladeshi Movies",
-        "/category/bengali-dub-drama/" to "Bangla Dub Drama",
-        "/category/bengali-dub-movies/" to "Bangla Dub Movies",
-        "/category/kolkata-bengali-movies/" to "Bengali Movies",
-        "/category/bengali-web-series/" to "Bengali Web Series",
-        "/category/web-series/" to "Web Series",
-        "/category/hollywood-movies/" to "Hollywood Movies",
-        "/category/bollywood-movies/" to "Bollywood Movies",
-        "/category/south-indian-movies/" to "South Indian Movies",
-        "/category/tv-shows/" to "TV Shows"
+        "/videos/latest" to "Latest",
+        "/videos/trending" to "Trending",
+        "/videos/category/1" to "Bangla & Kolkata",
+        "/videos/category/852" to "Bangla Dubbed",
+        "/videos/category/3" to "Web Series",
+        "/videos/category/4" to "Hindi",
+        "/videos/category/5" to "Hindi Dubbed",
+        "/videos/category/8" to "English",
+        "/videos/category/12" to "Korean",
+        "/videos/category/7" to "Cartoon",
+        "/videos/category/855" to "Natok",
+        "/videos/category/other" to "Other",
+        "/videos/category/853" to "Mix"
     )
 
     override suspend fun getMainPage(
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        val url = if(page == 1) mainUrl + request.data
-        else "$mainUrl${request.data}page/$page/"
-        val doc = app.get(url, cacheTime = 60, allowRedirects = true, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
-        val home = doc.select(".thumb.col-md-2.col-sm-4.col-xs-6").mapNotNull {toResult(it)}
-        return newHomePageResponse(request.name,home, true)
+        val doc = app.get("$mainUrl${request.data}?page_id=$page", cacheTime = 60).document
+        val home = doc.select(".video-thumb > a").mapNotNull {toResult(it)}
+        return newHomePageResponse(HomePageList(request.name,home,isHorizontalImages = true), true)
     }
 
     private fun toResult(post: Element): SearchResponse {
-        val title = post.select(".titl").text()
-        val check =  title.lowercase()
-        val url = post.select(".thumb > div:nth-child(2) > a:nth-child(1)")
-            .attr("href")
+        val title = post.selectFirst("a > img")?.attr("alt") ?: ""
+        val url = post.selectFirst("a:nth-child(1)")?.attr("href") ?: ""
+        val check = title.lowercase()
         return newAnimeSearchResponse(title, url, TvType.Movie) {
-            this.posterUrl = post.select(".thumb > figure > img")
-                .attr("src")
+            this.posterUrl = post.selectFirst("a > img")
+                ?.attr("src")
             this.quality = getSearchQuality(check)
             addDubStatus(
                 dubExist = when {
@@ -76,25 +76,21 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
                     "multi audio" in check -> true
                     else -> false
                 },
-                subExist = when {
-                    "esub" in check -> true
-                    else -> false
-                }
+                subExist = false
             )
         }
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val doc = app.get("$mainUrl/?s=$query", cacheTime = 60, allowRedirects = true, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
-        return doc.select(".thumb.col-md-2.col-sm-4.col-xs-6").mapNotNull {toResult(it)}
+        val doc = app.get("$mainUrl/search?keyword=$query", cacheTime = 60).document
+        return doc.select(".video-thumb > a").mapNotNull {toResult(it)}
     }
-
     override suspend fun load(url: String): LoadResponse {
-        val doc = app.get(url, cacheTime = 60, allowRedirects = true, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
-        val title = doc.select("h1.page-title > span").text()
+        val doc = app.get(url, cacheTime = 60).document
+        val title = doc.selectFirst(".hptag")?.text() ?: ""
         val year = "(?<=\\()\\d{4}(?=\\))".toRegex().find(title)?.value?.toIntOrNull()
-        val image = doc.select("div.block-head:nth-child(2) > p:nth-child(1) > img:nth-child(1)").attr("src")
-        val link = doc.getElementsContainingText("Watch Online Now").attr("href")
+        val image = doc.selectFirst("#my-video")?.attr("poster")
+        val link = doc.selectFirst(".download-placement > a")?.attr("href")
         return newMovieLoadResponse(title, url, TvType.Movie, link) {
             this.posterUrl = image
             this.year = year
@@ -107,9 +103,17 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val link = if (data.contains("playerwish"))data.replace("playerwish.com","mwish.pro")
-                    else data
-        loadExtractor(link, subtitleCallback, callback)
+        callback.invoke(
+            ExtractorLink(
+                mainUrl,
+                this.name,
+                url = data,
+                mainUrl,
+                quality = Qualities.Unknown.value,
+                isM3u8 = false,
+                isDash = false
+            )
+        )
         return true
     }
 

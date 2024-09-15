@@ -1,8 +1,5 @@
 package com.redowan
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
@@ -13,17 +10,16 @@ import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.addDubStatus
+import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.getDurationFromString
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newAnimeSearchResponse
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
+import com.lagradost.cloudstream3.utils.AppUtils
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
-import com.lagradost.nicehttp.Requests
-import com.lagradost.nicehttp.ResponseParser
-import kotlin.reflect.KClass
 
 class CircleFtpProvider : MainAPI() {
 //    override var mainUrl = "http://new.circleftp.net"
@@ -68,12 +64,11 @@ class CircleFtpProvider : MainAPI() {
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        val requests = Requests(responseParser = parser)
-        val json = requests.get(
+        val json = app.get(
             "$apiUrl/api/posts?categoryExact=${request.data}&page=$page&order=desc&limit=10",
             verify = false
-        ).parsed<PageData>()
-        val home = json.posts.mapNotNull { post ->
+        )
+        val home = AppUtils.parseJson<PageData>(json.text).posts.mapNotNull { post ->
             toSearchResult(post)
         }
         return newHomePageResponse(request.name, home, true)
@@ -100,25 +95,23 @@ class CircleFtpProvider : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val requests = Requests(responseParser = parser)
-        val searchResponse = requests.get(
+        val json = app.get(
             "$apiUrl/api/posts?searchTerm=$query&order=desc",
             verify = false
-        ).parsed<PageData>()
-        return searchResponse.posts.mapNotNull { post ->
+        )
+        return AppUtils.parseJson<PageData>(json.text).posts.mapNotNull { post ->
             toSearchResult(post)
         }
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val requests = Requests(responseParser = parser)
-        val json = requests.get(url.replace("$mainUrl/content/", "$apiUrl/api/posts/"),
+        val json = app.get(url.replace("$mainUrl/content/", "$apiUrl/api/posts/"),
             verify = false)
-        val loadData = json.parsed<Data>()
+        val loadData = AppUtils.parseJson<Data>(json.text)
         val title = loadData.title
         val poster = "$apiUrl/uploads/${loadData.image}"
         val description = loadData.metaData
-        val year = loadData.year?.toInt()
+        val year = selectUntilNonInt(loadData.year)
         if (loadData.type == "singleVideo") {
             val movieUrl = json.parsed<Movies>()
             val duration =
@@ -199,53 +192,50 @@ class CircleFtpProvider : MainAPI() {
         return true
     }
 
-    private fun getSearchQuality(check: String): SearchQuality? {
-        return when(check.lowercase()){
-            in "webrip" -> SearchQuality.WebRip
-            in "web-dl" -> SearchQuality.WebRip
-            in "bluray" -> SearchQuality.BlueRay
-            in "hdts" -> SearchQuality.HdCam
-            in "dvd" -> SearchQuality.DVD
-            in "cam" -> SearchQuality.Cam
-            in "camrip" -> SearchQuality.CamRip
-            in "hdcam" -> SearchQuality.HdCam
-            in "hdtc" -> SearchQuality.HdCam
-            in "hdrip" -> SearchQuality.HD
-            in "hd" -> SearchQuality.HD
-            in "hdtv" -> SearchQuality.HD
-            in "rip" -> SearchQuality.CamRip
-            in "telecine" -> SearchQuality.Telecine
-            in "telesync" -> SearchQuality.Telesync
-            else -> null
-        }
+    /**
+     * Extracts the initial numeric part of a string and returns it as an integer.
+     *
+     * @param string The input string.
+     * @return The initial numeric part as an integer, or `null` if the string doesn't start with a number or is null.
+     */
+    private fun selectUntilNonInt(string: String?): Int? {
+        return string?.let { Regex("^.*?(?=\\D|\$)").find(it)?.value?.toIntOrNull() }
     }
 
-    private fun getVideoQuality(str: String?): Int {
-        return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
-            ?: Qualities.Unknown.value
-    }
-
-    private val parser = object : ResponseParser {
-        val mapper: ObjectMapper = jacksonObjectMapper().configure(
-            DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-            false
-        )
-
-        override fun <T : Any> parse(text: String, kClass: KClass<T>): T {
-            return mapper.readValue(text, kClass.java)
-        }
-
-        override fun <T : Any> parseSafe(text: String, kClass: KClass<T>): T? {
-            return try {
-                mapper.readValue(text, kClass.java)
-            } catch (e: Exception) {
-                null
+    /**
+     * Determines the search quality based on the presence of specific keywords in the input string.
+     *
+     * @param check The string to check for keywords.
+     * @return The corresponding `SearchQuality` enum value, or `null` if no match is found.
+     */
+    private fun getSearchQuality(check: String?): SearchQuality? {
+        val lowercaseCheck = check?.lowercase()
+        if (lowercaseCheck != null) {
+            return when {
+                lowercaseCheck.contains("webrip") || lowercaseCheck.contains("web-dl") -> SearchQuality.WebRip
+                lowercaseCheck.contains("bluray") -> SearchQuality.BlueRay
+                lowercaseCheck.contains("hdts") || lowercaseCheck.contains("hdcam") || lowercaseCheck.contains("hdtc") -> SearchQuality.HdCam
+                lowercaseCheck.contains("dvd") -> SearchQuality.DVD
+                lowercaseCheck.contains("cam") -> SearchQuality.Cam
+                lowercaseCheck.contains("camrip") || lowercaseCheck.contains("rip") -> SearchQuality.CamRip
+                lowercaseCheck.contains("hdrip") || lowercaseCheck.contains("hd") || lowercaseCheck.contains("hdtv") -> SearchQuality.HD
+                lowercaseCheck.contains("telesync") -> SearchQuality.Telesync
+                lowercaseCheck.contains("telecine") -> SearchQuality.Telecine
+                else -> null
             }
         }
+        return null
+    }
 
-        override fun writeValueAsString(obj: Any): String {
-            return mapper.writeValueAsString(obj)
-        }
+    /**
+     * Extracts the video resolution (in pixels) from a string.
+     *
+     * @param string The input string containing the resolution (e.g., "720p", "1080P").
+     * @return The resolution as an integer, or `Qualities.Unknown.value` if no resolution is found.
+     */
+    private fun getVideoQuality(string: String?): Int {
+        return Regex("(\\d{3,4})[pP]").find(string ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
+            ?: Qualities.Unknown.value
     }
 
     data class PageData(
