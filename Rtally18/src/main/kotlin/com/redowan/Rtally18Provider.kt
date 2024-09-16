@@ -110,7 +110,8 @@ class Rtally18Provider : MainAPI() {
             headers = mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
         ).document
         val title = doc.select("h3.text-3xl.font-semibold").text()
-        val image = doc.select(".p-\\[5px\\]").attr("src")
+        val image = mainUrl + doc.select(".p-\\[5px\\]").attr("src")
+            .replace("&w=\\d+&q=75".toRegex(),"&w=1080&q=75")
         val plot = doc.selectFirst("p.text-sm:nth-child(3)")?.text()
         val download = doc.select("section.max-w-\\[90rem\\]:nth-child(2) > div:nth-child(1) > div > a:nth-child(1)")
         val duration = selectUntilNonInt(doc.select("div.space-x-4:nth-child(2) > span:nth-child(3)").text())
@@ -166,7 +167,7 @@ class Rtally18Provider : MainAPI() {
                 subtitleCallback,
                 callback
             )
-            else if (it.contains("vidguard")) loadExtractor(
+            else if (it.contains("vidguard") || it.contains("listeamed")) loadExtractor(
                 it.replace("/d/", "/e/"),
                 subtitleCallback,
                 callback
