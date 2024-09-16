@@ -27,7 +27,7 @@ class k9kMoviesProvider : MainAPI() { // all providers must be an instance of Ma
     override val hasQuickSearch = true
     override val supportedTypes = setOf(TvType.Movie,TvType.TvSeries,TvType.NSFW,)
     override val mainPage = mainPageOf(
-       "" to "Latest Movies",
+        "" to "Latest Movies",
         "/category/18-movies/" to "18+ Movies",
         "/category/4k-ultra-hd/" to "4K Ultra HD",
         "/category/bengali/" to "Bengali",
@@ -39,7 +39,7 @@ class k9kMoviesProvider : MainAPI() { // all providers must be an instance of Ma
         "/category/malayalam/" to "Malayalam",
         "/category/marathi/" to "Marathi",
         "/category/punjabi/" to "Punjabi",
-       "/category/tamil/" to "Tamil",
+        "/category/tamil/" to "Tamil",
         "/category/telugu/" to "Telugu",
         "/category/tv-shows/" to "Tv Shows",
         "/category/uncategorized/" to "Uncategorized",
@@ -73,11 +73,8 @@ class k9kMoviesProvider : MainAPI() { // all providers must be an instance of Ma
 
     private fun toResult(post: Element): SearchResponse {
         val url = post.select("figure figcaption a").attr("href")
-       // Log.d("salman731 url",url)
         val title = post.select("figure figcaption a p").text()
-        //Log.d("salman731 title",title)
         val imageUrl = post.select("figure img").attr("src")
-        //Log.d("salman731 imageUrl",imageUrl)
         return newMovieSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = imageUrl
         }
@@ -112,17 +109,14 @@ class k9kMoviesProvider : MainAPI() { // all providers must be an instance of Ma
 
         val doc = app.get(data).document
         val buttonElements = doc.select(".buttn.red")
-        Log.d("salman731 buttonElements",data + buttonElements.size.toString())
         buttonElements.forEach { item->
             val shortLinkUrl = item.attr("href")
             val sDoc = app.post(shortLinkUrl).document
             val links = sDoc.select(".col-sm-8.col-sm-offset-2.well.view-well a")
             links.forEach { item->
                val link = item.attr("href")
-                Log.d("salman731 link",link)
                 loadExtractor(link,subtitleCallback,callback)
             }
-            Log.d("salman731 links",links.size.toString())
 
 
         }
