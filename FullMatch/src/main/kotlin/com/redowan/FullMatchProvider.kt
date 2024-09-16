@@ -1,5 +1,6 @@
 package com.redowan
 
+import com.lagradost.api.Log
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
@@ -15,11 +16,13 @@ import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
+import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import okhttp3.FormBody
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import org.jsoup.select.Elements
 
 class FullMatchProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://fullmatch.info"
@@ -94,9 +97,12 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
     }
 
     private fun toResult(post: Element): SearchResponse {
+        Log.d("salman731 title2","title123")
         val url = post.select(".post-title a").attr("href")
         val title = post.select(".post-title a").text()
+        Log.d("salman731 title2",title)
         val imageUrl = post.select(".wp-post-image").attr("src")
+        Log.d("salman731 imageUrl2",imageUrl)
         return newMovieSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = imageUrl
         }
@@ -111,30 +117,152 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
     override suspend fun load(url: String): LoadResponse {
         val doc = app.get(url).document
         val title = doc.select(".entry-header h1").text()
+        Log.d("salman731 title",title)
         val imageUrl = doc.select(".single-featured-image img").attr("src")
-        val videoUrls = doc.select(".tabcontent iframe")
-        if(videoUrls.size > 1)
+        Log.d("salman731 imageUrl",imageUrl)
+        val tabs = doc.select(".tabcontent iframe")
+        Log.d("salman731 tabs",tabs.isNotEmpty().toString())
+        // When post page has tabs
+        if (tabs.isNotEmpty())
         {
-            val episodesData = mutableListOf<Episode>()
-            var episodeNo = 1
-            videoUrls.forEach{item ->
-                val videoUrl = item.attr("src")
-                    .replace("//", "https://")
-                episodesData.add(Episode(videoUrl, season = 1, episode =  episodeNo))
-                episodeNo++
-            }
-            return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
-                this.posterUrl = imageUrl
-            }
+            Log.d("salman731 not","tabs 1")
+            val tabcontent = doc.select(".tabcontent")
+            if(tabcontent.size > 1)
+            {
+                val episodesData = mutableListOf<Episode>()
+                var episodeNo = 1
+                tabcontent.forEach{item ->
+                    val hostUrls = getHostUrlsWithIframe(item)
+                    val title = doc.select(".tabtitle")[episodeNo-1].text()
+                    if (hostUrls.size > 1) {
+                        episodesData.add(Episode(hostUrls.joinToString("+"),title,season = 1, episode =  episodeNo))
+                    } else if(hostUrls.size == 1) {
+                        episodesData.add(Episode(hostUrls[0],title,season = 1, episode =  episodeNo))
+                    }
+                    else
+                    {
+                        episodesData.add(Episode("",title,season = 1, episode =  episodeNo))
+                    }
+                    episodeNo++
+                }
+                return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
+                    this.posterUrl = imageUrl
+                }
 
+            }
+            else {
+                val tab = doc.selectFirst(".tabcontent")
+                val hostUrls = getHostUrlsWithIframe(tab)
+                val links = if(hostUrls.size > 1) {hostUrls.joinToString("+")} else if (hostUrls.size == 1) {hostUrls[0]} else {""}
+                return newMovieLoadResponse(title, url, TvType.Movie, links) {
+                    this.posterUrl = imageUrl
+                }
+            }
         }
-        else {
-            val videoUrl = doc.select(".tabcontent iframe").attr("src")
+        // When post page has single iframe without tabs
+        else if (doc.select(".entry-content.entry.clearfix iframe").isNotEmpty())
+        {
+            var hostUrls = mutableListOf<String>()
+            val videoUrl = doc.select(".entry-content.entry.clearfix iframe").attr("src")
                 .replace("//", "https://")
-            return newMovieLoadResponse(title, url, TvType.Movie, videoUrl) {
+            hostUrls.add(videoUrl)
+            val urls = doc.select(".entry-content.entry.clearfix p")
+            urls.forEach { item->
+                Log.d("salman731 videoUrls",item.select("a").text())
+                val link = item.select("a").text()
+                if(link.contains(" "))
+                {
+                    val list = item.select("a").text().split(" ")
+                    hostUrls.addAll(list)
+                }
+                else
+                {
+                    hostUrls.add(link)
+                }
+
+            }
+            Log.d("salman731 joinToString",hostUrls.joinToString("+"))
+            return newMovieLoadResponse(title, url, TvType.Movie, hostUrls.joinToString("+")) {
                 this.posterUrl = imageUrl
             }
         }
+        // When post page has not iframe and other hoster links are available
+        else{
+            val servers = doc.select(".entry-content.entry.clearfix p")
+            val episodeData = mutableListOf<Episode>()
+            servers.forEach{ item ->
+                val hostTxt = item.text()
+                val isHostLink = "https:\\/\\/(.*)\\.(.*)\\/(.*)".toRegex().containsMatchIn(item.select("a").text())
+                Log.d("salman731 isHostLink",isHostLink.toString())
+                // When post page has colored links
+                if(hostTxt.contains("StreamWish"))
+                {
+                    Log.d("salman731 hosttext",hostTxt)
+                    val links = item.select("a")
+                    var episodeNum = 1;
+                    links.forEach{ item->
+                        Log.d("salman731 href",item.attr("href"))
+                        val value = "(https:\\/\\/fullmatch.info\\/goto\\/)\\d+".toRegex().containsMatchIn(item.attr("href"))
+                        if(value)
+                        {
+                            val doc2 = app.get(item.attr("href")).document
+                            val finalHostUrl = doc2.select(".entry-content.entry.clearfix p a").attr("href")
+                            Log.d("salman731 finalHostUrl",finalHostUrl)
+                            episodeData.add(Episode(finalHostUrl,item.text(),null,episodeNum))
+                            episodeNum++
+                        }
+                    }
+                }
+                // When post has no iframe and colored links
+                else if (isHostLink)
+                {
+                    val hostUrls = getHostUrls(item)
+                    Log.d("salman731 isHost",hostUrls.joinToString("+"))
+                    return newMovieLoadResponse(title, url, TvType.Movie, hostUrls.joinToString("+")) {
+                        this.posterUrl = imageUrl
+                    }
+                }
+
+            }
+            return newTvSeriesLoadResponse(title,url,TvType.TvSeries,episodeData) {
+                this.posterUrl = imageUrl;
+            }
+        }
+    }
+
+    private suspend fun getHostUrlsWithIframe (element: Element) : MutableList<String>
+    {
+        val hostUrls = mutableListOf<String>()
+        val videoUrl = element.select("iframe").attr("src")
+            .replace("//", "https://")
+        hostUrls.add(videoUrl)
+        val pEle = element.select("p")
+        pEle.forEach { item->
+            val isHostLink = "https:\\/\\/(.*)\\.(.*)\\/(.*)".toRegex().containsMatchIn(item.select("a").text())
+            if(isHostLink)
+            {
+                hostUrls.addAll(getHostUrls(item))
+            }
+        }
+
+        return hostUrls
+    }
+
+    private suspend fun getHostUrls (element: Element) : MutableList<String>
+    {
+        val hostUrls = mutableListOf<String>()
+        val list = element.select("a")
+        list.forEach { item->
+            val link = item.attr("href")
+            val value = "(https:\\/\\/fullmatch.info\\/goto\\/)\\d+".toRegex().containsMatchIn(link)
+            if(value)
+            {
+                val doc3 = app.get(item.attr("href")).document
+                val finalHostUrl = doc3.select(".entry-content.entry.clearfix p a").attr("href")
+                hostUrls.add(finalHostUrl)
+            }
+        }
+        return hostUrls
     }
 
     override suspend fun loadLinks(
@@ -143,7 +271,18 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        loadExtractor(data, subtitleCallback, callback)
+        if(data.contains("+"))
+        {
+            val links = data.split("+")
+            links.forEach{item->
+                Log.d("salman731 item links",item)
+                loadExtractor(item, subtitleCallback, callback)
+            }
+        }
+        else
+        {
+            loadExtractor(data, subtitleCallback, callback)
+        }
         return true
     }
 }
