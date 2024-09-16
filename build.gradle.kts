@@ -37,7 +37,7 @@ subprojects {
     cloudstream {
         // when running through github workflow, GITHUB_REPOSITORY should contain current repository name
         // you can modify it to use other git hosting services, like gitlab
-        setRepo(System.getenv("GITHUB_REPOSITORY") ?: "https://github.com/redowan99/CS-BDIX")
+        setRepo(System.getenv("GITHUB_REPOSITORY") ?: "https://github.com/redowan99/Redowan-CloudStream")
     }
 
     android {
