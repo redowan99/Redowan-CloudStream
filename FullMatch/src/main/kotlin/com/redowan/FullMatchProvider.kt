@@ -97,12 +97,9 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
     }
 
     private fun toResult(post: Element): SearchResponse {
-        Log.d("salman731 title2","title123")
         val url = post.select(".post-title a").attr("href")
         val title = post.select(".post-title a").text()
-        Log.d("salman731 title2",title)
         val imageUrl = post.select(".wp-post-image").attr("src")
-        Log.d("salman731 imageUrl2",imageUrl)
         return newMovieSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = imageUrl
         }
@@ -117,15 +114,11 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
     override suspend fun load(url: String): LoadResponse {
         val doc = app.get(url).document
         val title = doc.select(".entry-header h1").text()
-        Log.d("salman731 title",title)
         val imageUrl = doc.select(".single-featured-image img").attr("src")
-        Log.d("salman731 imageUrl",imageUrl)
         val tabs = doc.select(".tabcontent iframe")
-        Log.d("salman731 tabs",tabs.isNotEmpty().toString())
         // When post page has tabs
         if (tabs.isNotEmpty())
         {
-            Log.d("salman731 not","tabs 1")
             val tabcontent = doc.select(".tabcontent")
             if(tabcontent.size > 1)
             {
@@ -168,7 +161,6 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
             hostUrls.add(videoUrl)
             val urls = doc.select(".entry-content.entry.clearfix p")
             urls.forEach { item->
-                Log.d("salman731 videoUrls",item.select("a").text())
                 val link = item.select("a").text()
                 if(link.contains(" "))
                 {
@@ -181,7 +173,6 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
                 }
 
             }
-            Log.d("salman731 joinToString",hostUrls.joinToString("+"))
             return newMovieLoadResponse(title, url, TvType.Movie, hostUrls.joinToString("+")) {
                 this.posterUrl = imageUrl
             }
@@ -193,21 +184,17 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
             servers.forEach{ item ->
                 val hostTxt = item.text()
                 val isHostLink = "https:\\/\\/(.*)\\.(.*)\\/(.*)".toRegex().containsMatchIn(item.select("a").text())
-                Log.d("salman731 isHostLink",isHostLink.toString())
                 // When post page has colored links
                 if(hostTxt.contains("StreamWish"))
                 {
-                    Log.d("salman731 hosttext",hostTxt)
                     val links = item.select("a")
                     var episodeNum = 1;
                     links.forEach{ item->
-                        Log.d("salman731 href",item.attr("href"))
                         val value = "(https:\\/\\/fullmatch.info\\/goto\\/)\\d+".toRegex().containsMatchIn(item.attr("href"))
                         if(value)
                         {
                             val doc2 = app.get(item.attr("href")).document
                             val finalHostUrl = doc2.select(".entry-content.entry.clearfix p a").attr("href")
-                            Log.d("salman731 finalHostUrl",finalHostUrl)
                             episodeData.add(Episode(finalHostUrl,item.text(),null,episodeNum))
                             episodeNum++
                         }
@@ -217,7 +204,6 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
                 else if (isHostLink)
                 {
                     val hostUrls = getHostUrls(item)
-                    Log.d("salman731 isHost",hostUrls.joinToString("+"))
                     return newMovieLoadResponse(title, url, TvType.Movie, hostUrls.joinToString("+")) {
                         this.posterUrl = imageUrl
                     }
