@@ -107,9 +107,7 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val link = if (data.contains("playerwish"))data.replace("playerwish.com","mwish.pro")
-                    else data
-        loadExtractor(link, subtitleCallback, callback)
+        loadExtractor(data, subtitleCallback, callback)
         return true
     }
 
