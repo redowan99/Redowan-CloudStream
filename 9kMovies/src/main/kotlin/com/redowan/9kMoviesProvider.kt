@@ -1,6 +1,6 @@
 package com.redowan
 
-import com.lagradost.api.Log
+//import com.lagradost.api.Log
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
