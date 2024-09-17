@@ -5,10 +5,10 @@ import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
 import com.lagradost.cloudstream3.plugins.Plugin
 
 @CloudstreamPlugin
-class k9kMoviesPlugin: Plugin() {
+class NineKMoviesPlugin : Plugin() {
     override fun load(context: Context) {
         // All providers should be added in this manner. Please don't edit the providers list directly.
-        registerMainAPI(k9kMoviesProvider())
+        registerMainAPI(NineKMoviesProvider())
         registerExtractorAPI(StreamTapeSite())
         registerExtractorAPI(StreamTapeTo())
         registerExtractorAPI(DoodLi())
