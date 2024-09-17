@@ -28,7 +28,6 @@ class NineKMoviesProvider : MainAPI() {
     override val mainPage = mainPageOf(
         "" to "Latest Movies",
         "/category/18-movies/" to "18+ Movies",
-        "/category/4k-ultra-hd/" to "4K Ultra HD",
         "/category/bengali/" to "Bengali",
         "/category/dual-audio/" to "Dual Audio",
         "/category/gujarati/" to "Gujarati",
@@ -41,7 +40,6 @@ class NineKMoviesProvider : MainAPI() {
         "/category/tamil/" to "Tamil",
         "/category/telugu/" to "Telugu",
         "/category/tv-shows/" to "Tv Shows",
-        "/category/uncategorized/" to "Uncategorized",
         "/category/web-series/" to "Web Series",
         )
 
