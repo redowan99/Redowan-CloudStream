@@ -111,7 +111,7 @@ class Film1KProvider : MainAPI() {
                 }
             }
             url = url.replace("https://films5k.com","https://mwish.pro")
-            println(url)
+            url = url.replace("\"","")
             loadExtractor(url, subtitleCallback, callback)
         }
         return true
