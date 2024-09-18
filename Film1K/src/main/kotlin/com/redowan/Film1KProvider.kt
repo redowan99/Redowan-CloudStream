@@ -1,6 +1,5 @@
 package com.redowan
 
-import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
@@ -22,11 +21,11 @@ import org.jsoup.nodes.Element
 //suspend fun main() {
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(Film1KProvider())
 ////    providerTester.testLoadLinks("https://checklinko.top/60382/")
-////    providerTester.testAll()
+//    providerTester.testAll()
 ////    providerTester.testMainPage(verbose = true)
 ////    providerTester.testSearch(query = "gun",verbose = true)
 ////    providerTester.testLoad("")
-//    providerTester.testLoadLinks("51783")
+////    providerTester.testLoadLinks("51783")
 //}
 
 
@@ -56,9 +55,9 @@ class Film1KProvider : MainAPI() {
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        val doc = app.get("$mainUrl${request.data}/page/$page", cacheTime = 60, allowRedirects = true).document
+        val doc = app.get("$mainUrl${request.data}/page/$page", cacheTime = 60, allowRedirects = true, timeout = 30).document
         val home = doc.select("header.entry-header").mapNotNull { toResult(it) }
-        return newHomePageResponse(HomePageList(request.name,home,isHorizontalImages = true), true)
+        return newHomePageResponse(request.name,home, true)
     }
 
     private fun toResult(post: Element): SearchResponse {
@@ -71,12 +70,12 @@ class Film1KProvider : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val doc = app.get("$mainUrl/?s=$query", cacheTime = 60).document
+        val doc = app.get("$mainUrl/?s=$query", cacheTime = 60, timeout = 30).document
         return doc.select("header.entry-header").mapNotNull { toResult(it) }
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val doc = app.get(url, cacheTime = 60).document
+        val doc = app.get(url, cacheTime = 60, timeout = 30).document
         val title = doc.selectFirst("h1.title")?.text() ?: ""
         val image =
             doc.select("img.alignleft")
@@ -90,6 +89,8 @@ class Film1KProvider : MainAPI() {
         }
     }
 
+    private val film1kRegex = Regex("https://film1k\\.xyz/e/([^/]+)/.*")
+
     override suspend fun loadLinks(
         data: String,
         isCasting: Boolean,
@@ -100,18 +101,16 @@ class Film1KProvider : MainAPI() {
             val mediaType = "application/x-www-form-urlencoded".toMediaType()
             val body = "action=action_change_player_eroz&ide=$data&key=$i".toRequestBody(mediaType)
             val ajaxUrl = "$mainUrl/wp-admin/admin-ajax.php"
-            val doc = app.post(ajaxUrl, requestBody = body, cacheTime = 60).document
+            val doc = app.post(ajaxUrl, requestBody = body, cacheTime = 60, timeout = 30).document
             var url = doc.select("iframe").attr("src").replace("\\", "")
             if (url.contains("https://film1k.xyz")) {
-                val regex = Regex("https://film1k\\.xyz/e/([^/]+)/.*")
-                val matchResult = regex.find(url)
+                val matchResult = film1kRegex.find(url)
                 if (matchResult != null) {
                     val code = matchResult.groupValues[1]
                     url = "https://filemoon.sx/e/$code"
                 }
             }
             url = url.replace("https://films5k.com","https://mwish.pro")
-            url = url.replace("\"","")
             loadExtractor(url, subtitleCallback, callback)
         }
         return true
