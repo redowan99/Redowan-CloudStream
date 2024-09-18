@@ -1,9 +1,9 @@
 // use an integer for version numbers
-version = 2
+version = 1
 
 cloudstream {
-    description = "Watch Full Sexiest Movie For Free"
-    authors = listOf("Film1K")
+    description = "Movies 18+ ,Rare Movies and selected from all genres online for free, updated daily."
+    authors = listOf("salman731")
 
     /**
     * Status int as the following:
@@ -20,5 +20,5 @@ cloudstream {
     )
     language = "en"
 
-    iconUrl = "https://www.film1k.com/wp-content/uploads/2023/05/cropped-film1k-1.png"
+    iconUrl = "https://cat3movie.org/wp-content/themes/hnzphim/public/images/MainPoster.f0fe51.webp"
 }
