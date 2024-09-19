@@ -1,5 +1,6 @@
 package com.redowan
 
+import android.util.Log
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
@@ -102,7 +103,7 @@ class Film1KProvider : MainAPI() {
             val body = "action=action_change_player_eroz&ide=$data&key=$i".toRequestBody(mediaType)
             val ajaxUrl = "$mainUrl/wp-admin/admin-ajax.php"
             val doc = app.post(ajaxUrl, requestBody = body, cacheTime = 60, timeout = 30).document
-            var url = doc.select("iframe").attr("src").replace("\\", "")
+            var url = doc.select("iframe").attr("src").replace("\\", "").replace("\"","") // It is necessary because it returns link with double qoutes like this ("https://voe.sx/e/edpgpjsilexe")
             if (url.contains("https://film1k.xyz")) {
                 val matchResult = film1kRegex.find(url)
                 if (matchResult != null) {

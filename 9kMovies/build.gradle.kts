@@ -22,7 +22,7 @@ cloudstream {
         "TvSeries",
 		"NSFW"
     )
-    language = "en"
+    language = "hi"
 
     iconUrl = "https://9kmovies.com/wp-content/uploads/2024/08/9kmoviescomm.png"
 }
