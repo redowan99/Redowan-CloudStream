@@ -1,7 +1,5 @@
 package com.redowan
 
-//import com.lagradost.api.Log
-import com.lagradost.api.Log
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
@@ -52,9 +50,7 @@ class Mp4MoviezProvider : MainAPI() {
         } else {
             app.get("$mainUrl${request.data}&p=$page",allowRedirects = true, timeout = 30).document
         }
-        //Log.d("salman731 element size",doc.select(".thumb.col-md-2.col-sm-4.col-xs-6").size.toString())
         val home = doc.select(".fl").mapNotNull { toResult(it) }
-        //Log.d("salman731 total size",home.toString().length.toString())
         return newHomePageResponse(request.name, home, hasNext = true)
     }
 
@@ -81,7 +77,6 @@ class Mp4MoviezProvider : MainAPI() {
         val releasedDate = "(\\d{4})".toRegex().find(doc.select(".releasedate").text())?.groups?.get(1)?.value
         val rating = doc.select(".duration").text()
         val link = mainUrl + doc.select("div[style=\"text-align:left;\"] a").attr("href")
-        Log.d("salman731 load", link)
         return newMovieLoadResponse(title, url, TvType.Movie, link) {
             this.posterUrl = imageUrl
             if (plot != null) {
@@ -103,7 +98,6 @@ class Mp4MoviezProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        Log.d("salman731 link", data)
         val doc = app.get(data).document
         val links = doc.select("div[style=\"text-align:left;\"]")
         links.forEach { item->
@@ -125,7 +119,6 @@ class Mp4MoviezProvider : MainAPI() {
                 val links = sDoc.select(".col-sm-8.col-sm-offset-2.well.view-well a")
                 links.forEach {
                     val link = it.attr("href")
-                    Log.d("salman731 links4mad",link)
                     loadExtractor(link, subtitleCallback, callback)
                 }
             }
