@@ -87,6 +87,7 @@ class HindMoviezProvider : MainAPI() {
         var plot = ""
         val year = "<li><strong>Release Year: <\\/strong>(.*)<\\/li>".toRegex()
             .find(doc.html())?.groups?.get(1)?.value
+        val qualityRegex2 = "(\\d{3,4})[pP]".toRegex()
         if (title.lowercase().contains("season")) {
             val elements = doc.selectFirst(".entry-content")
             val qualityRegex = ">(\\d{3,4}p).*<".toRegex()
@@ -119,7 +120,7 @@ class HindMoviezProvider : MainAPI() {
                                 }
                             }
                             val currentSeason = "Season $i"
-                            if (item.tagName() == "h3" && qualityRegex.containsMatchIn(item.html())) {
+                            if (item.tagName() == "h3" && (qualityRegex.containsMatchIn(item.html()) || qualityRegex2.containsMatchIn(item.html()))) {
 
                                 if (item.text().lowercase().contains(currentSeason.lowercase())) {
 
@@ -201,7 +202,6 @@ class HindMoviezProvider : MainAPI() {
         {
             val elements = doc.selectFirst(".entry-content")
             val qualityRegex = ">(\\d{3,4}p).*<".toRegex()
-            val qualityRegex2 = "(\\d{3,4})[pP]".toRegex()
             val movieLinksList = mutableListOf<String>()
             for (j in 0..(elements.children().size - 1)) {
 
