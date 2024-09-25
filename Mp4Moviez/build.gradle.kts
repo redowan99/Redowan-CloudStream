@@ -1,8 +1,8 @@
 // use an integer for version numbers
-version = 2
+version = 1
 
 cloudstream {
-    description = "Watch Movies and Series"
+    description = "Download Mp4Moviez free full movies, high quality movies, latest movies from Mp4Moviez. Mp4moviez is number one entertainment hollywood bollywood website and provide free Mp4moviez full movie download facility"
     authors = listOf("salman731")
 
     /**
@@ -24,5 +24,5 @@ cloudstream {
     )
     language = "hi"
 
-    iconUrl = "https://9kmovies.com/wp-content/uploads/2024/08/9kmoviescomm.png"
+    iconUrl = "https://www.mp4moviez.glass/images/mp4moviez.png"
 }
