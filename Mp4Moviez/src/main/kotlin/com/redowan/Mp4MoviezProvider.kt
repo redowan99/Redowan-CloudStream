@@ -20,7 +20,7 @@ import org.jsoup.nodes.Element
 class Mp4MoviezProvider : MainAPI() {
     override var mainUrl = "https://www.mp4moviez.glass"
     override var name = "Mp4Moviez"
-    override var lang = "en"
+    override var lang = "hi"
     override val hasMainPage = true
     override val hasDownloadSupport = true
     override val hasQuickSearch = false
