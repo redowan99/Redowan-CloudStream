@@ -117,9 +117,6 @@ class CineFreakProvider : MainAPI() {
                 dlLinks.forEach { item->
                     linkList.add(item.attr("href"))
                 }
-                Log.d("salman731 sea linkList",linkList.toString())
-                Log.d("salman731 season",season.toString())
-                Log.d("salman731 episode",episode.toString())
                 if(!season.isNullOrEmpty() && !episode.isNullOrEmpty())
                 {
                     episodeData.add(Episode(linkList.joinToString("+"),episode,season.toInt(),episodeNo))
@@ -140,7 +137,6 @@ class CineFreakProvider : MainAPI() {
                 dlLinks.forEach { item->
                     linkList.add(item.attr("href"))
                 }
-                Log.d("salman731 linkList",linkList.toString())
             }
 
         }
@@ -182,17 +178,13 @@ class CineFreakProvider : MainAPI() {
             val quality = getVideoQuality(name)
             val buttons = doc.select(".card-body button")
             buttons.forEach { item->
-                Log.d("salman731 buttonstxt",item.text())
                 if(item.text().contains("ZenCloud") || item.text().contains("Instant Download"))
                 {
                     val finalLink = "window.open\\(\\'(.*)\\'\\)".toRegex().find(item.attr("onclick"))?.groups?.get(1)?.value.toString()
-                    Log.d("salman731 finalLink",finalLink)
                     if (!finalLink.isNullOrEmpty()) {
                         val doc = app.get(finalLink, timeout = 30).document
                         val link = doc.select("#vd").attr("onclick")
-                        Log.d("salman731 link",link)
                         val dlLink = "location.href=\\'(.*)\\'".toRegex().find(link)?.groups?.get(1)?.value.toString()
-                        Log.d("salman731 dlLink",dlLink)
                         callback.invoke(
                             ExtractorLink("ZenCloud","ZenCloud ($name)",dlLink,"",quality)
                         )
@@ -204,13 +196,10 @@ class CineFreakProvider : MainAPI() {
                     val dlLink = link.replace("/f/","/d/")
                     val doc = app.get(dlLink, timeout = 30).document
                     val buttons = doc.select(".card-body button")
-                    Log.d("salman731 cloud buttons",buttons.size.toString())
                     buttons.forEach { item->
                         if(item.text().contains("Download Now"))
                         {
-                            Log.d("salman731 onclick",item.attr("onclick"))
                             val finaldlLink = "location.href=\\'(.*)\\'".toRegex().find(item.attr("onclick"))?.groups?.get(1)?.value.toString()
-                            Log.d("salman731 finaldlLink",finaldlLink)
                             callback.invoke(
                                 ExtractorLink("ZenCloud","NeoDrive ($name)",finaldlLink,"",quality)
                             )
