@@ -1,6 +1,5 @@
 package com.redowan
 
-import android.util.Log
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
@@ -71,11 +70,8 @@ class LiveMovieProvider : MainAPI() {
 
     private fun toSearchResult(post: Element): SearchResponse {
         val url = post.select(".image a").attr("href")
-        Log.d("salman731 url",url)
         val title = post.select(".image img").attr("alt")
-        Log.d("salman731 title",title)
         val imageUrl = post.select(".image img").attr("src")
-        Log.d("salman731 imageUrl",imageUrl)
         return newMovieSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = imageUrl
         }
@@ -104,9 +100,7 @@ class LiveMovieProvider : MainAPI() {
                 val nume = item.attr("data-nume")
                 val requestBody = getRequestBody(post,nume,type)
                 val doc = app.post(ajaxUrl,requestBody = requestBody).text
-                Log.d("salman731 doc", doc)
                 val jsonObj = JSONObject(doc)
-                Log.d("salman731 doc", jsonObj.toString())
                 val link = jsonObj.get("embed_url")
                 linkList.add(link.toString())
             }
@@ -156,12 +150,10 @@ class LiveMovieProvider : MainAPI() {
                 val jsonObj = JSONObject(doc)
                 var link = jsonObj.get("embed_url").toString()
                 val title = item.select(".title")
-                Log.d("salman731 titlelink", "${link} \n ${title}")
                 if(link.contains("short.ink"))
                 {
                     val doc = app.get(link)
                     link = doc.url
-                    Log.d("salman731 shortlink", link)
                 }
                 episodeData.add(Episode(link,title.text(),null,null))
             }*/
@@ -199,15 +191,9 @@ class LiveMovieProvider : MainAPI() {
 
         val list = data.split("+")
         list.forEach { item->
-            Log.d("salman731 finalLink",item)
             loadExtractor(item.replace("listeamed.net/v/","listeamed.net/e/"), subtitleCallback, callback)
         }
 
         return true
-    }
-
-    private fun getVideoQuality(string: String?): Int {
-        return Regex("(\\d{3,4})[pP]").find(string ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
-            ?: Qualities.Unknown.value
     }
 }
