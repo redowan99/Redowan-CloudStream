@@ -31,7 +31,7 @@ class LiveMovieProvider : MainAPI() {
     override val hasQuickSearch = false
     override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries, TvType.NSFW)
 
-    val ajaxUrl = "$mainUrl/wp-admin/admin-ajax.php"
+    private val ajaxUrl = "$mainUrl/wp-admin/admin-ajax.php"
 
     override val mainPage = mainPageOf(
         "/movies/" to "Recently Added",
