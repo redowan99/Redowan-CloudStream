@@ -19,6 +19,15 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
 import org.jsoup.nodes.Element
 
+//suspend fun main() {
+//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(FibWatchProvider())
+////    providerTester.testLoadLinks("https://checklinko.top/60382/")
+////    providerTester.testAll()
+//    providerTester.testMainPage(verbose = true)
+////    providerTester.testSearch(query = "gun",verbose = true)
+////    providerTester.testLoad("https://fullymaza.pw/2024/06/die-in-a-gunfight-2021-hdrip-hindi-dual-audio-480p-720p-1080p/")
+//}
+
 class FibWatchProvider : MainAPI() {
     override var mainUrl = "https://fibwatch.online"
     override var name = "FibWatch"
