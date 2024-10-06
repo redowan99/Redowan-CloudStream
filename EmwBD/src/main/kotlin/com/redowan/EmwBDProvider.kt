@@ -139,7 +139,7 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
                 )
             )
         }
-        return newTvSeriesLoadResponse(title, url, TvType.Movie, episodesData) {
+        return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
             this.posterUrl = image
             this.year = year
         }
