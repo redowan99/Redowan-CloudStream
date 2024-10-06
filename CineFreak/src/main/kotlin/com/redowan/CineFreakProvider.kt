@@ -64,7 +64,7 @@ class CineFreakProvider : MainAPI() {
         request: MainPageRequest
     ): HomePageResponse {
 
-        // This is necessary for load more posts on homepage
+        //This is necessary for load more posts on homepage
         val doc = app.get("$mainUrl${request.data}page/$page").document
         val home = doc.select(".post").mapNotNull { toResult(it) }
         return newHomePageResponse(request.name, home, hasNext = true)
@@ -73,7 +73,7 @@ class CineFreakProvider : MainAPI() {
     private fun toResult(post: Element): SearchResponse {
         val url = post.select(".post-thumbnail").attr("href")
         val title = post.select(".entry-title a").text()
-        val imageUrl = post.select(".post-thumbnail img").attr("src")
+        val imageUrl = post.select(".post-thumbnail img").attr("data-src")
         val quality = post.select(".video-label").text()
         return newMovieSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = imageUrl
@@ -93,7 +93,7 @@ class CineFreakProvider : MainAPI() {
     override suspend fun load(url: String): LoadResponse {
         val doc = app.get(url).document
         val title = doc.select("title").text()
-        val imageUrl = doc.select(".post-thumbnail img").attr("src")
+        val imageUrl = doc.select(".post-thumbnail img").attr("data-src")
         var plot = ""
         val eList = doc.selectFirst(".single-service-content")
         eList.children().forEach { item->
@@ -180,7 +180,7 @@ class CineFreakProvider : MainAPI() {
             buttons.forEach { item->
                 if(item.text().contains("ZenCloud") || item.text().contains("Instant Download"))
                 {
-                    val finalLink = "window.open\\(\\'(.*)\\'\\)".toRegex().find(item.attr("onclick"))?.groups?.get(1)?.value.toString()
+                    val finalLink = "location.href=\\'(.*)\\'".toRegex().find(item.attr("onclick"))?.groups?.get(1)?.value.toString()
                     if (!finalLink.isNullOrEmpty()) {
                         val doc = app.get(finalLink, timeout = 30).document
                         val link = doc.select("#vd").attr("onclick")

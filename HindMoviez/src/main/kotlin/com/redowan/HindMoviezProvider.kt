@@ -33,7 +33,7 @@ import org.jsoup.nodes.Element
 
 
 class HindMoviezProvider : MainAPI() {
-    override var mainUrl = "https://hindmoviez.pl"
+    override var mainUrl = "https://hindmoviez.foo"
     override var name = "HindMoviez"
     override var lang = "hi"
     override val hasMainPage = true
@@ -274,8 +274,8 @@ class HindMoviezProvider : MainAPI() {
                 val links = doc.select(".container a");
                 links.forEach { item->
                     callback.invoke(ExtractorLink(
-                        "H-Cloud",
-                        "H-Cloud",
+                        "H-Cloud (VLC)",
+                        "H-Cloud (VLC)",
                         url = item.attr("href"),
                         "",
                         quality = quality,
@@ -290,8 +290,8 @@ class HindMoviezProvider : MainAPI() {
                     if(item.text().contains("HCloud"))
                     {
                         callback.invoke(ExtractorLink(
-                            "H-Cloud",
-                            "H-Cloud",
+                            "H-Cloud (VLC)",
+                            "H-Cloud (VLC)",
                             url = item.attr("href"),
                             "",
                             quality = quality,
@@ -302,7 +302,7 @@ class HindMoviezProvider : MainAPI() {
                         val doc = app.get(item.attr("href"), timeout =  30, allowRedirects = true).document
                         val links = doc.select(".container a");
                         links.forEach{ item->
-                            val host = if (item.text().lowercase().contains("google")) {item.text()} else {"HindCdn H-Cloud"}
+                            val host = if (item.text().lowercase().contains("google")) {item.text() + " (VLC)"} else {"HindCdn H-Cloud (VLC)"}
                             callback.invoke(ExtractorLink(
                                 host,
                                 host,
@@ -317,8 +317,8 @@ class HindMoviezProvider : MainAPI() {
                         val doc = app.get(item.attr("href"), timeout = 30, allowRedirects = true).document
                         val link = doc.select("a")
                         callback.invoke(ExtractorLink(
-                            "GDirect",
-                            "GDirect",
+                            "GDirect (VLC)",
+                            "GDirect (VLC)",
                             url = link.attr("href"),
                             "",
                             quality = quality,
