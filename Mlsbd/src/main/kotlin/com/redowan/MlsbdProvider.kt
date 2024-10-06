@@ -1,6 +1,5 @@
 package com.redowan
 
-
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
@@ -17,28 +16,25 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
-
+//suspend fun main() {
+//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(MlsbdProvider())
+////    providerTester.testLoadLinks("https://checklinko.top/60382/")
+////    providerTester.testAll()
+//    providerTester.testMainPage(verbose = true)
+////    providerTester.testSearch(query = "gun",verbose = true)
+////    providerTester.testLoad("https://fullymaza.pw/2024/06/die-in-a-gunfight-2021-hdrip-hindi-dual-audio-480p-720p-1080p/")
+//}
 
 class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://mlsbd.shop"
     override var name = "Mlsbd"
-    override val supportedTypes = setOf(
-        TvType.Movie,
-        TvType.TvSeries,
-        TvType.NSFW,
-        TvType.AsianDrama,
-        TvType.AnimeMovie,
-    )
-
     override var lang = "bn"
     override val hasMainPage = true
     override val hasDownloadSupport = true
     override val hasQuickSearch = false
-
     override val mainPage = mainPageOf(
         "" to "Latest Movies",
         "/category/bangla-dubbed/page/" to "Bangla Dubbed",
@@ -51,6 +47,14 @@ class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAP
         "/category/natok-teleflim/page/" to "Natok & Teleflim",
         "/category/unrated/page/" to "UnRated"
     )
+    override val supportedTypes = setOf(
+        TvType.Movie,
+        TvType.TvSeries,
+        TvType.NSFW,
+        TvType.AsianDrama,
+        TvType.AnimeMovie,
+    )
+    private val headers =   mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
 
     override suspend fun getMainPage(
         page: Int,
@@ -58,8 +62,7 @@ class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAP
     ): HomePageResponse {
         val url = if(request.data == "") mainUrl
         else "$mainUrl${request.data}$page/"
-        //val doc = app.get(url, allowRedirects = true).document
-        val doc = app.get(url, cacheTime = 60, allowRedirects = true, timeout = 10, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
+        val doc = app.get(url, cacheTime = 1440, allowRedirects = true, timeout = 60, headers = headers).document
         val homeResponse = doc.select("div.single-post")
         val home = homeResponse.mapNotNull { post ->
             toResult(post)
@@ -77,7 +80,7 @@ class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAP
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val doc = app.get("$mainUrl/?s=$query").document
+        val doc = app.get("$mainUrl/?s=$query", cacheTime = 60, timeout = 30, headers = headers).document
         val searchResponse = doc.select("div.single-post")
         return searchResponse.mapNotNull { post ->
             toResult(post)
@@ -85,7 +88,7 @@ class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAP
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val doc = app.get(url).document
+        val doc = app.get(url, cacheTime = 60, timeout = 30).document
         val title = doc.select(".name").text()
         val year = "(?<=\\()\\d{4}(?=\\))".toRegex().find(title)?.value?.toIntOrNull()
         val image = doc.select("img.aligncenter").attr("src")
@@ -166,39 +169,15 @@ class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAP
     ): Boolean {
         data.split(" ; ").forEach{ link ->
             if (link.contains("savelinks")) {
-                val doc = app.get(link).document
+                val doc = app.get(link, cacheTime = 60, timeout = 30).document
                 doc.select("div.col-sm-8:nth-child(4) > a").forEach{
-                    if (it.attr("href").contains("gdflix")){
-                        loadExtractor(it.attr("href"), subtitleCallback, callback)
+                    val url = it.attr("href")
+                    if (url.contains("gdflix")){
+                        loadExtractor(url, subtitleCallback, callback)
                     }
                 }
             }
         }
         return true
-    }
-
-    private suspend fun gdflix(
-        data: String,
-        callback: (ExtractorLink) -> Unit){
-        val doc = app.get(data).document
-        //Instant DL
-        val instantDlLink = doc.select("a.btn.btn-danger").attr("href")
-        val instantDL = app.get(instantDlLink).url.replace("https://instantdl.pages.dev/?url=","")
-        callback.invoke(
-            ExtractorLink(
-                "Instant DL",
-                "Instant DL",
-                url = instantDL,
-                data,
-                quality = getVideoQuality(doc.select("li.list-group-item:nth-child(1)").text()),
-                isM3u8 = false,
-                isDash = false
-            )
-        )
-    }
-
-    private fun getVideoQuality(str: String?): Int {
-        return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
-            ?: Qualities.Unknown.value
     }
 }
