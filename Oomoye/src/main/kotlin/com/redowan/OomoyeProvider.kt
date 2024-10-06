@@ -18,10 +18,15 @@ import com.lagradost.cloudstream3.utils.Qualities
 import org.jsoup.nodes.Element
 import java.net.URL
 
-
+//suspend fun main() {
+//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(OomoyeProvider())
+//    providerTester.testAll()
+////    providerTester.testMainPage(verbose = true)
+////    providerTester.testSearch(query = "gun",verbose = true)
+//}
 
 class OomoyeProvider : MainAPI() { // all providers must be an instance of MainAPI
-    override var mainUrl = "https://www.oomoye.store"
+    override var mainUrl = "https://www.oomoye.site"
     override var name = "Oomoye"
     override var lang = "en"
     override val hasMainPage = true
@@ -42,16 +47,22 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
         "Kannada-movies" to "Kannada Movies",
         "Gujarati-movies" to "Gujarati Movies"
     )
+    private val headers =
+        mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
 
     override suspend fun getMainPage(
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        val doc = app.get("$mainUrl/category/${request.data}.html?page=$page").document
+        val doc = app.get(
+            "$mainUrl/category/${request.data}.html?page=$page",
+            cacheTime = 60,
+            allowRedirects = true,
+            headers = headers
+        ).document
         val home = doc.select(".catRow").mapNotNull {toResult(it)}
         return newHomePageResponse(request.name, home, true)
     }
-
 
     private fun toResult(post: Element): SearchResponse {
         val url = post.select("a").attr("href")
@@ -63,8 +74,21 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
         }
     }
 
+    override suspend fun search(query: String): List<SearchResponse> {
+        val doc = app.get(
+            "$mainUrl/search.php?q=$query",
+            cacheTime = 60,
+            headers = headers
+        ).document
+        return doc.select(".catRow").mapNotNull { toResult(it) }
+    }
+
     override suspend fun load(url: String): LoadResponse {
-        val doc = app.get(url).document
+        val doc = app.get(
+            url,
+            cacheTime = 60,
+            headers = headers
+        ).document
         val title = doc.selectXpath("/html/body/div[7]/div").text()
         val year = "(?<=\\()\\d{4}(?=\\))".toRegex().find(title)?.value?.toIntOrNull()
         return newMovieLoadResponse(title, url, TvType.Movie, url) {
@@ -81,7 +105,11 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val doc = app.get(data).document
+        val doc = app.get(
+            data,
+            cacheTime = 60,
+            headers = headers
+        ).document
         doc.select("a[href*=$mainUrl/server/]").forEach { item ->
             val links = app.get(item.attr("href").replace("/server/", "/files/")).document
             val link = links.select(".fastdl a").attr("href")
