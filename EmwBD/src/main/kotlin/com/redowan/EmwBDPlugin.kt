@@ -8,5 +8,9 @@ import android.content.Context
 class EmwBDPlugin: Plugin() {
     override fun load(context: Context) {
         registerMainAPI(EmwBDProvider())
+        registerExtractorAPI(GDFlix())
+        registerExtractorAPI(GDFlix3())
+        registerExtractorAPI(GDFlix2())
+        registerExtractorAPI(GDMirrorBot())
     }
 }
