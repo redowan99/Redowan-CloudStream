@@ -32,9 +32,9 @@ class FilmyHunkProvider : MainAPI() {
     override val hasDownloadSupport = true
     override val hasQuickSearch = false
     override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries,)
-    private val proxyServer = "https://y.demo.wvusd.homes/" // To bypass cloudflare verification
+    /*private val proxyServer = "https://y.demo.wvusd.homes/" // To bypass cloudflare verification
     private var isCloudFlareChecked = false
-    private var finalUrl = ""
+    private var finalUrl = ""*/
     override val mainPage = mainPageOf(
         "" to "Latest Updates",
         "/category/bollywood-hindi-movies" to "Bollywood Hindi Movies",
@@ -62,7 +62,7 @@ class FilmyHunkProvider : MainAPI() {
         request: MainPageRequest
     ): HomePageResponse {
 
-        if(!isCloudFlareChecked)
+        /*if(!isCloudFlareChecked)
         {
             val code = app.get(mainUrl,allowRedirects = true, timeout = 30).code
             isCloudFlareChecked = true
@@ -74,8 +74,8 @@ class FilmyHunkProvider : MainAPI() {
             {
                 finalUrl = mainUrl
             }
-        }
-        val doc = app.get("$finalUrl${request.data}/page/$page",allowRedirects = true, timeout = 30).document
+        }*/
+        val doc = app.get("$mainUrl${request.data}/page/$page",allowRedirects = true, timeout = 30).document
         val home = doc.select(".col-md-2.col-sm-3.col-xs-6").mapNotNull { toResult(it) }
         return newHomePageResponse(request.name, home, hasNext = true)
     }
@@ -83,14 +83,14 @@ class FilmyHunkProvider : MainAPI() {
     private fun toResult(post: Element): SearchResponse {
         val url = post.select(".bw_thumb a").attr("href")
         val title = post.select(".h1title").text().replace("Download","").trim()
-        val imageUrl =post.select(".tm_hide").attr("src")
+        val imageUrl =post.select(".tm_hide").attr("data-lazy-src")
         return newMovieSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = imageUrl
         }
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val doc = app.get("$finalUrl/?s=$query",allowRedirects = true, timeout = 30).document
+        val doc = app.get("$mainUrl/?s=$query",allowRedirects = true, timeout = 30).document
         val searchResponse = doc.select(".col-md-2.col-sm-3.col-xs-6")
         return searchResponse.mapNotNull { toResult(it) }
     }
