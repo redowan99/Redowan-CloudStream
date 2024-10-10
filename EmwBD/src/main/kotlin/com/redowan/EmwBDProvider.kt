@@ -1,5 +1,6 @@
 package com.redowan
 
+import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
@@ -13,12 +14,20 @@ import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newAnimeSearchResponse
 import com.lagradost.cloudstream3.newHomePageResponse
-import com.lagradost.cloudstream3.newMovieLoadResponse
+import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
-
+//suspend fun main() {
+//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(EmwBDProvider())
+//    providerTester.testLoadLinks("https://new1.filepress.shop/file/66f107ab98fd7b89339181f8 + https://m.gdfile.org/file/HRSEE6xpdThp + https://gdmirrorbot.nl/file/l3b5eb9 + https://new4.gdflix.cfd/file/4Isc0LmYGI")
+////    providerTester.testAll()
+////    providerTester.testMainPage(verbose = true)
+////    providerTester.testSearch(query = "gun",verbose = true)
+////    providerTester.testLoad("https://www.emwbd.xyz/rajkumar-2024-bengali-full-movie-480p-720p-hd-download/")
+////    providerTester.testLoad("https://www.emwbd.xyz/meghna-konnya-2024-bengali-dp-web-dl-download/")
+//}
 
 class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://www.emwbd.xyz"
@@ -48,21 +57,23 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
         "/category/south-indian-movies/" to "South Indian Movies",
         "/category/tv-shows/" to "TV Shows"
     )
+    private val headers =
+        mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
 
     override suspend fun getMainPage(
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        val url = if(page == 1) mainUrl + request.data
+        val url = if (page == 1) mainUrl + request.data
         else "$mainUrl${request.data}page/$page/"
-        val doc = app.get(url, cacheTime = 60, allowRedirects = true, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
-        val home = doc.select(".thumb.col-md-2.col-sm-4.col-xs-6").mapNotNull {toResult(it)}
-        return newHomePageResponse(request.name,home, true)
+        val doc = app.get(url, cacheTime = 60, allowRedirects = true, headers = headers).document
+        val home = doc.select(".thumb.col-md-2.col-sm-4.col-xs-6").mapNotNull { toResult(it) }
+        return newHomePageResponse(request.name, home, true)
     }
 
     private fun toResult(post: Element): SearchResponse {
         val title = post.select(".titl").text()
-        val check =  title.lowercase()
+        val check = title.lowercase()
         val url = post.select(".thumb > div:nth-child(2) > a:nth-child(1)")
             .attr("href")
         return newAnimeSearchResponse(title, url, TvType.Movie) {
@@ -85,17 +96,50 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val doc = app.get("$mainUrl/?s=$query", cacheTime = 60, allowRedirects = true, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
-        return doc.select(".thumb.col-md-2.col-sm-4.col-xs-6").mapNotNull {toResult(it)}
+        val doc = app.get(
+            "$mainUrl/?s=$query",
+            cacheTime = 60,
+            allowRedirects = true,
+            headers = headers
+        ).document
+        return doc.select(".thumb.col-md-2.col-sm-4.col-xs-6").mapNotNull { toResult(it) }
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val doc = app.get(url, cacheTime = 60, allowRedirects = true, headers =  mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")).document
+        val doc = app.get(
+            url,
+            cacheTime = 60,
+            allowRedirects = true,
+            headers = mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
+        ).document
         val title = doc.select("h1.page-title > span").text()
         val year = "(?<=\\()\\d{4}(?=\\))".toRegex().find(title)?.value?.toIntOrNull()
-        val image = doc.select("div.block-head:nth-child(2) > p:nth-child(1) > img:nth-child(1)").attr("src")
-        val link = doc.getElementsContainingText("Watch Online Now").attr("href")
-        return newMovieLoadResponse(title, url, TvType.Movie, link) {
+        val image = doc.select("div.block-head:nth-child(2) > p:nth-child(1) > img:nth-child(1)")
+            .attr("src")
+
+        val resolutionToLinks = mutableMapOf<String, StringBuilder>()
+        val resolutionRegex = Regex("(\\d+)p")
+        doc.select(".page-body p > a:nth-child(1)").forEach {
+            val name = it.text()
+            val link = it.attr("href")
+            val matchResult = resolutionRegex.find(name)
+            if (matchResult != null) {
+                val resolution = matchResult.groupValues[1]
+                val sb = resolutionToLinks.getOrPut(resolution) { StringBuilder() }
+                sb.append(link).append(" + ")
+            }
+        }
+        val finalLinks = resolutionToLinks.mapValues { it.value.toString().trimEnd(' ', '+') }
+        val episodesData = mutableListOf<Episode>()
+        finalLinks.forEach {
+            episodesData.add(
+                Episode(
+                    it.value,
+                    name = it.key + "p",
+                )
+            )
+        }
+        return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
             this.posterUrl = image
             this.year = year
         }
@@ -107,7 +151,9 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        loadExtractor(data, subtitleCallback, callback)
+        data.split(" + ").forEach {
+            loadExtractor(it, subtitleCallback, callback)
+        }
         return true
     }
 
@@ -123,11 +169,17 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
             return when {
                 lowercaseCheck.contains("webrip") || lowercaseCheck.contains("web-dl") -> SearchQuality.WebRip
                 lowercaseCheck.contains("bluray") -> SearchQuality.BlueRay
-                lowercaseCheck.contains("hdts") || lowercaseCheck.contains("hdcam") || lowercaseCheck.contains("hdtc") -> SearchQuality.HdCam
+                lowercaseCheck.contains("hdts") || lowercaseCheck.contains("hdcam") || lowercaseCheck.contains(
+                    "hdtc"
+                ) -> SearchQuality.HdCam
+
                 lowercaseCheck.contains("dvd") -> SearchQuality.DVD
                 lowercaseCheck.contains("cam") -> SearchQuality.Cam
                 lowercaseCheck.contains("camrip") || lowercaseCheck.contains("rip") -> SearchQuality.CamRip
-                lowercaseCheck.contains("hdrip") || lowercaseCheck.contains("hd") || lowercaseCheck.contains("hdtv") -> SearchQuality.HD
+                lowercaseCheck.contains("hdrip") || lowercaseCheck.contains("hd") || lowercaseCheck.contains(
+                    "hdtv"
+                ) -> SearchQuality.HD
+
                 lowercaseCheck.contains("telesync") -> SearchQuality.Telesync
                 lowercaseCheck.contains("telecine") -> SearchQuality.Telecine
                 else -> null

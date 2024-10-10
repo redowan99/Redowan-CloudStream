@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 8
+version = 10
 
 cloudstream {
     description = "Movie website in Bangladesh"
