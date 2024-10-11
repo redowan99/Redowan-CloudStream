@@ -18,15 +18,15 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
-//suspend fun main() {
-//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(MoviPKProvider())
-////    providerTester.testLoadLinks("https://checklinko.top/60382/")
-////    providerTester.testAll()
-////    providerTester.testMainPage(verbose = true)
-////    providerTester.testSearch(query = "gun",verbose = true)
-//    providerTester.testLoad("https://www.movi.pk/adbhut-2024-hindi/")
-////    providerTester.testLoadLinks("51783")
-//}
+suspend fun main() {
+    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(MoviPKProvider())
+//    providerTester.testLoadLinks("https://checklinko.top/60382/")
+//    providerTester.testAll()
+//    providerTester.testMainPage(verbose = true)
+//    providerTester.testSearch(query = "gun",verbose = true)
+    providerTester.testLoad("https://www.movi.pk/dukaan-2024-hindi-v1/")
+//    providerTester.testLoadLinks("51783")
+}
 
 
 class MoviPKProvider : MainAPI() {
@@ -51,13 +51,19 @@ class MoviPKProvider : MainAPI() {
         "/genre/hollywood-movies/" to "Hollywood",
         "/genre/anime/" to "Anime"
     )
+
     override suspend fun getMainPage(
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        val doc = app.get("$mainUrl${request.data}page/$page", cacheTime = 60, allowRedirects = true, timeout = 30).document
+        val doc = app.get(
+            "$mainUrl${request.data}page/$page",
+            cacheTime = 60,
+            allowRedirects = true,
+            timeout = 30
+        ).document
         val home = doc.select(".ml-mask.jt").mapNotNull { toResult(it) }
-        return newHomePageResponse(request.name,home, true)
+        return newHomePageResponse(request.name, home, true)
     }
 
     private fun toResult(post: Element): SearchResponse {
@@ -87,13 +93,25 @@ class MoviPKProvider : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val doc = app.get(url, cacheTime = 60, timeout = 30).document
+        val doc = app.get(
+            url,
+            cacheTime = 60,
+            timeout = 30,
+            headers = mapOf(
+                "user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+            )).document
         val title = doc.select(".mvic-desc > h3:nth-child(1)").text()
         val image = doc.selectFirst(".hidden.lazyload")
-                ?.attr("data-src")
-        val dataUrl = doc.select("div.btn-group:nth-child(2) a[href*=listeamed]")
-            .attr("href").replace("/v/","/e/")
-        val plot = doc.select("p.f-desc:nth-child(1)").text().replace(title,"")
+            ?.attr("data-src")
+        val plot = doc.select("p.f-desc:nth-child(1)").text().replace(title, "")
+        var dataUrl = ""
+        doc.select("div.btn-group:nth-child(2) a").forEach {
+            val link = it.attr("href")
+            if (link.contains("https://listeamed.net")) dataUrl = link
+            else if (link.contains("https://bembed.net")) dataUrl =
+                link.replace("https://bembed.net", "https://listeamed.net")
+        }
+        dataUrl = dataUrl.replace("/v/", "/e/")
         return newMovieLoadResponse(title, url, TvType.Movie, dataUrl) {
             this.posterUrl = image
             this.plot = plot
