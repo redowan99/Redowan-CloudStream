@@ -17,13 +17,13 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
 import org.jsoup.nodes.Element
 
-suspend fun main() {
-    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(OomoyeProvider())
-//    providerTester.testAll()
-//    providerTester.testMainPage(verbose = true)
-//    providerTester.testSearch(query = "gun",verbose = true)
-    providerTester.testLoadLinks("https://www.oomoye.yachts/files/40136/Vedaa-2024-480p-mkv/1.html ; https://www.oomoye.yachts/files/40134/Vedaa-2024-720p-mkv/1.html ; https://www.oomoye.yachts/files/40132/Vedaa-2024-1080p-mkv/1.html")
-}
+//suspend fun main() {
+//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(OomoyeProvider())
+////    providerTester.testAll()
+////    providerTester.testMainPage(verbose = true)
+////    providerTester.testSearch(query = "gun",verbose = true)
+//    providerTester.testLoadLinks("https://www.oomoye.yachts/files/40136/Vedaa-2024-480p-mkv/1.html ; https://www.oomoye.yachts/files/40134/Vedaa-2024-720p-mkv/1.html ; https://www.oomoye.yachts/files/40132/Vedaa-2024-1080p-mkv/1.html")
+//}
 
 class OomoyeProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://www.oomoye.yachts"
