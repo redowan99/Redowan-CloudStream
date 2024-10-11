@@ -108,12 +108,12 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
             val doc = app.get(
                 it, cacheTime = 60, headers = headers
             ).document
-            doc.select(".fastdl:contains(Start Download from Server) > a").forEach { it ->
-                val linkTitle = it.attr("title")
+            doc.select(".fastdl:contains(Start Download from Server) > a").forEach { links ->
+                val linkTitle = links.attr("title")
                 val extractedName = Regex(nameExtractorRegex).find(linkTitle)
                     ?.groups?.get(1)?.value ?: ""
                 val categoryName = doc.select(".category").text()
-                val link = it.attr("href")
+                val link = links.attr("href")
                 val providerName = when {
                     link.contains("main") -> "Cloudflare"
                     else -> "Pixeldrain"
