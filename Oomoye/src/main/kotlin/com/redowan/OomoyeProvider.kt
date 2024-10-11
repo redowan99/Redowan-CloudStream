@@ -17,13 +17,13 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
 import org.jsoup.nodes.Element
 
-//suspend fun main() {
-//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(OomoyeProvider())
-////    providerTester.testAll()
-////    providerTester.testMainPage(verbose = true)
-////    providerTester.testSearch(query = "gun",verbose = true)
-//    providerTester.testLoadLinks("https://www.oomoye.yachts/files/40136/Vedaa-2024-480p-mkv/1.html ; https://www.oomoye.yachts/files/40134/Vedaa-2024-720p-mkv/1.html ; https://www.oomoye.yachts/files/40132/Vedaa-2024-1080p-mkv/1.html")
-//}
+suspend fun main() {
+    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(OomoyeProvider())
+//    providerTester.testAll()
+//    providerTester.testMainPage(verbose = true)
+//    providerTester.testSearch(query = "gun",verbose = true)
+    providerTester.testLoadLinks("https://www.oomoye.yachts/files/40136/Vedaa-2024-480p-mkv/1.html ; https://www.oomoye.yachts/files/40134/Vedaa-2024-720p-mkv/1.html ; https://www.oomoye.yachts/files/40132/Vedaa-2024-1080p-mkv/1.html")
+}
 
 class OomoyeProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://www.oomoye.yachts"
@@ -96,6 +96,7 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
         }
     }
 
+    private val nameExtractorRegex = "(?<=\\))\\s*(.*?)(?=\\.)"
 
     override suspend fun loadLinks(
         data: String,
@@ -103,18 +104,28 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        data.split(" ; ").forEach { it ->
+        data.split(" ; ").forEach {
             val doc = app.get(
                 it, cacheTime = 60, headers = headers
             ).document
-            doc.select(".fastdl:contains(Start Download from Server) > a").forEach { link ->
+            doc.select(".fastdl:contains(Start Download from Server) > a").forEach { it ->
+                val linkTitle = it.attr("title")
+                val extractedName = Regex(nameExtractorRegex).find(linkTitle)
+                    ?.groups?.get(1)?.value ?: ""
+                val categoryName = doc.select(".category").text()
+                val link = it.attr("href")
+                val providerName = when {
+                    link.contains("main") -> "Cloudflare"
+                    else -> "Pixeldrain"
+                }
+                val finalName = "$extractedName - $categoryName $providerName"
                 callback.invoke(
                     ExtractorLink(
                         this.name,
-                        this.name,
-                        url = link.attr("href"),
+                        finalName,
+                        url = link,
                         mainUrl,
-                        quality = getVideoQuality(link.attr("title")),
+                        quality = getVideoQuality(linkTitle),
                         isM3u8 = false,
                         isDash = false
                     )
