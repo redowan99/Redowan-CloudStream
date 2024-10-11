@@ -20,6 +20,11 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
+//suspend fun main() {
+//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(Rtally18Provider())
+//    providerTester.testAll()
+//}
+
 class Rtally18Provider : MainAPI() {
     override var mainUrl = "https://rtally18.vercel.app"
     override var name = "Rtally18"
@@ -44,7 +49,7 @@ class Rtally18Provider : MainAPI() {
         request: MainPageRequest
     ): HomePageResponse {
         val pageId = page * 12
-        val url = "https://xotpxf3q.api.sanity.io/v2023-03-01/data/query/rtally?query=%0A*%5B_type+%3D%3D+%22movie%22+%26%26+%24keyword+in+categories%5B%5D-%3Etitle%5D+%7C++order%28_createdAt++desc%29+%7C+order%28released++desc%29%5B${pageId-12}...%24end%5D%7B%0A++++...%2C%0A++++type%5B%5D-%3E%2C%0A++++categories%5B%5D-%3E%2C%0A++++genres%5B%5D-%3E%2C%0A++++language%5B%5D-%3E%2C%0A++++quality%5B%5D-%3E%2C%0A++++year%5B%5D-%3E%2C%0A++++%22count%22%3A+count%28*%5B_type+%3D%3D+%22movie%22+%26%26+%24keyword+in+categories%5B%5D-%3Etitle%5D%29%0A%7D&%24keyword=%22${request.data}%22&%24end=$pageId"
+        val url = "https://xotpxf3q.api.sanity.io/v2023-03-01/data/query/rtally?query=%0A*%5B_type+%3D%3D+%22movie%22+%26%26+%24keyword+in+categories%5B%5D-%3Etitle%5D+%7C++order%28_createdAt++desc%29+%7C+order%28released++desc%29%5B${pageId - 12}...%24end%5D%7B%0A++++...%2C%0A++++type%5B%5D-%3E%2C%0A++++categories%5B%5D-%3E%2C%0A++++genres%5B%5D-%3E%2C%0A++++language%5B%5D-%3E%2C%0A++++quality%5B%5D-%3E%2C%0A++++year%5B%5D-%3E%2C%0A++++%22count%22%3A+count%28*%5B_type+%3D%3D+%22movie%22+%26%26+%24keyword+in+categories%5B%5D-%3Etitle%5D%29%0A%7D&%24keyword=%22${request.data}%22&%24end=$pageId"
         val doc = app.get(
             url,
             cacheTime = 60,
@@ -60,8 +65,8 @@ class Rtally18Provider : MainAPI() {
     private fun toHomeResult(post: Result): SearchResponse {
         val url = if (post.slug?.current?.contains("https") == true) post.slug.current
             else "$mainUrl/post/${post.slug?.current}"
-        val imageId = post.mainImage?.asset?._ref?.replaceFirst("image-","")
-            ?.replace("-jpg",".jpg")?.replace("-webp",".webp")
+        val imageId = post.mainImage?.asset?._ref?.replaceFirst("image-", "")
+            ?.replace("-jpg", ".jpg")?.replace("-webp", ".webp")
         val image = "https://rtally18.vercel.app/_next/image?url=https%3A%2F%2Fcdn.sanity.io%2Fimages%2Fxotpxf3q%2Frtally%2F${imageId}&w=1080&q=75"
         return newAnimeSearchResponse(post.title ?: "", url, TvType.Movie) {
             this.posterUrl = image
@@ -111,7 +116,7 @@ class Rtally18Provider : MainAPI() {
         ).document
         val title = doc.select("h3.text-3xl.font-semibold").text()
         val image = mainUrl + doc.select(".p-\\[5px\\]").attr("src")
-            .replace("&w=\\d+&q=75".toRegex(),"&w=1080&q=75")
+            .replace("&w=\\d+&q=75".toRegex(), "&w=1080&q=75")
         val plot = doc.selectFirst("p.text-sm:nth-child(3)")?.text()
         val download = doc.select("section.max-w-\\[90rem\\]:nth-child(2) > div:nth-child(1) > div > a:nth-child(1)")
         val duration = selectUntilNonInt(doc.select("div.space-x-4:nth-child(2) > span:nth-child(3)").text())
@@ -203,7 +208,7 @@ class Rtally18Provider : MainAPI() {
         val _ref: String?
     )
 
-    private fun selectUntilNonInt(string: String): Int?{
+    private fun selectUntilNonInt(string: String): Int? {
         return Regex("^.*?(?=\\D|\$)").find(string)?.value?.toIntOrNull()
     }
 }
