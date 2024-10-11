@@ -96,6 +96,7 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
         }
     }
 
+    private val nameExtractorRegex = "(?<=\\))\\s*(.*?)(?=\\.)"
 
     override suspend fun loadLinks(
         data: String,
@@ -103,18 +104,28 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        data.split(" ; ").forEach { it ->
+        data.split(" ; ").forEach {
             val doc = app.get(
                 it, cacheTime = 60, headers = headers
             ).document
-            doc.select(".fastdl:contains(Start Download from Server) > a").forEach { link ->
+            doc.select(".fastdl:contains(Start Download from Server) > a").forEach { links ->
+                val linkTitle = links.attr("title")
+                val extractedName = Regex(nameExtractorRegex).find(linkTitle)
+                    ?.groups?.get(1)?.value ?: ""
+                val categoryName = doc.select(".category").text()
+                val link = links.attr("href")
+                val providerName = when {
+                    link.contains("main") -> "Cloudflare"
+                    else -> "Pixeldrain"
+                }
+                val finalName = "$extractedName - $categoryName $providerName"
                 callback.invoke(
                     ExtractorLink(
                         this.name,
-                        this.name,
-                        url = link.attr("href"),
+                        finalName,
+                        url = link,
                         mainUrl,
-                        quality = getVideoQuality(link.attr("title")),
+                        quality = getVideoQuality(linkTitle),
                         isM3u8 = false,
                         isDash = false
                     )
