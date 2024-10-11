@@ -18,6 +18,7 @@ import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
+import kotlin.text.replace
 
 //suspend fun main() {
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(FullyMazaProvider())
@@ -69,8 +70,10 @@ class FullyMazaProvider : MainAPI() {
         return newHomePageResponse(request.name, home, true)
     }
 
+    private val nonAscii = Regex("[^\\x00-\\x7F]")
+
     private fun toLatestResult(post: Element): SearchResponse {
-        val title = post.select(".movi-title > a:nth-child(1)").text()
+        val title = post.select(".movi-title > a:nth-child(1)").text().replace(nonAscii, "")
         val url = post.select(".movi-title > a:nth-child(1)").attr("href")
         val check = title.lowercase()
         return newAnimeSearchResponse(title, url, TvType.Movie) {
@@ -90,7 +93,7 @@ class FullyMazaProvider : MainAPI() {
     }
 
     private fun toResult(post: Element): SearchResponse {
-        val title = post.select(".res-grid-title").text()
+        val title = post.select(".res-grid-title").text().replace(nonAscii, "")
         val url = post.select(".blog-starter-standard-post__post-title > a:nth-child(1)")
             .attr("href")
         val check = title.lowercase()
