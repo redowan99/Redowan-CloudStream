@@ -23,15 +23,15 @@ import org.jsoup.nodes.Element
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(HDhub4uProvider())
 ////    providerTester.testAll()
 ////    providerTester.testMainPage(verbose = true)
-////    providerTester.testSearch(query = "gun",verbose = true)
+//    providerTester.testSearch(query = "gun",verbose = true)
 ////    providerTester.testLoad("https://www.hdhub4u.com.mx/The-guns-of-navarone-1961-hindi-english-full-movie-3270.html")
 ////    providerTester.testLoad("https://www.hdhub4u.com.mx/Mirzapur-2018-2024-hindi-web-series-21143.html")
 ////    providerTester.testLoad("https://www.hdhub4u.com.mx/Vedaa-2024-hindi-full-movie-22487.html")
-//    providerTester.testLoadLinks("480p.mkv {Hindi} [427.26 MB] ## https://allset.lol/viEw1MjAzNDM/ ; 720p.mkv {Hindi} [1.46 GB] ## https://allset.lol/viEw1MjAzNDI/ ; 1080p.mkv {Hindi} [2.2 GB] ## https://allset.lol/viEw1MjAzNDE/")
+////    providerTester.testLoadLinks("480p.mkv {Hindi} [427.26 MB] ## https://allset.lol/viEw1MjAzNDM/ ; 720p.mkv {Hindi} [1.46 GB] ## https://allset.lol/viEw1MjAzNDI/ ; 1080p.mkv {Hindi} [2.2 GB] ## https://allset.lol/viEw1MjAzNDE/")
 //}
 
 class HDhub4uProvider : MainAPI() {
-    override var mainUrl = "https://www.hdhub4u.com.mx"
+    override var mainUrl = "https://www.hdhub4u.com.vc"
     override var name = "HDhub4u"
     override var lang = "en"
     override val hasMainPage = true
@@ -42,13 +42,14 @@ class HDhub4uProvider : MainAPI() {
     )
     override val mainPage = mainPageOf(
         "/" to "Latest",
-//        "/categories/featured" to "Featured",
-//        "/categories/hollywood" to "Hollywood",
-//        "/categories/bengali" to "Bangla",
-        "/category/Bollywood-movies/" to "Bollywood"
-//        "/categories/tv-shows" to "Tv Shows",
-//        "/categories/korean" to "Korean",
-//        "/categories/anime" to "Anime"
+        "/category/Bollywood-movies/" to "Bollywood",
+        "/category/Hollywood-hindi-dubbed-movies/" to "Hollywood Hindi Movies",
+        "/category/Hollywood-english-movies/" to "Hollywood English Movies",
+        "/category/Hollywood-cartoon-movies/" to "Hollywood Cartoon Movies",
+        "/category/Bengali-movies/" to "Bengali Movies",
+        "/category/South-indian-hindi-movies/" to " South Indian Hindi Movies",
+        "/category/Hindi-Web-Series/" to "Hindi Web Series",
+        "/category/Hollywood-Hindi-Dubbed-Web-Series/" to "Hollywood Web Series"
     )
     private val headers =
         mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
@@ -57,7 +58,10 @@ class HDhub4uProvider : MainAPI() {
         page: Int, request: MainPageRequest
     ): HomePageResponse {
         val doc = app.get(
-            "$mainUrl${request.data}page/$page/", cacheTime = 60, headers = headers
+            "$mainUrl${request.data}page/$page/",
+            cacheTime = 60,
+            headers = headers,
+            allowRedirects = true
         ).document
         val home = doc.select("article.post").mapNotNull { toResult(it) }
         return newHomePageResponse(request.name, home, true)
