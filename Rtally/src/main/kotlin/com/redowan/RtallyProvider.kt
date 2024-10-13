@@ -15,14 +15,25 @@ import com.lagradost.cloudstream3.newAnimeSearchResponse
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
-import com.lagradost.cloudstream3.utils.AppUtils
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
+//suspend fun main() {
+//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(RtallyProvider())
+////    providerTester.testAll()
+////    providerTester.testMainPage(verbose = true)
+////    providerTester.testSearch(query = "gun",verbose = true)
+//    providerTester.testLoad("https://rtally.vercel.app/post/from-season-1")
+//}
+
 class RtallyProvider : MainAPI() {
     override var mainUrl = "https://rtally.vercel.app"
     override var name = "Rtally"
+    override var lang = "bn"
+    override val hasMainPage = true
+    override val hasDownloadSupport = true
+    override val hasQuickSearch = false
     override val supportedTypes = setOf(
         TvType.Movie,
         TvType.TvSeries,
@@ -30,68 +41,48 @@ class RtallyProvider : MainAPI() {
         TvType.AnimeMovie,
         TvType.Anime
     )
-
-    override var lang = "bn"
-    override val hasMainPage = true
-    override val hasDownloadSupport = true
-    override val hasQuickSearch = false
-
     override val mainPage = mainPageOf(
-        "Trending" to "Trending",
-        "Featured" to "Featured",
-        "Tv-Shows" to "Tv Shows",
-        "Anime" to "Anime",
-        "Bengali" to "Bangladeshi",
-        "Bollywood" to "Indian",
-        "Hollywood" to "Hollywood"
+        "/categories/trending" to "Trending",
+        "/categories/featured" to "Featured",
+        "/categories/hollywood" to "Hollywood",
+        "/categories/bengali" to "Bangla",
+        "/categories/bollywood" to "bollywood",
+        "/categories/tv-shows" to "Tv Shows",
+        "/categories/korean" to "Korean",
+        "/categories/anime" to "Anime"
     )
+    private val headers =
+        mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
 
     override suspend fun getMainPage(
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        val pageId = page * 12
-        val url = "https://12wlmtcp.api.sanity.io/v2023-03-01/data/query/production?query=%0A*%5B_type+%3D%3D+%22movie%22+%26%26+%24keyword+in+categories%5B%5D-%3Etitle%5D+%7C++order%28_createdAt++desc%29+%7C+order%28released++desc%29%5B${pageId-12}...%24end%5D%7B%0A++++...%2C%0A++++type%5B%5D-%3E%2C%0A++++categories%5B%5D-%3E%2C%0A++++%2F%2F+genres%5B%5D-%3E%2C%0A++++language%5B%5D-%3E%2C%0A++++quality%5B%5D-%3E%2C%0A++++year%5B%5D-%3E%2C%0A++++dramasLink%5B%5D-%3E%2C%0A++++%22count%22%3A+count%28*%5B_type+%3D%3D+%22movie%22+%26%26+%24keyword+in+categories%5B%5D-%3Etitle%5D%29%0A%7D&%24keyword=%22${request.data}%22&%24end=$pageId"
         val doc = app.get(
-            url,
+            "$mainUrl${request.data}?page=$page",
             cacheTime = 60,
-            headers = mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
-        )
-        val home = AppUtils.parseJson<Post>(doc.text).result.map { toHomeResult(it) }
+            headers = headers
+        ).document
+        val home = doc.select("div.grid:nth-child(1) > a").mapNotNull { toResult(it) }
         return newHomePageResponse(request.name, home, true)
     }
 
-    private fun toHomeResult(post: Result): SearchResponse {
-        val url = if (post.slug?.current?.contains("https") == true) post.slug.current
-            else "$mainUrl/post/${post.slug?.current}"
-        return newAnimeSearchResponse(post.title ?: "", url, TvType.Movie) {
-            this.posterUrl = post.otherImg
-            addDubStatus(
-                dubExist = when {
-                    "dual" in (post.language?.first()?.title ?: "") -> true
-                    else -> false
-                },
-                subExist = false
-            )
-        }
-    }
-
-    private fun toSearchResult(post: Element): SearchResponse {
-        val title = post.selectFirst(".line-clamp-1")?.text() ?: ""
-        val check = post.select("span.absolute:nth-child(5)").text().lowercase()
-        val link = post.select("a.relative").attr("href")
-        val url = if (link.contains("https")) link
-            else mainUrl + link
+    private fun toResult(post: Element): SearchResponse {
+        val title = post.select("h2").text()
+        val check = post.select("div.absolute:nth-child(4)").text()
+        val url = mainUrl + post.select("a:nth-child(1)")
+            .attr("href")
         return newAnimeSearchResponse(title, url, TvType.Movie) {
-            this.posterUrl = post.select(".object-cover")
+            this.posterUrl = post.select(".p-\\[4px\\]")
                 .attr("src")
             addDubStatus(
                 dubExist = when {
-                    "dual" in check -> true
+                    "Dual" in check -> true
                     else -> false
                 },
                 subExist = false
             )
+            this.year = post.select(".flexBt > h5:nth-child(1)").text().toIntOrNull()
         }
     }
 
@@ -99,55 +90,71 @@ class RtallyProvider : MainAPI() {
         val doc = app.get(
             "$mainUrl/search/$query",
             cacheTime = 60,
-            headers = mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
+            headers = headers
         ).document
-        return doc.select("a.relative.space-y-2").mapNotNull { toSearchResult(it) }
+        return doc.select("div.grid:nth-child(1) > a").mapNotNull { toResult(it) }
     }
 
     override suspend fun load(url: String): LoadResponse {
         val doc = app.get(
             url,
             cacheTime = 60,
-            headers = mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
+            headers = headers
         ).document
-        val title = doc.select("h3.text-3xl.font-semibold").text()
-        val image = doc.select(".p-\\[5px\\]").attr("src")
-        val plot = doc.selectFirst("p.text-sm:nth-child(3)")?.text()
-        val download = doc.select(".gap-4 > div > a:nth-child(1)")
-        val duration = selectUntilNonInt(doc.select("div.space-x-4:nth-child(2) > span:nth-child(3)").text())
-        val year = selectUntilNonInt(doc.select("div.grid:nth-child(3) > p:nth-child(2) > a:nth-child(1) > span:nth-child(1)").text())
-        if (download.isNotEmpty()) {
-            var links = ""
-            download.forEach { links += it.attr("href") + " ; " }
-            return newMovieLoadResponse(title, url, TvType.Movie, links) {
-                this.posterUrl = image
-                this.plot = plot
-                this.duration = duration
-                this.year = year
-            }
-        } else {
+        val title = doc.select(".font-serif").text()
+        val image = doc.select(".w-\\[200px\\] > img:nth-child(1)").attr("src")
+        val plot = doc.selectFirst("p.text-sm:nth-child(2)")?.text()
+        val year = doc.select("div.infoDiv:nth-child(7) > span:nth-child(2)").text().toIntOrNull()
+
+        val episode = doc.select("ul.flex > li")
+        if (episode.isNotEmpty())
+        {
             val episodesData = mutableListOf<Episode>()
-            var episodeNum = 0
-            doc.select("div.space-x-2.px-2").forEach {
-                episodeNum++
-                val link = it.select(".grid > a:nth-child(1)").attr("href")
-                val name = it.select(".line-clamp-1").text().replace("$title ", "")
+            val scriptElements = doc.select("script")
+            val allScriptHtml: String = scriptElements.joinToString() { it.html() }.replace("\\", "")
+            val streamWish = extractStreamwishUrls(allScriptHtml)
+            val vidhideplus = extractVidhideplus(allScriptHtml)
+            episode.forEachIndexed { index, it ->
                 episodesData.add(
                     Episode(
-                        link,
-                        name,
-                        null,
-                        episodeNum
+                        "${streamWish[index]} ; ${vidhideplus[index]}",
+                        name = "Episode ${it.text()}"
                     )
                 )
             }
             return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
                 this.posterUrl = image
                 this.plot = plot
-                this.duration = duration
+                this.year = year
+            }
+
+        }
+        else{
+            var links = ""
+            doc.select("div.justify-center:nth-child(2) > a").forEach {
+                links += it.attr("href") + " ; "
+            }
+            return newMovieLoadResponse(title, url, TvType.Movie, links) {
+                this.posterUrl = image
+                this.plot = plot
                 this.year = year
             }
         }
+    }
+
+    private val streamwishMultiUrlRegex = Regex("\"streamwishMultiUrl\":\\s*\"([^\"]+)\"")
+    private fun extractStreamwishUrls(text: String): List<String> {
+        val streamwishMultiUrlMatch = streamwishMultiUrlRegex.find(text)
+        val streamwishMultiUrlValue = streamwishMultiUrlMatch?.groupValues?.getOrNull(1)
+        val streamwishIds = streamwishMultiUrlValue?.split(",") ?: emptyList()
+        return streamwishIds.map { "https://streamwish.to/e/$it" }
+    }
+    private val vidhideplusRegex = Regex("\"multiLinksSl\":\\s*\"([^\"]+)\"")
+    private fun extractVidhideplus(text: String): List<String> {
+        val vidhideplusMatch = vidhideplusRegex.find(text)
+        val vidhideplusValue = vidhideplusMatch?.groupValues?.getOrNull(1)
+        val vidhideplusIds = vidhideplusValue?.split(",") ?: emptyList()
+        return vidhideplusIds.map { "https://vidhideplus.com/v/$it" }
     }
 
     override suspend fun loadLinks(
@@ -157,13 +164,9 @@ class RtallyProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         data.split(" ; ").forEach {
-            if (it.contains("filemoon")) loadExtractor(
-                it.replace("/download/", "/e/"),
-                subtitleCallback,
-                callback
-            )
-            else if (it.contains("vidhidepre")) loadExtractor(
-                it.replace("/d/", "/v/"),
+            loadExtractor(
+                it.replace("wish.com/d/", "wish.com/e/")
+                    .replace("vidhideplus.com/d/", "vidhideplus.com/v/"),
                 subtitleCallback,
                 callback
             )
@@ -171,26 +174,5 @@ class RtallyProvider : MainAPI() {
         return true
     }
 
-    data class Post(
-        val result: List<Result>
-    )
 
-    data class Result(
-        val language: List<Language>?,
-        val otherImg: String?,
-        val slug: Slug?,
-        val title: String?
-    )
-
-    data class Language(
-        val title: String?
-    )
-
-    data class Slug(
-        val current: String?
-    )
-
-    private fun selectUntilNonInt(string: String): Int?{
-        return Regex("^.*?(?=\\D|\$)").find(string)?.value?.toIntOrNull()
-    }
 }
