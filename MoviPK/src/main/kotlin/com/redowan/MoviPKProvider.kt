@@ -18,15 +18,15 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
-suspend fun main() {
-    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(MoviPKProvider())
-//    providerTester.testLoadLinks("https://checklinko.top/60382/")
-//    providerTester.testAll()
-//    providerTester.testMainPage(verbose = true)
-//    providerTester.testSearch(query = "gun",verbose = true)
-    providerTester.testLoad("https://www.movi.pk/dukaan-2024-hindi-v1/")
-//    providerTester.testLoadLinks("51783")
-}
+//suspend fun main() {
+//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(MoviPKProvider())
+////    providerTester.testLoadLinks("https://checklinko.top/60382/")
+////    providerTester.testAll()
+////    providerTester.testMainPage(verbose = true)
+////    providerTester.testSearch(query = "gun",verbose = true)
+//    providerTester.testLoad("https://www.movi.pk/dukaan-2024-hindi-v1/")
+////    providerTester.testLoadLinks("51783")
+//}
 
 
 class MoviPKProvider : MainAPI() {
