@@ -23,11 +23,12 @@ import org.jsoup.nodes.Element
 //suspend fun main() {
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(RtallyProvider())
 ////    providerTester.testAll()
-////    providerTester.testMainPage(verbose = true)
+//    providerTester.testMainPage(verbose = true)
 ////    providerTester.testSearch(query = "gun",verbose = true)
 ////    providerTester.testLoad("https://rtally.vercel.app/post/from-season-1")
 ////    providerTester.testLoad("https://rtally.vercel.app/post/the-substance")
-//    providerTester.testLoad("https://rtally.vercel.app/post/all-of-us-are-dead-season-1")
+////    providerTester.testLoad("https://rtally.vercel.app/post/all-of-us-are-dead-season-1")
+////    providerTester.testLoad("https://rtally.vercel.app/post/kill")
 //}
 
 class RtallyProvider : MainAPI() {
@@ -73,8 +74,7 @@ class RtallyProvider : MainAPI() {
     private fun toResult(post: Element): SearchResponse {
         val title = post.select("h2").text()
         val check = post.select("div.absolute:nth-child(4)").text()
-        val url = mainUrl + post.select("a:nth-child(1)")
-            .attr("href")
+        val url = mainUrl + (post.selectFirst("a")?.attr("href") ?: "")
         return newAnimeSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = post.select(".relative.border.border-gray-500.rounded-lg.group img")
                 .attr("src")
@@ -105,7 +105,7 @@ class RtallyProvider : MainAPI() {
             headers = headers
         ).document
         val title = doc.select(".font-serif").text()
-        val image = doc.select(".w-\\[200px\\] > img:nth-child(1)").attr("src")
+        val image = doc.selectFirst(".w-\\[200px\\] > img:nth-child(1)")?.attr("src")
         val plot = doc.selectFirst("p.text-sm:nth-child(2)")?.text()
         val year = doc.select("div.infoDiv:nth-child(7) > span:nth-child(2)").text().toIntOrNull()
         val recommendations = doc.select(".gap-8").mapNotNull {
@@ -187,7 +187,7 @@ class RtallyProvider : MainAPI() {
             //Filemoon
             "Download 1" -> url.attr("href").replace("/download/", "/e/") + " ; "
             //Vidhideplus
-            "Download 2" -> url.attr("href").replace("/download/", "/v/") + " ; "
+            "Download 2" -> url.attr("href").replace("/download/", "/v/").replace("/d/", "/e/") + " ; "
             //StreamWish
             "Download 3" -> url.attr("href").replace("/d/", "/e/") + " ; "
             else -> url.attr("href")
