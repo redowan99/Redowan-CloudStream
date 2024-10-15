@@ -23,12 +23,12 @@ import org.jsoup.nodes.Element
 suspend fun main() {
     val providerTester = com.lagradost.cloudstreamtest.ProviderTester(RtallyProvider())
 //    providerTester.testAll()
-    providerTester.testMainPage(verbose = true)
+//    providerTester.testMainPage(verbose = true)
 //    providerTester.testSearch(query = "gun",verbose = true)
 //    providerTester.testLoad("https://rtally.vercel.app/post/from-season-1")
 //    providerTester.testLoad("https://rtally.vercel.app/post/the-substance")
 //    providerTester.testLoad("https://rtally.vercel.app/post/all-of-us-are-dead-season-1")
-//    providerTester.testLoad("https://rtally.vercel.app/post/turbo")
+    providerTester.testLoad("https://rtally.vercel.app/post/bigg-boss-season-18")
 }
 
 class RtallyProvider : MainAPI() {
@@ -151,11 +151,11 @@ class RtallyProvider : MainAPI() {
                         }
                 }
             }
-            episode.forEachIndexed { index, it ->
+            linkList.forEachIndexed {index, it ->
                 episodesData.add(
                     Episode(
-                        linkList[index],
-                        name = "Episode ${it.text()}"
+                        it,
+                        name = "Episode ${index.plus(1)}}"
                     )
                 )
             }
