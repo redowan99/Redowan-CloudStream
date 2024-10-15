@@ -23,12 +23,12 @@ import org.jsoup.nodes.Element
 //suspend fun main() {
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(RtallyProvider())
 ////    providerTester.testAll()
-//    providerTester.testMainPage(verbose = true)
+////    providerTester.testMainPage(verbose = true)
 ////    providerTester.testSearch(query = "gun",verbose = true)
 ////    providerTester.testLoad("https://rtally.vercel.app/post/from-season-1")
 ////    providerTester.testLoad("https://rtally.vercel.app/post/the-substance")
 ////    providerTester.testLoad("https://rtally.vercel.app/post/all-of-us-are-dead-season-1")
-////    providerTester.testLoad("https://rtally.vercel.app/post/kill")
+//    providerTester.testLoad("https://rtally.vercel.app/post/turbo")
 //}
 
 class RtallyProvider : MainAPI() {
@@ -50,7 +50,7 @@ class RtallyProvider : MainAPI() {
         "/categories/featured" to "Featured",
         "/categories/hollywood" to "Hollywood",
         "/categories/bengali" to "Bangla",
-        "/categories/bollywood" to "bollywood",
+        "/categories/bollywood" to "Bollywood",
         "/categories/tv-shows" to "Tv Shows",
         "/categories/korean" to "Korean",
         "/categories/anime" to "Anime"
@@ -121,10 +121,9 @@ class RtallyProvider : MainAPI() {
             val scriptHtml = doc.select("script").joinToString() { it.html() }.replace("\\", "")
             val linkList: MutableList<String> = mutableListOf()
             doc.select("div.justify-center:nth-child(2) > a").forEach {
-                val server = it.text().trim()
-                when (server) {
+                when {
                     //Filemoon
-                    "Download 1" -> extractFileMoonUrls(scriptHtml)?.split(",")
+                    url.contains("filemoon") -> extractFileMoonUrls(scriptHtml)?.split(",")
                         ?.forEachIndexed { index, id ->
                             if (index in linkList.indices) {
                                 linkList[index] += "https://filemoon.sx/e/$id ; "
@@ -133,7 +132,7 @@ class RtallyProvider : MainAPI() {
                             }
                         }
                     //Vidhideplus
-                    "Download 2" -> extractVidhideplus(scriptHtml)?.split(",")
+                    url.contains("vidhideplus") -> extractVidhideplus(scriptHtml)?.split(",")
                         ?.forEachIndexed { index, id ->
                             if (index in linkList.indices) {
                                 linkList[index] += "https://vidhideplus.com/v/$id ; "
@@ -142,7 +141,7 @@ class RtallyProvider : MainAPI() {
                             }
                         }
                     //StreamWish
-                    "Download 3" -> extractStreamwishUrls(scriptHtml)?.split(",")
+                    url.contains("wish") -> extractStreamwishUrls(scriptHtml)?.split(",")
                         ?.forEachIndexed { index, id ->
                             if (index in linkList.indices) {
                                 linkList[index] += "https://playerwish.com/e/$id ; "
@@ -181,16 +180,18 @@ class RtallyProvider : MainAPI() {
         }
     }
 
-    private fun downloadToEmbedUrl(url: Element): String {
-        val server = url.text().trim()
-        return when (server) {
+    private fun downloadToEmbedUrl(urlElement: Element): String {
+        val url = urlElement.attr("href")
+        return when {
             //Filemoon
-            "Download 1" -> url.attr("href").replace("/download/", "/e/") + " ; "
+            url.contains("filemoon") -> url.replace("/download/", "/e/") + " ; "
             //Vidhideplus
-            "Download 2" -> url.attr("href").replace("/download/", "/v/").replace("/d/", "/e/") + " ; "
+            url.contains("vidhideplus") -> url.replace("/download/", "/v/") + " ; "
+            //Vidhidepre
+            url.contains("vidhidepre") -> url.replace("/d/", "/v/") + " ; "
             //StreamWish
-            "Download 3" -> url.attr("href").replace("/d/", "/e/") + " ; "
-            else -> url.attr("href")
+            url.contains("playerwish") -> url.replace("/d/", "/e/") + " ; "
+            else -> url
         }
     }
 
