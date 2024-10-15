@@ -20,16 +20,16 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
-//suspend fun main() {
-//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(RtallyProvider())
-////    providerTester.testAll()
-//    providerTester.testMainPage(verbose = true)
-////    providerTester.testSearch(query = "gun",verbose = true)
-////    providerTester.testLoad("https://rtally.vercel.app/post/from-season-1")
-////    providerTester.testLoad("https://rtally.vercel.app/post/the-substance")
-////    providerTester.testLoad("https://rtally.vercel.app/post/all-of-us-are-dead-season-1")
-////    providerTester.testLoad("https://rtally.vercel.app/post/kill")
-//}
+suspend fun main() {
+    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(RtallyProvider())
+//    providerTester.testAll()
+    providerTester.testMainPage(verbose = true)
+//    providerTester.testSearch(query = "gun",verbose = true)
+//    providerTester.testLoad("https://rtally.vercel.app/post/from-season-1")
+//    providerTester.testLoad("https://rtally.vercel.app/post/the-substance")
+//    providerTester.testLoad("https://rtally.vercel.app/post/all-of-us-are-dead-season-1")
+//    providerTester.testLoad("https://rtally.vercel.app/post/kill")
+}
 
 class RtallyProvider : MainAPI() {
     override var mainUrl = "https://rtally.vercel.app"
@@ -67,7 +67,7 @@ class RtallyProvider : MainAPI() {
             cacheTime = 60,
             headers = headers
         ).document
-        val home = doc.select("div.grid:nth-child(1) > a").mapNotNull { toResult(it) }
+        val home = doc.select("div.grid:nth-child(1) > a[href]:not([target])").mapNotNull { toResult(it) }
         return newHomePageResponse(request.name, home, true)
     }
 
@@ -95,7 +95,7 @@ class RtallyProvider : MainAPI() {
             cacheTime = 60,
             headers = headers
         ).document
-        return doc.select("div.grid:nth-child(1) > a").mapNotNull { toResult(it) }
+        return doc.select("div.grid:nth-child(1) > a[href]:not([target])").mapNotNull { toResult(it) }
     }
 
     override suspend fun load(url: String): LoadResponse {
