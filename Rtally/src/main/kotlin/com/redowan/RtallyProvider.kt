@@ -20,16 +20,16 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
-//suspend fun main() {
-//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(RtallyProvider())
-////    providerTester.testAll()
-////    providerTester.testMainPage(verbose = true)
-////    providerTester.testSearch(query = "gun",verbose = true)
-////    providerTester.testLoad("https://rtally.vercel.app/post/from-season-1")
-////    providerTester.testLoad("https://rtally.vercel.app/post/the-substance")
-////    providerTester.testLoad("https://rtally.vercel.app/post/all-of-us-are-dead-season-1")
+suspend fun main() {
+    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(RtallyProvider())
+//    providerTester.testAll()
+    providerTester.testMainPage(verbose = true)
+//    providerTester.testSearch(query = "gun",verbose = true)
+//    providerTester.testLoad("https://rtally.vercel.app/post/from-season-1")
+//    providerTester.testLoad("https://rtally.vercel.app/post/the-substance")
+//    providerTester.testLoad("https://rtally.vercel.app/post/all-of-us-are-dead-season-1")
 //    providerTester.testLoad("https://rtally.vercel.app/post/turbo")
-//}
+}
 
 class RtallyProvider : MainAPI() {
     override var mainUrl = "https://rtally.vercel.app"
@@ -85,7 +85,6 @@ class RtallyProvider : MainAPI() {
                 },
                 subExist = false
             )
-            this.year = post.select(".flexBt > h5:nth-child(1)").text().toIntOrNull()
         }
     }
 
@@ -118,12 +117,13 @@ class RtallyProvider : MainAPI() {
         val episode = doc.select("ul.flex > li")
         if (episode.isNotEmpty()) {
             val episodesData = mutableListOf<Episode>()
-            val scriptHtml = doc.select("script").joinToString() { it.html() }.replace("\\", "")
+            val scriptHtml = doc.select("script").joinToString { it.html() }.replace("\\", "")
             val linkList: MutableList<String> = mutableListOf()
             doc.select("div.justify-center:nth-child(2) > a").forEach {
+                val link = it.attr("href")
                 when {
                     //Filemoon
-                    url.contains("filemoon") -> extractFileMoonUrls(scriptHtml)?.split(",")
+                    link.contains("filemoon") -> extractFileMoonUrls(scriptHtml)?.split(",")
                         ?.forEachIndexed { index, id ->
                             if (index in linkList.indices) {
                                 linkList[index] += "https://filemoon.sx/e/$id ; "
@@ -132,7 +132,7 @@ class RtallyProvider : MainAPI() {
                             }
                         }
                     //Vidhideplus
-                    url.contains("vidhideplus") -> extractVidhideplus(scriptHtml)?.split(",")
+                    link.contains("vidhideplus") -> extractVidhideplus(scriptHtml)?.split(",")
                         ?.forEachIndexed { index, id ->
                             if (index in linkList.indices) {
                                 linkList[index] += "https://vidhideplus.com/v/$id ; "
@@ -141,7 +141,7 @@ class RtallyProvider : MainAPI() {
                             }
                         }
                     //StreamWish
-                    url.contains("wish") -> extractStreamwishUrls(scriptHtml)?.split(",")
+                    link.contains("wish") -> extractStreamwishUrls(scriptHtml)?.split(",")
                         ?.forEachIndexed { index, id ->
                             if (index in linkList.indices) {
                                 linkList[index] += "https://playerwish.com/e/$id ; "
