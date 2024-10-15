@@ -14,6 +14,7 @@ import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newAnimeSearchResponse
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
+import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
@@ -24,7 +25,9 @@ import org.jsoup.nodes.Element
 ////    providerTester.testAll()
 ////    providerTester.testMainPage(verbose = true)
 ////    providerTester.testSearch(query = "gun",verbose = true)
-//    providerTester.testLoad("https://rtally.vercel.app/post/from-season-1")
+////    providerTester.testLoad("https://rtally.vercel.app/post/from-season-1")
+////    providerTester.testLoad("https://rtally.vercel.app/post/the-substance")
+//    providerTester.testLoad("https://rtally.vercel.app/post/all-of-us-are-dead-season-1")
 //}
 
 class RtallyProvider : MainAPI() {
@@ -73,7 +76,7 @@ class RtallyProvider : MainAPI() {
         val url = mainUrl + post.select("a:nth-child(1)")
             .attr("href")
         return newAnimeSearchResponse(title, url, TvType.Movie) {
-            this.posterUrl = post.select(".p-\\[4px\\]")
+            this.posterUrl = post.select(".relative.border.border-gray-500.rounded-lg.group img")
                 .attr("src")
             addDubStatus(
                 dubExist = when {
@@ -105,19 +108,54 @@ class RtallyProvider : MainAPI() {
         val image = doc.select(".w-\\[200px\\] > img:nth-child(1)").attr("src")
         val plot = doc.selectFirst("p.text-sm:nth-child(2)")?.text()
         val year = doc.select("div.infoDiv:nth-child(7) > span:nth-child(2)").text().toIntOrNull()
-
+        val recommendations = doc.select(".gap-8").mapNotNull {
+            val link = it.select("a")
+            newMovieSearchResponse(link.text(), link.attr("href"), TvType.Movie)
+            {
+                this.posterUrl = it.select("img").attr("src")
+            }
+        }
         val episode = doc.select("ul.flex > li")
-        if (episode.isNotEmpty())
-        {
+        if (episode.isNotEmpty()) {
             val episodesData = mutableListOf<Episode>()
-            val scriptElements = doc.select("script")
-            val allScriptHtml: String = scriptElements.joinToString() { it.html() }.replace("\\", "")
-            val streamWish = extractStreamwishUrls(allScriptHtml)
-            val vidhideplus = extractVidhideplus(allScriptHtml)
+            val scriptHtml = doc.select("script").joinToString() { it.html() }.replace("\\", "")
+            val linkList: MutableList<String> = mutableListOf()
+            doc.select("div.justify-center:nth-child(2) > a").forEach {
+                val server = it.text().trim()
+                when (server) {
+                    //Filemoon
+                    "Download 1" -> extractFileMoonUrls(scriptHtml)?.split(",")
+                        ?.forEachIndexed { index, id ->
+                            if (index in linkList.indices) {
+                                linkList[index] += "https://filemoon.sx/e/$id ; "
+                            } else {
+                                linkList.add("https://filemoon.sx/e/$id ; ")
+                            }
+                        }
+                    //Vidhideplus
+                    "Download 2" -> extractVidhideplus(scriptHtml)?.split(",")
+                        ?.forEachIndexed { index, id ->
+                            if (index in linkList.indices) {
+                                linkList[index] += "https://vidhideplus.com/v/$id ; "
+                            } else {
+                                linkList.add("https://vidhideplus.com/v/$id ; ")
+                            }
+                        }
+                    //StreamWish
+                    "Download 3" -> extractStreamwishUrls(scriptHtml)?.split(",")
+                        ?.forEachIndexed { index, id ->
+                            if (index in linkList.indices) {
+                                linkList[index] += "https://playerwish.com/e/$id ; "
+                            } else {
+                                linkList.add("https://playerwish.com/e/$id ; ")
+                            }
+                        }
+                }
+            }
             episode.forEachIndexed { index, it ->
                 episodesData.add(
                     Episode(
-                        "${streamWish[index]} ; ${vidhideplus[index]}",
+                        linkList[index],
                         name = "Episode ${it.text()}"
                     )
                 )
@@ -126,35 +164,52 @@ class RtallyProvider : MainAPI() {
                 this.posterUrl = image
                 this.plot = plot
                 this.year = year
+                this.recommendations = recommendations
             }
 
-        }
-        else{
+        } else {
             var links = ""
             doc.select("div.justify-center:nth-child(2) > a").forEach {
-                links += it.attr("href") + " ; "
+                links += downloadToEmbedUrl(it)
             }
             return newMovieLoadResponse(title, url, TvType.Movie, links) {
                 this.posterUrl = image
                 this.plot = plot
                 this.year = year
+                this.recommendations = recommendations
             }
         }
     }
 
-    private val streamwishMultiUrlRegex = Regex("\"streamwishMultiUrl\":\\s*\"([^\"]+)\"")
-    private fun extractStreamwishUrls(text: String): List<String> {
-        val streamwishMultiUrlMatch = streamwishMultiUrlRegex.find(text)
-        val streamwishMultiUrlValue = streamwishMultiUrlMatch?.groupValues?.getOrNull(1)
-        val streamwishIds = streamwishMultiUrlValue?.split(",") ?: emptyList()
-        return streamwishIds.map { "https://streamwish.to/e/$it" }
+    private fun downloadToEmbedUrl(url: Element): String {
+        val server = url.text().trim()
+        return when (server) {
+            //Filemoon
+            "Download 1" -> url.attr("href").replace("/download/", "/e/") + " ; "
+            //Vidhideplus
+            "Download 2" -> url.attr("href").replace("/download/", "/v/") + " ; "
+            //StreamWish
+            "Download 3" -> url.attr("href").replace("/d/", "/e/") + " ; "
+            else -> url.attr("href")
+        }
     }
+
+    private val fileMoonRegex = Regex("\"multiLinksDl\":\\s*\"([^\"]+)\"")
+    private fun extractFileMoonUrls(text: String): String? {
+        val fileMoonMatch = fileMoonRegex.find(text)
+        return fileMoonMatch?.groupValues?.getOrNull(1)
+    }
+
+    private val streamwishMultiUrlRegex = Regex("\"streamwishMultiUrl\":\\s*\"([^\"]+)\"")
+    private fun extractStreamwishUrls(text: String): String? {
+        val streamwishMultiUrlMatch = streamwishMultiUrlRegex.find(text)
+        return streamwishMultiUrlMatch?.groupValues?.getOrNull(1)
+    }
+
     private val vidhideplusRegex = Regex("\"multiLinksSl\":\\s*\"([^\"]+)\"")
-    private fun extractVidhideplus(text: String): List<String> {
+    private fun extractVidhideplus(text: String): String? {
         val vidhideplusMatch = vidhideplusRegex.find(text)
-        val vidhideplusValue = vidhideplusMatch?.groupValues?.getOrNull(1)
-        val vidhideplusIds = vidhideplusValue?.split(",") ?: emptyList()
-        return vidhideplusIds.map { "https://vidhideplus.com/v/$it" }
+        return vidhideplusMatch?.groupValues?.getOrNull(1)
     }
 
     override suspend fun loadLinks(
@@ -165,14 +220,11 @@ class RtallyProvider : MainAPI() {
     ): Boolean {
         data.split(" ; ").forEach {
             loadExtractor(
-                it.replace("wish.com/d/", "wish.com/e/")
-                    .replace("vidhideplus.com/d/", "vidhideplus.com/v/"),
+                it,
                 subtitleCallback,
                 callback
             )
         }
         return true
     }
-
-
 }
