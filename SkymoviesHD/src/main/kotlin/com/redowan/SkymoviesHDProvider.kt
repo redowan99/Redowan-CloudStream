@@ -147,7 +147,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ) {
-        if (url.contains("howblogs")) howBlogs(url, subtitleCallback, callback)
+        if (url.contains("howblogs")) howBlogs(url, callback)
         //else if (url.contains("fastxyz")) fastxyz(url, subtitleCallback, callback)
         else if (url.contains("hubcloud")) hubCloud(url, callback)
         else loadExtractor(url, subtitleCallback, callback)
@@ -155,7 +155,6 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
 
     private suspend fun howBlogs(
         url: String,
-        subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ) {
         val doc = app.get(url).document

@@ -79,16 +79,9 @@ class Mp4MoviezProvider : MainAPI() {
         val link = mainUrl + doc.select("div[style=\"text-align:left;\"] a").attr("href")
         return newMovieLoadResponse(title, url, TvType.Movie, link) {
             this.posterUrl = imageUrl
-            if (plot != null) {
-                this.plot = plot.trim()
-            }
-            if(!rating.contains("N/A") && !rating.isNullOrEmpty())
-            {
-                this.rating = rating.toFloat().toInt()
-            }
-            if (!releasedDate.isNullOrEmpty()) {
-                this.year = releasedDate?.toInt()
-            }
+            this.plot = plot.trim()
+            if(!rating.contains("N/A")) this.rating = rating.toFloat().toInt()
+            this.year = releasedDate?.toInt()
         }
     }
 
