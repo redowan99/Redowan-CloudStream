@@ -26,7 +26,7 @@ import org.jsoup.nodes.Element
 //}
 
 class OomoyeProvider : MainAPI() { // all providers must be an instance of MainAPI
-    override var mainUrl = "https://www.oomoye.yachts"
+    override var mainUrl = "https://www.oomoye.xyz"
     override var name = "Oomoye"
     override var lang = "en"
     override val hasMainPage = true
