@@ -109,10 +109,9 @@ class Mp4MoviezProvider : MainAPI() {
             {
                 val shortLinkUrl = item.select("a").attr("href")
                 val sDoc = app.post(shortLinkUrl).document
-                val links = sDoc.select(".col-sm-8.col-sm-offset-2.well.view-well a")
-                links.forEach {
-                    val link = it.attr("href")
-                    loadExtractor(link, subtitleCallback, callback)
+                val links1 = sDoc.select(".col-sm-8.col-sm-offset-2.well.view-well a")
+                links1.forEach {
+                    loadExtractor(it.attr("href"), subtitleCallback, callback)
                 }
             }
         }
