@@ -92,7 +92,7 @@ class CircleFtpProvider : MainAPI() {
     private fun toSearchResult(post: Post): SearchResponse? {
         if (post.type == "singleVideo" || post.type == "series") {
             return newAnimeSearchResponse(post.title, "$mainUrl/content/${post.id}", TvType.Movie) {
-                this.posterUrl = "$apiUrl/uploads/${post.imageSm}"
+                this.posterUrl = "$mainApiUrl/uploads/${post.imageSm}"
                 val check = post.title.lowercase()
                 this.quality = getSearchQuality(check)
                 addDubStatus(
