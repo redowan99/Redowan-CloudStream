@@ -25,7 +25,7 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
 class FilmyHunkProvider : MainAPI() {
-    override var mainUrl = "https://filmyhunk.com.ro"
+    override var mainUrl = "https://filmyhunk.click"
     override var name = "FilmyHunk"
     override var lang = "hi"
     override val hasMainPage = true
