@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 2
+version = 3
 
 cloudstream {
     description = "Bollywood, South, Punjabi, Hollywood Movies Download: Filmyhunk Punjabi Movies, Bollywood Movies, Hollywood Movies Dubbed Hindi Download"
@@ -23,5 +23,5 @@ cloudstream {
     )
     language = "hi"
 
-    iconUrl = "https://filmyhunk.com.ro/wp-content/uploads/2023/12/filmyhunk.png"
+    iconUrl = "https://filmyhunk.click/wp-content/uploads/2023/12/filmyhunk.png"
 }
