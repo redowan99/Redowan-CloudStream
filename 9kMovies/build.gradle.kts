@@ -1,9 +1,9 @@
 // use an integer for version numbers
-version = 2
+version = 3
 
 cloudstream {
-    description = "Watch Movies and Series"
-    authors = listOf("salman731")
+    description = "Included:10HitMovies"
+    authors = listOf("salman731","Dilip")
 
     /**
     * Status int as the following:
