@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 5
+version = 6
 
 cloudstream {
     description = "Movie website in Bangladesh"
@@ -12,7 +12,7 @@ cloudstream {
     * 2: Slow
     * 3: Beta only
     * */
-    status = 0 // will be 3 if unspecified
+    status = 1 // will be 3 if unspecified
 
     tvTypes = listOf(
         "Movie",
@@ -22,5 +22,5 @@ cloudstream {
     )
     language = "bn"
 
-    iconUrl = "https://fibwatch.online/themes/default/img/fibwatch-logo-new.png"
+    iconUrl = "https://fibwatch.lol/themes/default/img/icon.png"
 }
