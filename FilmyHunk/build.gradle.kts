@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 3
+version = 4
 
 cloudstream {
     description = "Bollywood, South, Punjabi, Hollywood Movies Download: Filmyhunk Punjabi Movies, Bollywood Movies, Hollywood Movies Dubbed Hindi Download"
