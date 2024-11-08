@@ -1,8 +1,8 @@
 // use an integer for version numbers
-version = 6
+version = 1
 
 cloudstream {
-    description = "Movie website in Bangladesh"
+    description = "Watch Football Full Match Replay and Shows"
     authors = listOf("Redowan")
 
     /**
@@ -15,12 +15,9 @@ cloudstream {
     status = 1 // will be 3 if unspecified
 
     tvTypes = listOf(
-        "Movie",
-        "TvSeries",
-        "AnimeMovie",
-        "AsianDrama",
+        "Others",
     )
-    language = "bn"
+    language = "en"
 
-    iconUrl = "https://fibwatch.lol/themes/default/img/icon.png"
+    iconUrl = "https://www.fullreplays.com/wp-content/uploads/2023/05/logo-ball-150x150.png"
 }

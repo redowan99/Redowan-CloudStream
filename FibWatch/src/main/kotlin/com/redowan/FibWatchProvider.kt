@@ -21,29 +21,26 @@ import org.jsoup.nodes.Element
 
 //suspend fun main() {
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(FibWatchProvider())
-////    providerTester.testLoadLinks("https://checklinko.top/60382/")
 ////    providerTester.testAll()
-//    providerTester.testMainPage(verbose = true)
-////    providerTester.testSearch(query = "gun",verbose = true)
-////    providerTester.testLoad("https://fullymaza.pw/2024/06/die-in-a-gunfight-2021-hdrip-hindi-dual-audio-480p-720p-1080p/")
+////    providerTester.testMainPage(verbose = true)
+//    providerTester.testSearch(query = "gun",verbose = true)
+////    providerTester.testLoad("https://fibwatch.lol/watch/rob-b-hood-2006-dual-audio-hindi-english-bluray-1080p_adbbX7knPrXd1oq.html")
 //}
 
 class FibWatchProvider : MainAPI() {
-    override var mainUrl = "https://fibwatch.online"
+    override var mainUrl = "https://fibwatch.lol"
     override var name = "FibWatch"
     override val supportedTypes = setOf(
         TvType.Movie,
         TvType.TvSeries,
         TvType.AsianDrama,
         TvType.AnimeMovie,
-        TvType.NSFW
     )
 
     override var lang = "bn"
     override val hasMainPage = true
     override val hasDownloadSupport = true
     override val hasQuickSearch = false
-    override val instantLinkLoading = true
 
     override val mainPage = mainPageOf(
         "/videos/latest" to "Latest",
@@ -94,15 +91,14 @@ class FibWatchProvider : MainAPI() {
         val doc = app.get("$mainUrl/search?keyword=$query", cacheTime = 60).document
         return doc.select(".video-thumb > a").mapNotNull {toResult(it)}
     }
+
     override suspend fun load(url: String): LoadResponse {
         val doc = app.get(url, cacheTime = 60).document
         val title = doc.selectFirst(".hptag")?.text() ?: ""
-        val year = "(?<=\\()\\d{4}(?=\\))".toRegex().find(title)?.value?.toIntOrNull()
         val image = doc.selectFirst("#my-video")?.attr("poster")
         val link = doc.selectFirst(".download-placement > a")?.attr("href")
         return newMovieLoadResponse(title, url, TvType.Movie, link) {
             this.posterUrl = image
-            this.year = year
         }
     }
 
