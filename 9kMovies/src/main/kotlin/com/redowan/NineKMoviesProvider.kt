@@ -99,7 +99,7 @@ open class NineKMoviesProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         val doc = app.get(data).document
-        val buttonElements = doc.select(".buttn.red")
+        val buttonElements = doc.select(".buttn")
         buttonElements.forEach { item ->
             val shortLinkUrl = item.attr("href")
             val sDoc = app.post(shortLinkUrl).document
