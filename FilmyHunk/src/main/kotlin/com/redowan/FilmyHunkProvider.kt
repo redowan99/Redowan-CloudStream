@@ -83,7 +83,11 @@ class FilmyHunkProvider : MainAPI() {
     private fun toResult(post: Element): SearchResponse {
         val url = post.select(".bw_thumb a").attr("href")
         val title = post.select(".h1title").text().replace("Download","").trim()
-        val imageUrl =post.select(".tm_hide").attr("data-lazy-src")
+        var imageUrl = if(post.select(".tm_hide").attr("data-lazy-src").isNullOrEmpty()) {post.select(".tm_hide").attr("src")} else {post.select(".tm_hide").attr("data-lazy-src")}
+        if(imageUrl.contains("wp-content/uploads/http"))
+        {
+            imageUrl = imageUrl.substringAfter("wp-content/uploads/")
+        }
         return newMovieSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = imageUrl
         }
@@ -160,7 +164,8 @@ class FilmyHunkProvider : MainAPI() {
             val seasonRegex2 = "(\\d)-(\\d)"
             val sRegex = "Season\\s+(\\d{1,2})"
             val qualityRegex2 = "(\\d{3,4})[pP]".toRegex()
-            val episodeRegex = "(Episode\\s*(\\d{1,3}))"
+            val episodeRegex = "([E|e]pisode\\s*(\\d{1,3}))"
+            val episodeRegex2 = "(^[E|e]\\s*(\\d{1,3}))"
             val isMultiSeason = seasonRegex.toRegex().containsMatchIn(title) || seasonRegex2.toRegex().containsMatchIn(title)
             val isMultiWordSeason = sRegex.toRegex().findAll(title).count() > 1
             var startSeason:Int? = 1
@@ -236,10 +241,13 @@ class FilmyHunkProvider : MainAPI() {
                                     val links = if(doc.select(".myButton1").isNullOrEmpty()) {doc.select(".myButton2")} else {doc.select(".myButton1")}
                                     links.forEach { item->
                                         val link = item.attr("href")
-                                        var episodeName = item.text()
-                                        if(episodeName.lowercase().contains("mb"))
+                                        var episodeName = item.text().trim()
+                                        if(episodeRegex.toRegex().containsMatchIn(episodeName))
                                         {
-                                            episodeName = episodeRegex.toRegex().find(episodeName)?.groups?.get(1)?.value.toString()
+                                            episodeName = "Episode " + episodeRegex.toRegex().find(episodeName)?.groups?.get(2)?.value.toString().toInt()
+                                        } else if(episodeRegex2.toRegex().containsMatchIn(episodeName))
+                                        {
+                                            episodeName = "Episode " + episodeRegex2.toRegex().find(episodeName)?.groups?.get(2)?.value.toString().toInt()
                                         }
                                         if(!episodeMap[episodeName].isNullOrEmpty()) {
                                             episodeMap[episodeName]?.add(link)
