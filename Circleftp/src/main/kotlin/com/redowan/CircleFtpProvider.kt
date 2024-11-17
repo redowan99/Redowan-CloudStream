@@ -146,7 +146,7 @@ class CircleFtpProvider : MainAPI() {
             )
             // Fallback to apiUrl
         }
-        val urlCheck = if (json.url.contains(mainApiUrl)) true else false
+        val urlCheck = json.url.contains(mainApiUrl)
         val loadData = AppUtils.parseJson<Data>(json.text)
         val title = loadData.title
         val poster = "$apiUrl/uploads/${loadData.image}"
