@@ -21,18 +21,18 @@ import com.lagradost.cloudstream3.utils.AppUtils
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
 
-suspend fun main() {
-    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(CircleFtpProvider())
-    providerTester.testAll()
-//    providerTester.testMainPage(verbose = true)
-//    providerTester.testSearch(query = "gun",verbose = true)
-//    providerTester.testLoad("")
-}
+//suspend fun main() {
+//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(CircleFtpProvider())
+//    providerTester.testAll()
+////    providerTester.testMainPage(verbose = true)
+////    providerTester.testSearch(query = "gun",verbose = true)
+////    providerTester.testLoad("")
+//}
 
 class CircleFtpProvider : MainAPI() {
     override var mainUrl = "http://new.circleftp.net"
-    private var mainApiUrl = "http://new.circleftp.net:5000"
-    private val apiUrl = "http://15.1.1.50:5000"
+    private var mainApiUrl = "https://new.circleftp.net:5000"
+    private val apiUrl = "https://15.1.1.50:5000"
     override var name = "Circle FTP"
     override var lang = "bn"
     override val hasMainPage = true
