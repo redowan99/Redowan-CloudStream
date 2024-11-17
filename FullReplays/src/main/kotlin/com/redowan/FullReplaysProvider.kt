@@ -96,7 +96,7 @@ class FullReplaysProvider : MainAPI() {
                 )
             )
         }
-        return newTvSeriesLoadResponse(title, url, TvType.Movie, episodesData) {
+        return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
             this.posterUrl = image
             this.plot = plot
         }
