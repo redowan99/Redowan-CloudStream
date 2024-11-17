@@ -32,18 +32,10 @@ import org.jsoup.nodes.Element
 class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://www.emwbd.xyz"
     override var name = "EmwBD"
-    override val supportedTypes = setOf(
-        TvType.Movie,
-        TvType.TvSeries,
-        TvType.AsianDrama,
-        TvType.AnimeMovie,
-    )
-
     override var lang = "bn"
     override val hasMainPage = true
     override val hasDownloadSupport = true
     override val hasQuickSearch = false
-
     override val mainPage = mainPageOf(
         "/" to "Latest Movies",
         "/category/bangladeshi-movies/" to "Bangladeshi Movies",
@@ -56,6 +48,12 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
         "/category/bollywood-movies/" to "Bollywood Movies",
         "/category/south-indian-movies/" to "South Indian Movies",
         "/category/tv-shows/" to "TV Shows"
+    )
+    override val supportedTypes = setOf(
+        TvType.Movie,
+        TvType.TvSeries,
+        TvType.AsianDrama,
+        TvType.AnimeMovie,
     )
     private val headers =
         mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
