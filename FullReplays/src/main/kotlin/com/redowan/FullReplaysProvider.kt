@@ -1,5 +1,6 @@
 package com.redowan
 
+import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
@@ -11,8 +12,8 @@ import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
-import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
+import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
@@ -28,9 +29,6 @@ import org.jsoup.nodes.Element
 class FullReplaysProvider : MainAPI() {
     override var mainUrl = "https://www.fullreplays.com"
     override var name = "FullReplays"
-    override val supportedTypes = setOf(
-        TvType.Others
-    )
     override var lang = "en"
     override val hasMainPage = true
     override val hasDownloadSupport = true
@@ -45,6 +43,9 @@ class FullReplaysProvider : MainAPI() {
         "/france/" to "France",
         "/shows/" to "Shows",
         "/friendly/" to "Friendly"
+    )
+    override val supportedTypes = setOf(
+        TvType.Others
     )
 
     override suspend fun getMainPage(
@@ -70,15 +71,32 @@ class FullReplaysProvider : MainAPI() {
         return doc.select("article.vlog-lay-g").mapNotNull {toResult(it)}
     }
 
-    private val LinkRegex = Regex("href=\"([^\"]*)\"")
     override suspend fun load(url: String): LoadResponse {
         val doc = app.get(url, cacheTime = 60).document
         val title = doc.selectFirst("h1.entry-title")?.text() ?: ""
         val image = doc.selectFirst(".vlog-cover > img:nth-child(1)")?.attr("src")
-        val linkHtml = doc.selectFirst(".frc-cdt-para")?.html() ?: ""
-        val link = LinkRegex.find(linkHtml)?.groups?.get(1)?.value ?: ""
         val plot = doc.selectFirst(".frc_first_para_match_dt")?.html() ?: ""
-        return newMovieLoadResponse(title, url, TvType.Movie, link) {
+        val episodesData = mutableListOf<Episode>()
+        val episodeLinksMap = mutableMapOf<String, StringBuilder>()
+        doc.select("ul.frc-vid-sources-list").map { element ->
+            element.select(".frc-vid-sources-list > li > span:nth-child(1)").forEach { link ->
+                val episodeName = link.text()
+                if (episodeName.isNotEmpty()) {
+                    episodeLinksMap.getOrPut(episodeName) { StringBuilder() }.apply {
+                        append(link.attr("data-sc")).append(" ; ")
+                    }.toString()
+                }
+            }
+        }
+        episodeLinksMap.map { (episodeName, episodeLinks) ->
+            episodesData.add(
+                Episode(
+                    data = episodeLinks.toString(),
+                    name = episodeName
+                )
+            )
+        }
+        return newTvSeriesLoadResponse(title, url, TvType.Movie, episodesData) {
             this.posterUrl = image
             this.plot = plot
         }
@@ -90,7 +108,7 @@ class FullReplaysProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        loadExtractor(data,subtitleCallback,callback)
+        data.split(" ; ").forEach {loadExtractor(it,subtitleCallback,callback)}
         return true
     }
 }
