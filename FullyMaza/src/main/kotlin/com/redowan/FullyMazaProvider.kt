@@ -23,15 +23,15 @@ import kotlin.text.replace
 //suspend fun main() {
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(FullyMazaProvider())
 ////    providerTester.testLoadLinks("https://checklinko.top/60382/")
-////    providerTester.testAll()
-//    providerTester.testMainPage(verbose = true)
+//    providerTester.testAll()
+////    providerTester.testMainPage(verbose = true)
 ////    providerTester.testSearch(query = "gun",verbose = true)
 ////    providerTester.testLoad("https://fullymaza.pw/2024/06/die-in-a-gunfight-2021-hdrip-hindi-dual-audio-480p-720p-1080p/")
 //}
 
 
 class FullyMazaProvider : MainAPI() {
-    override var mainUrl = "https://fullymaza.help"
+    override var mainUrl = "https://fullymaza.homes"
     override var name = "FullyMaza"
     override var lang = "en"
     override val hasMainPage = true
@@ -128,7 +128,7 @@ class FullyMazaProvider : MainAPI() {
         val episodesData = mutableListOf<Episode>()
         doc.select(".blog-starter-standard-post__full-summery.text-left a").forEach {
             val link = it.attr("href")
-            if (link.contains("checklinko")) {
+            if (link.contains("checklinko")||link.contains("alinkz")) {
                 val name = it.text().replace("Download Links", "")
                 episodesData.add(
                     Episode(
