@@ -85,7 +85,7 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
             url, cacheTime = 60, headers = headers
         ).document
         val title = doc.selectXpath("/html/body/div[7]/div").text()
-        val year = "(?<=\\()\\d{4}(?=\\))".toRegex().find(title)?.value?.toIntOrNull()
+        val year = getYearFromString(title)
         val links = doc.select(".catRow a[href*=/server/]").joinToString(separator = " ; ") {
                 it.attr("href").replace("/server/", "/files/")
             }
@@ -170,4 +170,29 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
         return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
             ?: Qualities.Unknown.value
     }
+
+    /**
+     * Extracts a four-digit year from a string, prioritizing years in parentheses and ensuring no word characters follow.
+     *
+     * Example:
+     *
+     * "This is (2023) movie" -> 2023
+     *
+     * "This is 1920x1080p" -> null
+     *
+     * "This is 2023 movie" -> 2023
+     *
+     * "This is 1999-2010 TvSeries" -> 1999
+     *
+     * @param check The input string.
+     * @return The year as an integer, or `null` if no match is found.
+     */
+    private fun getYearFromString(check: String?): Int? {
+        return check?.let {
+            parenthesesYear.find(it)?.value?.toIntOrNull()
+                ?: withoutParenthesesYear.find(it)?.value?.toIntOrNull()
+        }
+    }
+    private val parenthesesYear = "(?<=\\()\\d{4}(?=\\))".toRegex()
+    private val withoutParenthesesYear = "(19|20)\\d{2}(?!\\w)".toRegex()
 }
