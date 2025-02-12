@@ -27,6 +27,15 @@ import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.utils.Qualities
 
 
+//suspend fun main() {
+//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(FzMoviesProvider())
+////    providerTester.testAll()
+//    providerTester.testMainPage(verbose = true)
+////    providerTester.testSearch(query = "gun",verbose = true)
+////    providerTester.testLoad("")
+//
+//}
+
 
 class FzMoviesProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://fzmovies.net"
@@ -58,7 +67,7 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
         request : MainPageRequest
     ): HomePageResponse {
         val doc = app.get("$mainUrl/${request.data}$page").document
-        val homeResponse = doc.select("div.mainbox")
+        val homeResponse = doc.select("div.mainbox > table")
         val home = homeResponse.mapNotNull { post ->
             toResult(post)
         }
@@ -66,13 +75,13 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
     }
 
     private fun toResult(post: Element): SearchResponse {
-        val url = "$mainUrl/"+ post.selectXpath("table/tbody/tr/td[1]/a").attr("href")
-        val title = post.selectXpath("table/tbody/tr/td[2]/span/a/small/b").text() + " " +
-                post.selectXpath("table/tbody/tr/td[2]/span/small[1]").text()
+        val url = "$mainUrl/"+ post.selectXpath("tbody/tr/td[1]/a").attr("href")
+        val title = post.selectXpath("tbody/tr/td[2]/span/a/small/b").text() + " " +
+                post.selectXpath("tbody/tr/td[2]/span/small[1]").text()
         return newMovieSearchResponse(title, url, TvType.Movie) {
-            this.posterUrl = mainUrl + post.selectXpath("table/tbody/tr/td[1]/a/img")
+            this.posterUrl = mainUrl + post.selectXpath("tbody/tr/td[1]/a/img")
                 .attr("src")
-            this.quality = getSearchQuality(post.selectXpath("table/tbody/tr/td[2]/span/small[2]").text())
+            this.quality = getSearchQuality(post.selectXpath("tbody/tr/td[2]/span/small[2]").text())
         }
     }
 
@@ -87,7 +96,7 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
             .build()
         val response = client.newCall(request).execute()
         val doc = Jsoup.parse(response.body.string(), "UTF-8")
-        val searchResponse = doc.select("div.mainbox")
+        val searchResponse = doc.select("div.mainbox > table")
         return searchResponse.mapNotNull { post ->
             toResult(post)
         }
