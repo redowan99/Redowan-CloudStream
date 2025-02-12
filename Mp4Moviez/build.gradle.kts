@@ -1,6 +1,10 @@
 // use an integer for version numbers
 version = 1
 
+android {
+    namespace = "com.redowan"
+}
+
 cloudstream {
     description = "Download Mp4Moviez free full movies, high quality movies, latest movies from Mp4Moviez. Mp4moviez is number one entertainment hollywood bollywood website and provide free Mp4moviez full movie download facility"
     authors = listOf("salman731")

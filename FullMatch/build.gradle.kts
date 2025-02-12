@@ -1,6 +1,10 @@
 // use an integer for version numbers
 version = 4
 
+android {
+    namespace = "com.redowan"
+}
+
 cloudstream {
     description = "Watch FootBall Matches"
     authors = listOf("salman731,Redowan")

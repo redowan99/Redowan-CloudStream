@@ -1,6 +1,10 @@
 // use an integer for version numbers
 version = 3
 
+android {
+    namespace = "com.redowan"
+}
+
 cloudstream {
     description = "Watch Football Full Match Replay and Shows"
     authors = listOf("Redowan")

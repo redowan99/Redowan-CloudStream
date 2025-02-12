@@ -1,6 +1,10 @@
 // use an integer for version numbers
 version = 4
 
+android {
+    namespace = "com.redowan"
+}
+
 cloudstream {
     description = "Bollywood, South, Punjabi, Hollywood Movies Download: Filmyhunk Punjabi Movies, Bollywood Movies, Hollywood Movies Dubbed Hindi Download"
     authors = listOf("salman731")

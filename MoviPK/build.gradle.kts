@@ -1,6 +1,10 @@
 // use an integer for version numbers
 version = 2
 
+android {
+    namespace = "com.redowan"
+}
+
 cloudstream {
     //description = ""
     authors = listOf("MoviPK")

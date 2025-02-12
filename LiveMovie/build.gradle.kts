@@ -1,6 +1,10 @@
 // use an integer for version numbers
 version = 1
 
+android {
+    namespace = "com.redowan"
+}
+
 cloudstream {
     description = "watch hindi dubbed movie free download, free download latest bollywood movie, south hindi dubbed free movie , english adult movie, free watch 18+ movie"
     authors = listOf("salman731")

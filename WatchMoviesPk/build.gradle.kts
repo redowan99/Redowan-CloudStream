@@ -1,5 +1,9 @@
 version = 1
 
+android {
+    namespace = "com.redowan"
+}
+
 cloudstream {
     language = "hi"
 

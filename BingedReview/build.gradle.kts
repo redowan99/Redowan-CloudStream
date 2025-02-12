@@ -1,6 +1,10 @@
 // use an integer for version numbers
 version = 2
 
+android {
+    namespace = "com.redowan"
+}
+
 cloudstream {
     // All of these properties are optional, you can safely remove them
 
@@ -22,3 +26,4 @@ cloudstream {
     tvTypes = listOf("Movie")
     iconUrl = "https://raw.githubusercontent.com/rockhero1234/extensions/refs/heads/master/Screenshot_20241012-211513_Binged%7E3.png"
 }
+

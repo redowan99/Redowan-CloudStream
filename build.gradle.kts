@@ -10,10 +10,10 @@ buildscript {
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:7.0.4")
+        classpath("com.android.tools.build:gradle:8.2.2")
         // Cloudstream gradle plugin which makes everything work and builds plugins
         classpath("com.github.recloudstream:gradle:-SNAPSHOT")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.21")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.23")
     }
 }
 
@@ -98,7 +98,7 @@ subprojects {
         implementation(kotlin("stdlib")) // adds standard kotlin features, like listOf, mapOf etc
 
         implementation("com.github.Blatzar:NiceHttp:0.4.11") // http library
-        implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2")
+        implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.0")
     }
 }
 

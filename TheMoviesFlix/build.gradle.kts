@@ -1,6 +1,10 @@
 // use an integer for version numbers
 version = 1
 
+android {
+    namespace = "com.redowan"
+}
+
 cloudstream {
     description = "720p Movies, 1080p movies, Dual Audio Movies, Hindi Dubbed Series, Hollywood Movies"
     authors = listOf("salman731")

@@ -1,6 +1,10 @@
 // use an integer for version numbers
 version = 4
 
+android {
+    namespace = "com.redowan"
+}
+
 
 cloudstream {
     // All of these properties are optional, you can safely remove them
