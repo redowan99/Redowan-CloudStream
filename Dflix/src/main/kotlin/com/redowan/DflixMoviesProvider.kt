@@ -17,6 +17,7 @@ import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newAnimeSearchResponse
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
+import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
 import org.jsoup.nodes.Element
@@ -108,11 +109,20 @@ class DflixMoviesProvider : MainAPI() { // all providers must be an instance of 
         val dataUrl = doc.select("div.col-md-12:nth-child(3) > div:nth-child(1) > a:nth-child(1)")
             .attr("href")
         val size = doc.select(".badge.badge-fill").text()
+        val img = doc.select(".movie-detail-banner > img:nth-child(1)").attr("src")
         return newMovieLoadResponse(title, url, TvType.Movie, dataUrl) {
-            this.posterUrl = doc.select(".movie-detail-banner > img:nth-child(1)").attr("src")
+            this.posterUrl = img
             this.plot = "<b>$size</b><br><br>" + doc.select(".storyline").text()
             this.tags = doc.select(".ganre-wrapper > a").map { it.text().replace(",", "") }
             this.actors = doc.select("div.col-lg-2").map { actor(it) }
+            this.recommendations = doc.select("div.badge-outline > a").map { qualityRecommendations(it,title,img) }
+        }
+    }
+    private fun qualityRecommendations(post: Element, title:String, imageLink:String): SearchResponse{
+        val movieName = title +" "+ post.text()
+        val movieUrl = mainUrl + post.attr("href")
+        return newMovieSearchResponse(movieName,movieUrl,TvType.Movie) {
+            this.posterUrl = imageLink
         }
     }
 
