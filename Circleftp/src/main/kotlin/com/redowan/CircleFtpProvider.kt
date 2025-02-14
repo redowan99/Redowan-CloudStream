@@ -23,9 +23,9 @@ import com.lagradost.cloudstream3.utils.Qualities
 
 //suspend fun main() {
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(CircleFtpProvider())
-//    providerTester.testAll()
+////    providerTester.testAll()
 ////    providerTester.testMainPage(verbose = true)
-////    providerTester.testSearch(query = "gun",verbose = true)
+//    providerTester.testSearch(query = "gun",verbose = true)
 ////    providerTester.testLoad("")
 //}
 

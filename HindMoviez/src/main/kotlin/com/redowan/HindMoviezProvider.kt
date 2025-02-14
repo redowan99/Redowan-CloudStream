@@ -1,6 +1,5 @@
 package com.redowan
 
-import android.util.Log
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
@@ -11,12 +10,10 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
-import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
-import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
 import org.jsoup.nodes.Element
@@ -85,7 +82,7 @@ class HindMoviezProvider : MainAPI() {
         val title = doc.selectFirst(".entry-title")?.text() ?: ""
         val image = doc.select(".featured-image img").attr("src")
         var plot = ""
-        val year = "<li><strong>Release Year: <\\/strong>(.*)<\\/li>".toRegex()
+        val year = "<li><strong>Release Year: </strong>(.*)</li>".toRegex()
             .find(doc.html())?.groups?.get(1)?.value
         val qualityRegex2 = "(\\d{3,4})[pP]".toRegex()
         if (title.lowercase().contains("season")) {
@@ -107,54 +104,62 @@ class HindMoviezProvider : MainAPI() {
 
                     val seasonList = mutableListOf<SeasonDetail>()
                     for (i in startSeason..endSeason) {
+                        if (elements != null) {
+                            for (j in 0..<elements.children().size) {
 
-                        val episodeData = mutableListOf<Episode>()
-                        for (j in 0..(elements.children().size - 1)) {
-
-                            val item = elements.children()[j]
-                            if(plot.isEmpty())
-                            {
-                                if(item.text().contains("Storyline"))
-                                {
-                                    plot = item.nextElementSibling().text()
+                                val item = elements.children()[j]
+                                if(plot.isEmpty()) {
+                                    if(item.text().contains("Storyline")) {
+                                        plot = item.nextElementSibling()?.text() ?: ""
+                                    }
                                 }
-                            }
-                            val currentSeason = "Season $i"
-                            if (item.tagName() == "h3" && (qualityRegex.containsMatchIn(item.html()) || qualityRegex2.containsMatchIn(item.html()))) {
+                                val currentSeason = "Season $i"
+                                if (item.tagName() == "h3" && (qualityRegex.containsMatchIn(item.html()) || qualityRegex2.containsMatchIn(item.html()))) {
 
-                                if (item.text().lowercase().contains(currentSeason.lowercase())) {
+                                    if (item.text().lowercase().contains(currentSeason.lowercase())) {
 
-                                    val quality = item.select("span[style=\"color: #ff00ff;\"]").text()
-                                    val episodeUrls = item.nextElementSibling().select("a")
-                                    val episodeLinksMap = mutableMapOf<String,MutableList<String>>()
-                                    episodeUrls.forEach { item->
-                                        val episodeUrl = item.attr("href")
-                                        if (episodeUrl.isNotEmpty()) {
-                                            val doc = app.get(episodeUrl, allowRedirects = true, timeout = 30).document
-                                            val episodelinks = doc.select(".entry-content h3")
-                                            episodelinks.forEach { item->
-                                                val url = item.select("a").attr("href")
-                                                val episodeName = item.select("a").text()
-                                                if (!episodeName.lowercase().contains("batch")) {
-                                                    if(!episodeLinksMap[episodeName].isNullOrEmpty())
-                                                    {
-                                                        episodeLinksMap[episodeName]?.add(url)
-                                                    }
-                                                    else
-                                                    {
-                                                        val links = mutableListOf<String>()
-                                                        links.add(url)
-                                                        episodeLinksMap[episodeName] = links
+                                        val quality =
+                                            item.select("span[style=\"color: #ff00ff;\"]").text()
+                                        val episodeLinksMap =
+                                            mutableMapOf<String, MutableList<String>>()
+                                        item.nextElementSibling()?.select("a")?.forEach { item ->
+                                            val episodeUrl = item.attr("href")
+                                            if (episodeUrl.isNotEmpty()) {
+                                                val doc = app.get(
+                                                    episodeUrl,
+                                                    allowRedirects = true,
+                                                    timeout = 30
+                                                ).document
+                                                val episodelinks = doc.select(".entry-content h3")
+                                                episodelinks.forEach { item ->
+                                                    val url = item.select("a").attr("href")
+                                                    val episodeName = item.select("a").text()
+                                                    if (!episodeName.lowercase()
+                                                            .contains("batch")
+                                                    ) {
+                                                        if (!episodeLinksMap[episodeName].isNullOrEmpty()) {
+                                                            episodeLinksMap[episodeName]?.add(url)
+                                                        } else {
+                                                            val links = mutableListOf<String>()
+                                                            links.add(url)
+                                                            episodeLinksMap[episodeName] = links
 
+                                                        }
                                                     }
                                                 }
+
+
                                             }
-
-
                                         }
-                                    }
 
-                                    seasonList.add(SeasonDetail(quality,episodeLinksMap,currentSeason))
+                                        seasonList.add(
+                                            SeasonDetail(
+                                                quality,
+                                                episodeLinksMap,
+                                                currentSeason
+                                            )
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -203,37 +208,37 @@ class HindMoviezProvider : MainAPI() {
             val elements = doc.selectFirst(".entry-content")
             val qualityRegex = ">(\\d{3,4}p).*<".toRegex()
             val movieLinksList = mutableListOf<String>()
-            for (j in 0..(elements.children().size - 1)) {
+            if (elements != null) {
+                for (j in 0..<elements.children().size) {
 
-                val item = elements.children()[j]
-                if(plot.isEmpty())
-                {
-                    if(item.text().contains("Storyline"))
-                    {
-                        plot = item.nextElementSibling().text()
+                    val item = elements.children()[j]
+                    if(plot.isEmpty()) {
+                        if(item.text().contains("Storyline")) {
+                            plot = item.nextElementSibling()?.text() ?: ""
+                        }
                     }
-                }
-                if (item.tagName() == "h3" && (qualityRegex.containsMatchIn(item.html()) || qualityRegex2.containsMatchIn(item.html()))) {
-                        val movieUrls = item.nextElementSibling().select("a")
+                    if (item.tagName() == "h3" && (qualityRegex.containsMatchIn(item.html()) || qualityRegex2.containsMatchIn(item.html()))) {
 
-                        movieUrls.forEach { item->
-                            val episodeUrl = if(item.attr("href").contains("href.li"))
-                            {
+                        item.nextElementSibling()?.select("a")?.forEach { item ->
+                            val episodeUrl = if (item.attr("href").contains("href.li")) {
                                 item.attr("href").substringAfter("/?")
-                            }
-                            else
-                            {
+                            } else {
                                 item.attr("href")
                             }
                             if (episodeUrl.isNotEmpty()) {
-                                val doc = app.get(episodeUrl, allowRedirects = true, timeout = 30).document
+                                val doc = app.get(
+                                    episodeUrl,
+                                    allowRedirects = true,
+                                    timeout = 30
+                                ).document
                                 val episodelinks = doc.select(".entry-content h3")
-                                episodelinks.forEach { item->
+                                episodelinks.forEach { item ->
                                     val url = item.select("a").attr("href")
                                     movieLinksList.add(url)
                                 }
                             }
                         }
+                    }
                 }
             }
             return newMovieLoadResponse(title, url, TvType.Movie, movieLinksList.joinToString("+")) {
@@ -271,7 +276,7 @@ class HindMoviezProvider : MainAPI() {
             if(res.url.contains("hpage.site"))
             {
                 val quality = getVideoQuality(doc.select(".container h2").text())
-                val links = doc.select(".container a");
+                val links = doc.select(".container a")
                 links.forEach { item->
                     callback.invoke(ExtractorLink(
                         "H-Cloud (VLC)",
@@ -285,7 +290,7 @@ class HindMoviezProvider : MainAPI() {
             else if (res.url.contains("hindshare.site"))
             {
                 val quality = getVideoQuality(doc.select(".container p:nth-of-type(1) strong").text())
-                val links = doc.select(".btn-group a");
+                val links = doc.select(".btn-group a")
                 links.forEach { item->
                     if(item.text().contains("HCloud"))
                     {
@@ -300,7 +305,7 @@ class HindMoviezProvider : MainAPI() {
                     else if (item.attr("href").contains("hindcdn.site"))
                     {
                         val doc = app.get(item.attr("href"), timeout =  30, allowRedirects = true).document
-                        val links = doc.select(".container a");
+                        val links = doc.select(".container a")
                         links.forEach{ item->
                             val host = if (item.text().lowercase().contains("google")) {item.text() + " (VLC)"} else {"HindCdn H-Cloud (VLC)"}
                             callback.invoke(ExtractorLink(

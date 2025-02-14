@@ -49,7 +49,7 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
     // enable this when your provider has a main page
     override val hasMainPage = true
     override val hasDownloadSupport = true
-    override val hasQuickSearch = true
+    override val hasQuickSearch = false
 
     override val mainPage = mainPageOf(
         "imdb250.php?tag=imdb250&pg=" to "Top IMDB 250 movies",

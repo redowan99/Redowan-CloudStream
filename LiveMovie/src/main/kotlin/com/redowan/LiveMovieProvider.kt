@@ -15,8 +15,6 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.JsUnpacker.Companion.load
-import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.loadExtractor
 import okhttp3.FormBody
 import org.json.JSONObject
@@ -87,7 +85,7 @@ class LiveMovieProvider : MainAPI() {
         val doc = app.get(url,allowRedirects = true, timeout = 30).document
         val title = doc.select("meta[property=\"og:title\"]").attr("content").replace(" - LiveMovie","")
         val poster = doc.selectFirst(".poster img")?.attr("src")
-        val description = doc.selectFirst("meta[property=\"og:description\"]").attr("content")
+        val description = doc.selectFirst("meta[property=\"og:description\"]")?.attr("content")
         val tags = doc.select(".sgeneros a")
         val playerText = doc.select(".dooplay_player_option .title").text()
         if(playerText.lowercase().contains("player"))
@@ -99,8 +97,8 @@ class LiveMovieProvider : MainAPI() {
                 val post = item.attr("data-post")
                 val nume = item.attr("data-nume")
                 val requestBody = getRequestBody(post,nume,type)
-                val doc = app.post(ajaxUrl,requestBody = requestBody).text
-                val jsonObj = JSONObject(doc)
+                val ajaxResponse = app.post(ajaxUrl,requestBody = requestBody).text
+                val jsonObj = JSONObject(ajaxResponse)
                 val link = jsonObj.get("embed_url")
                 linkList.add(link.toString())
             }
@@ -111,7 +109,7 @@ class LiveMovieProvider : MainAPI() {
                     this.plot = description
                 }
 
-                if(!tags.isNullOrEmpty())
+                if(!tags.isEmpty())
                 {
                     this.tags = tags.map {it.text()}
                 }
@@ -121,17 +119,15 @@ class LiveMovieProvider : MainAPI() {
         {
             val episodeData = mutableListOf<Episode>()
             val list = doc.selectFirst(".wp-content")
-            list.children().forEach { item ->
-                if(item.tagName() == "h1" || item.tagName() == "h2")
-                {
-                    if(item.children().size == 1 && item.children().first().tagName() == "strong")
-                    {
+            list?.children()?.forEach { item ->
+                if(item.tagName() == "h1" || item.tagName() == "h2") {
+                    if(item.children().size == 1 && (item.children().first()?.tagName()
+                            ?: "") == "strong"
+                    ) {
                         val name = item.select("strong")
-                        val link = item.nextElementSibling().select("a").attr("href")
+                        val link = item.nextElementSibling()?.select("a")?.attr("href") ?: ""
                         episodeData.add(Episode(link,name.text(),null,null))
-                    }
-                    else if (item.children().size == 2)
-                    {
+                    } else if (item.children().size == 2) {
                         val name = item.select("strong")
                         val link = item.select("a").attr("href")
                         episodeData.add(Episode(link,name.text(),null,null))
@@ -163,7 +159,7 @@ class LiveMovieProvider : MainAPI() {
                     this.plot = description
                 }
 
-                if(!tags.isNullOrEmpty())
+                if(!tags.isEmpty())
                 {
                     this.tags = tags.map {it.text()}
                 }
