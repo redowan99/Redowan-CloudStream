@@ -1,6 +1,6 @@
 package com.redowan
 
-import com.lagradost.api.Log
+import android.util.Log
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
@@ -16,13 +16,11 @@ import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
-import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import okhttp3.FormBody
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
-import org.jsoup.select.Elements
 
 class FullMatchProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://fullmatch.info"
@@ -126,15 +124,15 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
                 var episodeNo = 1
                 tabcontent.forEach{item ->
                     val hostUrls = getHostUrlsWithIframe(item)
-                    val title = doc.select(".tabtitle")[episodeNo-1].text()
+                    val episodeTitle = doc.select(".tabtitle")[episodeNo-1].text()
                     if (hostUrls.size > 1) {
-                        episodesData.add(Episode(hostUrls.joinToString("+"),title,season = 1, episode =  episodeNo))
+                        episodesData.add(Episode(hostUrls.joinToString("+"),episodeTitle,season = 1, episode =  episodeNo))
                     } else if(hostUrls.size == 1) {
-                        episodesData.add(Episode(hostUrls[0],title,season = 1, episode =  episodeNo))
+                        episodesData.add(Episode(hostUrls[0],episodeTitle,season = 1, episode =  episodeNo))
                     }
                     else
                     {
-                        episodesData.add(Episode("",title,season = 1, episode =  episodeNo))
+                        episodesData.add(Episode("",episodeTitle,season = 1, episode =  episodeNo))
                     }
                     episodeNo++
                 }
@@ -144,8 +142,8 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
 
             }
             else {
-                val tab = doc.selectFirst(".tabcontent")
-                val hostUrls = getHostUrlsWithIframe(tab)
+                val tab = doc.select(".tabcontent")
+                val hostUrls = getHostUrlsWithIframe(tab[0])
                 val links = if(hostUrls.size > 1) {hostUrls.joinToString("+")} else if (hostUrls.size == 1) {hostUrls[0]} else {""}
                 return newMovieLoadResponse(title, url, TvType.Movie, links) {
                     this.posterUrl = imageUrl
@@ -155,7 +153,7 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
         // When post page has single iframe without tabs
         else if (doc.select(".entry-content.entry.clearfix iframe").isNotEmpty())
         {
-            var hostUrls = mutableListOf<String>()
+            val hostUrls = mutableListOf<String>()
             val videoUrl = doc.select(".entry-content.entry.clearfix iframe").attr("src")
                 .replace("//", "https://")
             hostUrls.add(videoUrl)
@@ -183,19 +181,19 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
             val episodeData = mutableListOf<Episode>()
             servers.forEach{ item ->
                 val hostTxt = item.text()
-                val isHostLink = "https:\\/\\/(.*)\\.(.*)\\/(.*)".toRegex().containsMatchIn(item.select("a").text())
+                val isHostLink = "https://(.*)\\.(.*)/(.*)".toRegex().containsMatchIn(item.select("a").text())
                 // When post page has colored links
                 if(hostTxt.contains("StreamWish"))
                 {
                     val links = item.select("a")
-                    var episodeNum = 1;
-                    links.forEach{ item->
-                        val value = "(https:\\/\\/fullmatch.info\\/goto\\/)\\d+".toRegex().containsMatchIn(item.attr("href"))
+                    var episodeNum = 1
+                    links.forEach{ linkElement->
+                        val value = "(https://fullmatch.info/goto/)\\d+".toRegex().containsMatchIn(linkElement.attr("href"))
                         if(value)
                         {
-                            val doc2 = app.get(item.attr("href")).document
+                            val doc2 = app.get(linkElement.attr("href")).document
                             val finalHostUrl = doc2.select(".entry-content.entry.clearfix p a").attr("href")
-                            episodeData.add(Episode(finalHostUrl,item.text(),null,episodeNum))
+                            episodeData.add(Episode(finalHostUrl,linkElement.text(),null,episodeNum))
                             episodeNum++
                         }
                     }
@@ -211,7 +209,7 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
 
             }
             return newTvSeriesLoadResponse(title,url,TvType.TvSeries,episodeData) {
-                this.posterUrl = imageUrl;
+                this.posterUrl = imageUrl
             }
         }
     }
@@ -224,7 +222,7 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
         hostUrls.add(videoUrl)
         val pEle = element.select("p")
         pEle.forEach { item->
-            val isHostLink = "https:\\/\\/(.*)\\.(.*)\\/(.*)".toRegex().containsMatchIn(item.select("a").text())
+            val isHostLink = "https://(.*)\\.(.*)/(.*)".toRegex().containsMatchIn(item.select("a").text())
             if(isHostLink)
             {
                 hostUrls.addAll(getHostUrls(item))
@@ -240,7 +238,7 @@ class FullMatchProvider : MainAPI() { // all providers must be an instance of Ma
         val list = element.select("a")
         list.forEach { item->
             val link = item.attr("href")
-            val value = "(https:\\/\\/fullmatch.info\\/goto\\/)\\d+".toRegex().containsMatchIn(link)
+            val value = "(https://fullmatch.info/goto/)\\d+".toRegex().containsMatchIn(link)
             if(value)
             {
                 val doc3 = app.get(item.attr("href")).document
