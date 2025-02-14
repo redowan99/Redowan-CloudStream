@@ -13,7 +13,7 @@ buildscript {
         classpath("com.android.tools.build:gradle:8.2.2")
         // Cloudstream gradle plugin which makes everything work and builds plugins
         classpath("com.github.recloudstream:gradle:-SNAPSHOT")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.23")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0")
     }
 }
 
@@ -44,7 +44,7 @@ subprojects {
         defaultConfig {
             minSdk = 21
             compileSdkVersion(33)
-            targetSdk = 33
+            targetSdk = 35
         }
 
         compileOptions {
