@@ -129,13 +129,13 @@ class BingedProvider : MainAPI() {
         val title = doc.select("h1").first()!!.text()
         val dt = doc.select("div.single-mevents-meta").text()
         val dtsplit = dt.split("|")
-        val imageUrl = doc.select("meta")[15].attr("content").toString()
-        val trailer = doc.select("div.bng-section__content")[1].select("a").attr("href").toString()
+        val imageUrl = doc.select("meta")[15].attr("content")
+        val trailer = doc.select("div.bng-section__content")[1].select("a").attr("href")
         val tags = listOf(
-            doc.select("span.single-mevents-platforms-row-date").text().toString(),
-            doc.select("span.rating-span").first()!!.text().toString(),
-            doc.select("img.single-mevents-platforms-row-image").attr("alt").toString(),
-            doc.select("span.audiostring").text().toString(),
+            doc.select("span.single-mevents-platforms-row-date").text(),
+            doc.select("span.rating-span").first()!!.text(),
+            doc.select("img.single-mevents-platforms-row-image").attr("alt"),
+            doc.select("span.audiostring").text(),
             if (dtsplit.size > 1) dtsplit[1] else "",
             if (dtsplit.size > 2) dtsplit[2] else "",
             if (dtsplit.size > 3) dtsplit[3] else ""

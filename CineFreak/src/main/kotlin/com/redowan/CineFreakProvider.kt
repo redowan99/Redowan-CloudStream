@@ -22,8 +22,8 @@ import org.jsoup.select.Elements
 
 //suspend fun main() {
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(CineFreakProvider())
-//    providerTester.testAll()
-////    providerTester.testMainPage(verbose = true)
+////    providerTester.testAll()
+//    providerTester.testMainPage(verbose = true)
 ////    providerTester.testSearch(query = "gun",verbose = true)
 ////    providerTester.testLoad("")
 ////    providerTester.testLoadLinks("https://neodrive.xyz/f/3c861172+https://neodrive.xyz/f/8f007c1f+https://neodrive.xyz/f/600f7e15")
@@ -67,13 +67,13 @@ class CineFreakProvider : MainAPI() {
         val url = post.select(".post-thumbnail").attr("href")
         val title = post.select(".entry-title a").text()
         var imageUrl = post.select(".post-thumbnail img").attr("src")
-        if (imageUrl.isNullOrEmpty()) {
+        if (imageUrl.isEmpty()) {
             imageUrl = post.select(".post-thumbnail img").attr("data-src")
         }
         val quality = post.select(".video-label").text()
         return newMovieSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = imageUrl
-            if (!quality.isNullOrEmpty()) {
+            if (quality.isNotEmpty()) {
                 this.quality = getSearchQuality(quality)
             }
         }
@@ -89,7 +89,7 @@ class CineFreakProvider : MainAPI() {
         val doc = app.get(url).document
         val title = doc.select("title").text()
         var imageUrl = doc.select(".post-thumbnail img").attr("src")
-        if (imageUrl.isNullOrEmpty()) {
+        if (imageUrl.isEmpty()) {
             imageUrl = doc.select(".post-thumbnail img").attr("data-src")
         }
         var plot = ""
@@ -106,13 +106,13 @@ class CineFreakProvider : MainAPI() {
         val linkList = mutableListOf<String>()
         dwnLinks?.children()?.forEach { item ->
             if (item.tagName() == "h4" && item.text().lowercase()
-                    .contains("season") && item.nextElementSibling().text().lowercase()
-                    .contains("episode")
+                    .contains("season") && item.nextElementSibling()?.text()?.lowercase()
+                    ?.contains("episode") == true
             ) {
                 val season =
                     "Season(\\s\\d*)".toRegex().find(item.text())?.groups?.get(1)?.value?.trim()
                 val episode = "Episode\\s(\\d*-\\d*)|".toRegex()
-                    .find(item.nextElementSibling().text())?.groups?.get(1)?.value?.trim()
+                    .find(item.nextElementSibling()!!.text())?.groups?.get(1)?.value?.trim()
                 val dlLinks = item.nextElementSibling()?.nextElementSibling()?.select("a")
                 val list = mutableListOf<String>()
                 dlLinks?.forEach {
@@ -129,16 +129,16 @@ class CineFreakProvider : MainAPI() {
                     )
                 }
                 episodeNo++
-            } else if (item.tagName() == "h4" && !item.nextElementSibling().text().lowercase()
-                    .contains("episode")
+            } else if (item.tagName() == "h4" && !item.nextElementSibling()?.text()?.lowercase()
+                    ?.contains("episode")!!
             ) {
-                val dlLinks: Elements =
-                    if (item.nextElementSibling().className() == "downloads-btns-div") {
-                        item.nextElementSibling().select("a")
+                val dlLinks: Elements? =
+                    if (item.nextElementSibling()!!.className() == "downloads-btns-div") {
+                        item.nextElementSibling()!!.select("a")
                     } else {
-                        item.nextElementSibling().nextElementSibling().select("a")
+                        item.nextElementSibling()!!.nextElementSibling()?.select("a")
                     }
-                dlLinks.forEach {
+                dlLinks?.forEach {
                     linkList.add(it.attr("href"))
                 }
             }
@@ -186,8 +186,8 @@ class CineFreakProvider : MainAPI() {
         return true
     }
 
-    private val PROVIDER_ZENCLOUD = "ZenCloud"
-    private val PROVIDER_NEODRIVE = "NeoDrive"
+    private val providerZenCloud = "ZenCloud"
+    private val providerNeoDrive = "NeoDrive"
     private val redirectRegex = "location.href='(.*)'".toRegex()
     private suspend fun extractZenCloudLink(
         button: Element,
@@ -203,8 +203,8 @@ class CineFreakProvider : MainAPI() {
                 .find(onClickLink)?.groupValues?.getOrNull(1)
             callback.invoke(
                 ExtractorLink(
-                    PROVIDER_ZENCLOUD,
-                    PROVIDER_ZENCLOUD,
+                    providerZenCloud,
+                    providerZenCloud,
                     downloadUrl.orEmpty(),
                     "",
                     quality
@@ -226,8 +226,8 @@ class CineFreakProvider : MainAPI() {
                 .find(it.attr("onclick"))?.groupValues?.getOrNull(1)
             callback.invoke(
                 ExtractorLink(
-                    PROVIDER_ZENCLOUD,
-                    PROVIDER_NEODRIVE,
+                    providerZenCloud,
+                    providerNeoDrive,
                     redirectUrl.orEmpty(),
                     "",
                     quality
