@@ -25,9 +25,9 @@ import org.jsoup.nodes.Element
 //suspend fun main() {
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(DflixMoviesProvider())
 ////    providerTester.testAll()
-////    providerTester.testMainPage(verbose = true)
+//    providerTester.testMainPage(verbose = true)
 ////    providerTester.testSearch(query = "gun",verbose = true)
-//    providerTester.testLoad("https://dflix.discoveryftp.net/m/view/34449")
+////    providerTester.testLoad("https://dflix.discoveryftp.net/m/view/34449")
 //}
 
 
@@ -55,13 +55,9 @@ class DflixMoviesProvider : MainAPI() { // all providers must be an instance of 
     private var loginCookie: Map<String, String>? = null
     private suspend fun login() {
         if (loginCookie == null) {
-            val client = app.get("https://dflix.discoveryftp.net/login/demo", allowRedirects = true)
+            val client =
+                app.get("https://dflix.discoveryftp.net/login/demo", allowRedirects = false)
             loginCookie = client.cookies
-            app.get(
-                "https://dflix.discoveryftp.net/login/demo",
-                cookies = loginCookie!!,
-                allowRedirects = true
-            )
         }
     }
 
