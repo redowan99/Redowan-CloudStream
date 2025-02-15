@@ -1,0 +1,175 @@
+package com.redowan
+
+import com.lagradost.cloudstream3.Actor
+import com.lagradost.cloudstream3.ActorData
+import com.lagradost.cloudstream3.Episode
+import com.lagradost.cloudstream3.HomePageResponse
+import com.lagradost.cloudstream3.LoadResponse
+import com.lagradost.cloudstream3.MainAPI
+import com.lagradost.cloudstream3.MainPageRequest
+import com.lagradost.cloudstream3.SearchResponse
+import com.lagradost.cloudstream3.SubtitleFile
+import com.lagradost.cloudstream3.TvType
+import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.mainPageOf
+import com.lagradost.cloudstream3.newHomePageResponse
+import com.lagradost.cloudstream3.newMovieSearchResponse
+import com.lagradost.cloudstream3.newTvSeriesLoadResponse
+import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.Qualities
+import org.jsoup.nodes.Element
+
+
+//suspend fun main() {
+//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(DflixSeriesProvider())
+////    providerTester.testAll()
+////    providerTester.testMainPage(verbose = true)
+////    providerTester.testSearch(query = "gun",verbose = true)
+//    providerTester.testLoad("https://dflix.discoveryftp.net/s/view/5967")
+//}
+
+
+class DflixSeriesProvider : MainAPI() { // all providers must be an instance of MainAPI
+    override var mainUrl = "https://dflix.discoveryftp.net"
+    override var name = "Dflix Series"
+    override val hasMainPage = true
+    override val hasDownloadSupport = true
+    override val hasQuickSearch = false
+    override val instantLinkLoading = true
+    override var lang = "bn"
+    override val supportedTypes = setOf(
+        TvType.Movie,
+        TvType.AnimeMovie
+    )
+    override val mainPage = mainPageOf(
+        "category/Foreign" to "English",
+        "category/Bangla" to "Bangla",
+        "category/Hindi" to "Hindi",
+        "category/South" to "South",
+        "category/Animation" to "Animation",
+        "category/Dubbed" to "Dubbed"
+    )
+
+    private var loginCookie: Map<String, String>? = null
+    private suspend fun login() {
+        if (loginCookie == null) {
+            val client =
+                app.get("https://dflix.discoveryftp.net/login/demo", allowRedirects = false)
+            loginCookie = client.cookies
+        }
+    }
+
+    override suspend fun getMainPage(
+        page: Int,
+        request: MainPageRequest
+    ): HomePageResponse {
+        login()
+        val doc = app.get("$mainUrl/s/${request.data}/$page", cookies = loginCookie!!).document
+        val homeResponse = doc.select("div.col-xl-4")
+        val home = homeResponse.mapNotNull { post ->
+            toResult(post)
+        }
+        return newHomePageResponse(request.name, home, true)
+    }
+
+    private fun toResult(post: Element): SearchResponse {
+        val url = mainUrl + (post.selectFirst("div > a:nth-child(1)")?.attr("href") ?: "")
+        val title = post.select("div.fcard > div:nth-child(2) > div:nth-child(1)").text()
+        return newMovieSearchResponse(title, url, TvType.Movie) {
+            this.posterUrl = post.selectFirst("img:nth-child(1)")?.attr("src")
+        }
+    }
+
+    override suspend fun search(query: String): List<SearchResponse> {
+        login()
+        val doc = app.get("$mainUrl/s/find/$query", cookies = loginCookie!!).document
+        val searchResponse = doc.select("div.col-xl-3")
+        return searchResponse.mapNotNull { post ->
+            toResult(post)
+        }
+    }
+
+    override suspend fun load(url: String): LoadResponse {
+        login()
+        val doc = app.get(url, cookies = loginCookie!!).document
+        val title = doc.select(".movie-detail-content-test > h3:nth-child(1)").text()
+        val img = doc.select(".movie-detail-banner > img:nth-child(1)").attr("src")
+
+        val episodesData = mutableListOf<Episode>()
+        var seasonNum = 0
+        doc.select("table.table:nth-child(1) > tbody:nth-child(1) > tr a").reversed().forEach{ season ->
+            seasonNum++
+            var episodeNum = 0
+
+            val seasonUrl = mainUrl + season.attr("href")
+            val seasonDoc = app.get(seasonUrl, cookies = loginCookie!!).document
+            seasonDoc.select("div.container:nth-child(6) > div").forEach { episode ->
+                val episodeName = episode.selectFirst("h4")?.childNode(0).toString() + "EP"+ (episodeNum+1)
+                val episodeImage = episode.selectFirst("div")?.attr("style")?.let { extractBGImageUrl(it) }
+                val episodeDescription = episode.selectFirst("div.season_overview")?.text()
+                val episodeLink = episode.select("div.mt-2 >h5>a").attr("href")
+                episodeNum++
+                episodesData.add(
+                    Episode(
+                        data = episodeLink,
+                        name = episodeName,
+                        posterUrl = episodeImage,
+                        season = seasonNum,
+                        episode = episodeNum,
+                        description = episodeDescription
+                    )
+                )
+            }
+        }
+
+        return newTvSeriesLoadResponse(title, url, TvType.TvSeries,episodesData) {
+            this.posterUrl = img
+            this.plot = doc.select(".storyline").text()
+            this.tags = doc.select(".ganre-wrapper > a").map { it.text().replace(",", "") }
+            this.actors = doc.select("div.col-lg-2").map { actor(it) }
+        }
+    }
+
+    private val bgImageRegex = Regex("""url\(['"]?(.*?)['"]?\)""")
+    private fun extractBGImageUrl(text: String): String? {
+        val matchResult = bgImageRegex.find(text)
+        return matchResult?.groupValues?.get(1)
+    }
+
+    private fun actor(post: Element): ActorData {
+        val html = post.select("div.col-lg-2 > a:nth-child(1) > img:nth-child(1)")
+        val img = html.attr("src")
+        val name = html.attr("alt")
+        return ActorData(
+            actor = Actor(
+                name,
+                img
+            ), roleString = post.select("div.col-lg-2 > p.text-center.text-white").text()
+        )
+    }
+
+    override suspend fun loadLinks(
+        data: String,
+        isCasting: Boolean,
+        subtitleCallback: (SubtitleFile) -> Unit,
+        callback: (ExtractorLink) -> Unit
+    ): Boolean {
+        callback.invoke(
+            ExtractorLink(
+                mainUrl,
+                this.name,
+                url = data,
+                mainUrl,
+                quality = getVideoQuality(data),
+                isM3u8 = false,
+                isDash = false
+            )
+        )
+        return true
+    }
+
+    private fun getVideoQuality(str: String?): Int {
+        return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
+            ?: Qualities.Unknown.value
+    }
+}
