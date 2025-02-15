@@ -17,18 +17,19 @@ import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.nicehttp.getHeaders
 import org.jsoup.nodes.Element
 
 //suspend fun main() {
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(FibWatchProvider())
 ////    providerTester.testAll()
 ////    providerTester.testMainPage(verbose = true)
-//    providerTester.testSearch(query = "gun",verbose = true)
-////    providerTester.testLoad("https://fibwatch.lol/watch/rob-b-hood-2006-dual-audio-hindi-english-bluray-1080p_adbbX7knPrXd1oq.html")
+////    providerTester.testSearch(query = "gun",verbose = true)
+//    providerTester.testLoad("https://fibwatch.info/watch/agontuk-2024-bengali-iscreen-web-dl-720p_SPyeH84EDn3i7gK.html")
 //}
 
 class FibWatchProvider : MainAPI() {
-    override var mainUrl = "https://fibwatch.lol"
+    override var mainUrl = "https://fibwatch.info"
     override var name = "FibWatch"
     override val supportedTypes = setOf(
         TvType.Movie,
@@ -74,6 +75,7 @@ class FibWatchProvider : MainAPI() {
         return newAnimeSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = post.selectFirst("a > img")
                 ?.attr("src")
+            this.posterHeaders = mapOf("Referer" to mainUrl)
             this.quality = getSearchQuality(check)
             addDubStatus(
                 dubExist = when {
