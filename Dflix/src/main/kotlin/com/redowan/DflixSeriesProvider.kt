@@ -17,16 +17,17 @@ import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
+import okhttp3.FormBody
 import org.jsoup.nodes.Element
 
 
-//suspend fun main() {
-//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(DflixSeriesProvider())
-////    providerTester.testAll()
-////    providerTester.testMainPage(verbose = true)
-////    providerTester.testSearch(query = "gun",verbose = true)
+suspend fun main() {
+    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(DflixSeriesProvider())
+//    providerTester.testAll()
+//    providerTester.testMainPage(verbose = true)
+    providerTester.testSearch(query = "game of",verbose = true)
 //    providerTester.testLoad("https://dflix.discoveryftp.net/s/view/5967")
-//}
+}
 
 
 class DflixSeriesProvider : MainAPI() { // all providers must be an instance of MainAPI
@@ -38,8 +39,11 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
     override val instantLinkLoading = true
     override var lang = "bn"
     override val supportedTypes = setOf(
-        TvType.Movie,
-        TvType.AnimeMovie
+        TvType.TvSeries,
+        TvType.AsianDrama,
+        TvType.Anime,
+        TvType.Documentary,
+        TvType.Cartoon
     )
     override val mainPage = mainPageOf(
         "category/Foreign" to "English",
@@ -52,7 +56,7 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
 
     private var loginCookie: Map<String, String>? = null
     private suspend fun login() {
-        if (loginCookie == null) {
+        if (loginCookie?.size != 2) {
             val client =
                 app.get("https://dflix.discoveryftp.net/login/demo", allowRedirects = false)
             loginCookie = client.cookies
@@ -80,12 +84,24 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
         }
     }
 
+    private fun toSearchResult(post: Element): SearchResponse {
+        val url = mainUrl + (post.selectFirst("a")?.attr("href") ?: "")
+        val title = post.select("div.searchtitle").text()
+        return newMovieSearchResponse(title, url, TvType.Movie) {
+            this.posterUrl = post.selectFirst("img:nth-child(1)")?.attr("src")
+        }
+    }
+
     override suspend fun search(query: String): List<SearchResponse> {
         login()
-        val doc = app.get("$mainUrl/s/find/$query", cookies = loginCookie!!).document
-        val searchResponse = doc.select("div.col-xl-3")
+        val requestBody = FormBody.Builder()
+            .add("term", query)
+            .add("types","s")
+            .build()
+        val doc = app.post("$mainUrl/search", cookies = loginCookie!!, requestBody = requestBody).document
+        val searchResponse = doc.select("div.moviesearchiteam > a")
         return searchResponse.mapNotNull { post ->
-            toResult(post)
+            toSearchResult(post)
         }
     }
 

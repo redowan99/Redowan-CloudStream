@@ -55,7 +55,7 @@ class DflixMoviesProvider : MainAPI() { // all providers must be an instance of 
 
     private var loginCookie: Map<String, String>? = null
     private suspend fun login() {
-        if (loginCookie == null) {
+        if (loginCookie?.size != 2) {
             val client =
                 app.get("https://dflix.discoveryftp.net/login/demo", allowRedirects = false)
             loginCookie = client.cookies
