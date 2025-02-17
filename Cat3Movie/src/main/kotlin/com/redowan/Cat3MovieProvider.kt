@@ -120,7 +120,7 @@ class Cat3MovieProvider : MainAPI() {
             var url = doc.select("iframe").attr("src").replace("\\", "")
             url = url.replace("\"","")
             val hlsDoc = app.get(url).document
-            val m3u8Link = getSecondOccurrenceBetween(hlsDoc.html(),"file: \"","\",") // Regex was not working here
+            val m3u8Link = getSecondOccurrenceBetween(hlsDoc.html())
             callback.invoke(
                 ExtractorLink(
                     "HlsVip",
@@ -134,7 +134,9 @@ class Cat3MovieProvider : MainAPI() {
             return true
     }
 
-    private fun getSecondOccurrenceBetween(input: String, after: String, before: String): String? {
+    private fun getSecondOccurrenceBetween(input: String): String? {
+        val after = "file: \""
+        val before = "\","
         // Get the part of the string after the first occurrence of `after`
         val firstOccurrence = input.substringAfter(after)
 
