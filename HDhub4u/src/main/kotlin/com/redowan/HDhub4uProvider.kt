@@ -12,6 +12,7 @@ import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newAnimeSearchResponse
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
@@ -31,7 +32,7 @@ import org.jsoup.nodes.Element
 //}
 
 class HDhub4uProvider : MainAPI() {
-    override var mainUrl = "https://www.hdhub4u.com.vc"
+    override var mainUrl = "https://www.hdhub4u.com.im"
     override var name = "HDhub4u"
     override var lang = "en"
     override val hasMainPage = true
@@ -83,6 +84,7 @@ class HDhub4uProvider : MainAPI() {
         ).document
         return doc.select("article.post").mapNotNull { toResult(it) }
     }
+
     private val regex = Regex("(?<=\\)\\s).*")
     override suspend fun load(url: String): LoadResponse {
         val doc = app.get(
@@ -98,7 +100,7 @@ class HDhub4uProvider : MainAPI() {
                 val quality = link.previousElementSibling()?.text() ?: ""
                 val matchResult = regex.find(quality)
                 val extractedText = matchResult?.value
-                extractedText+ " ## " + (link.selectFirst("a")?.attr("href") ?: "")
+                extractedText + " ## " + (link.selectFirst("a")?.attr("href") ?: "")
             }
             return newMovieLoadResponse(title, url, TvType.Movie, links) {
                 this.posterUrl = image
@@ -127,10 +129,12 @@ class HDhub4uProvider : MainAPI() {
                 }
                 episodeLinksMap.map { (episodeName, episodeLinks) ->
                     episodesData.add(
-                        Episode(
-                            episodeLinks,
-                            episodeName,
-                            seasonNum
+                        newEpisode(
+                            Episode(
+                                episodeLinks,
+                                episodeName,
+                                seasonNum
+                            )
                         )
                     )
                 }
@@ -218,5 +222,6 @@ class HDhub4uProvider : MainAPI() {
         return getVideoQualityRegex.find(string ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
             ?: Qualities.Unknown.value
     }
+
     private val getVideoQualityRegex = Regex("(\\d{3,4})[pP]")
 }
