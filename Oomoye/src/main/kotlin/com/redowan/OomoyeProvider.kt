@@ -22,30 +22,28 @@ import org.jsoup.nodes.Element
 ////    providerTester.testAll()
 ////    providerTester.testMainPage(verbose = true)
 ////    providerTester.testSearch(query = "gun",verbose = true)
-//    providerTester.testLoadLinks("https://www.oomoye.yachts/files/40136/Vedaa-2024-480p-mkv/1.html ; https://www.oomoye.yachts/files/40134/Vedaa-2024-720p-mkv/1.html ; https://www.oomoye.yachts/files/40132/Vedaa-2024-1080p-mkv/1.html")
+//    providerTester.testLoad("https://oomoye.guru/movie/26127/Chhaava-2025-hindi-movie.html")
+////    providerTester.testLoadLinks("https://www.oomoye.yachts/files/40136/Vedaa-2024-480p-mkv/1.html ; https://www.oomoye.yachts/files/40134/Vedaa-2024-720p-mkv/1.html ; https://www.oomoye.yachts/files/40132/Vedaa-2024-1080p-mkv/1.html")
 //}
 
 class OomoyeProvider : MainAPI() { // all providers must be an instance of MainAPI
-    override var mainUrl = "https://www.oomoye.xyz"
+    override var mainUrl = "https://oomoye.guru"
     override var name = "Oomoye"
     override var lang = "en"
     override val hasMainPage = true
     override val hasDownloadSupport = true
-
     override val mainPage = mainPageOf(
-        "Bollywood-movies" to "Bollywood Movies",
-        "South-indian-hindi-movies" to "South Indian Hindi Movies",
-        "Hollywood-hindi-dubbed-movies" to "Hollywood Hindi Movies",
-        "Hollywood-english-movies" to "Hollywood English Movies",
-        "Hollywood-cartoon-movies" to "Hollywood Cartoon Movies",
-        "Punjabi-movies" to "Punjabi Movies",
-        "Tamil-movies" to "Tamil Movies",
-        "Telugu-movies" to "Telugu Movies",
-        "Malayalam-movies" to "Malayalam Movies",
-        "Marathi-movies" to "Marathi Movies",
-        "Bengali-movies" to "Bengali Movies",
-        "Kannada-movies" to "Kannada Movies",
-        "Gujarati-movies" to "Gujarati Movies"
+        "2025-new-bollywood-movies" to "Bollywood Movies",
+        "2025-new-south-indian-hindi-dubbed-movies" to "South Indian Dubbed Movies",
+        "2025-latest-hollywood-hindi-dubbed-movies" to "Hollywood Dubbed Movies",
+        "2024-latest-hollywood-english-movies" to "Hollywood Movies",
+        "Latest-bengali-movies-2024" to "Bengali Movies",
+        "2024-latest-hollywood-cartoon-movies" to "Hollywood Cartoon Movies",
+        "Chinese-dubbed-movies-2020-to-1980" to "Chinese Dubbed Movies",
+        "English-web-series" to "English Web Series",
+        "Hollywood-dubbed-web-series" to "Hollywood Dubbed Web Series",
+        "Hindi-web-series" to "Hindi Web Series",
+        "Indian-Hot-Web-Series" to "Indian Hot Web Series"
     )
     private val headers =
         mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
@@ -73,25 +71,23 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
         }
     }
 
-    override suspend fun search(query: String): List<SearchResponse> {
-        val doc = app.get(
-            "$mainUrl/search.php?q=$query", cacheTime = 60, headers = headers
-        ).document
-        return doc.select(".catRow").mapNotNull { toResult(it) }
-    }
+//    override suspend fun search(query: String): List<SearchResponse> {
+//        val doc = app.get(
+//            "$mainUrl/search.php?q=$query", cacheTime = 60, headers = headers
+//        ).document
+//        return doc.select(".catRow").mapNotNull { toResult(it) }
+//    }
 
     override suspend fun load(url: String): LoadResponse {
         val doc = app.get(
             url, cacheTime = 60, headers = headers
         ).document
-        val title = doc.selectXpath("/html/body/div[7]/div").text()
-        val year = getYearFromString(title)
-        val links = doc.select(".catRow a[href*=/server/]").joinToString(separator = " ; ") {
-                it.attr("href").replace("/server/", "/files/")
+        val title = doc.selectFirst("div.moviename")?.text() ?: ""
+        val links = doc.select(".catRow a[href*=/servers/]").joinToString(separator = " ; ") {
+                it.attr("href").replace("/servers/", "/server/")
             }
         return newMovieLoadResponse(title, url, TvType.Movie, links) {
             this.posterUrl = doc.getElementsByClass("posterss").attr("src")
-            this.year = year
             this.plot = doc.getElementsByClass("description").text()
         }
     }

@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 17
+version = 18
 
 android {
     namespace = "com.redowan"
@@ -17,7 +17,7 @@ cloudstream {
     * 2: Slow
     * 3: Beta only
     * */
-    status = 1 // will be 3 if unspecified
+    status = 0 // will be 3 if unspecified
 
     // List of video source types. Users are able to filter for extensions in a given category.
     // You can find a list of available types here:
@@ -26,6 +26,7 @@ cloudstream {
         "Movie",
         "TvSeries",
         "Cartoon",
+        "NSFW"
     )
     language = "en"
 
