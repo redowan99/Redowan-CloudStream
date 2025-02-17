@@ -21,13 +21,13 @@ import okhttp3.FormBody
 import org.jsoup.nodes.Element
 
 
-suspend fun main() {
-    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(DflixSeriesProvider())
-//    providerTester.testAll()
-//    providerTester.testMainPage(verbose = true)
-    providerTester.testSearch(query = "game of",verbose = true)
-//    providerTester.testLoad("https://dflix.discoveryftp.net/s/view/5967")
-}
+//suspend fun main() {
+//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(DflixSeriesProvider())
+////    providerTester.testAll()
+////    providerTester.testMainPage(verbose = true)
+//    providerTester.testSearch(query = "game of",verbose = true)
+////    providerTester.testLoad("https://dflix.discoveryftp.net/s/view/5967")
+//}
 
 
 class DflixSeriesProvider : MainAPI() { // all providers must be an instance of MainAPI
