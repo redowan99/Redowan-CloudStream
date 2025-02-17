@@ -1,6 +1,5 @@
 package com.redowan
 
-import com.lagradost.api.Log
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
@@ -16,21 +15,25 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
-import org.jsoup.nodes.Element
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.lagradost.cloudstream3.utils.AppUtils
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+
 
 //suspend fun main() {
-//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(Film1KProvider())
-////    providerTester.testLoadLinks("https://checklinko.top/60382/")
+//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(Cat3MovieProvider())
 ////    providerTester.testAll()
 ////    providerTester.testMainPage(verbose = true)
 ////    providerTester.testSearch(query = "gun",verbose = true)
-////    providerTester.testLoad("")
-//    providerTester.testLoadLinks("51783")
+//    providerTester.testLoad("https://cat3movie.org/info/deaden-2006")
+////    providerTester.testLoadLinks("51783")
 //}
 
 
 class Cat3MovieProvider : MainAPI() {
     override var mainUrl = "https://cat3movie.org"
+    private var apiMainUrl = "https://api.cat3movie.org"
     override var name = "Cat3Movie"
     override var lang = "en"
     override val hasMainPage = true
@@ -41,65 +44,68 @@ class Cat3MovieProvider : MainAPI() {
         TvType.NSFW
     )
     override val mainPage = mainPageOf(
-        "/action" to "Action",
-        "/horror" to "Horror",
-        "/comedy" to "Comedy",
-        "/animation" to "Animation",
-        "/war" to "War",
-        "/sci-fi" to "Sci-Fi",
-        "/romance" to "Romance",
-        "/asian" to "Asian",
-        "/drama" to "Drama",
-        "/classic-porn" to "Classic Porn",
-        "/asian-erotica" to "Asian Erotica",
-        "/newage-erotica" to "Newage Erotica",
-        "/classic-erotica" to "Classic Erotica",
-        "/sex-education" to "Sex Education",
-        "/incest" to "Incest",
-        "/thriller" to "Thriller",
-        "/crime" to "Crime",
-        "/adventure" to "Adventure",
-        "/western" to "Western",
-        "/fantasy" to "Fantasy",
-        "/newage-porn" to "Newage Porn",
+        "action" to "Action",
+        "horror" to "Horror",
+        "comedy" to "Comedy",
+        "animation" to "Animation",
+        "war" to "War",
+        "sci-fi" to "Sci-Fi",
+        "romance" to "Romance",
+        "asian" to "Asian",
+        "drama" to "Drama",
+        "classic-porn" to "Classic Porn",
+        "asian-erotica" to "Asian Erotica",
+        "newage-erotica" to "Newage Erotica",
+        "classic-erotica" to "Classic Erotica",
+        "sex-education" to "Sex Education",
+        "incest" to "Incest",
+        "thriller" to "Thriller",
+        "crime" to "Crime",
+        "adventure" to "Adventure",
+        "western" to "Western",
+        "fantasy" to "Fantasy",
+        "newage-porn" to "Newage Porn",
     )
     override suspend fun getMainPage(
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        val doc = app.get("$mainUrl${request.data}/page/$page", timeout = 60).document
-        //Log.d("salman731 html",doc.html())
-        val home = doc.select(".col-md-2\\.5").mapNotNull { toResult(it) }
+        val mediaType = "application/json".toMediaType()
+        val body = "{\"filters\":{\"category\":\"${request.data}\"},\"page\":$page}".toRequestBody(mediaType)
+        val json = app.post("$apiMainUrl/movie/filter",
+            requestBody = body,
+            cacheTime = 60).text
+        val home = AppUtils.parseJson<MovieJson>(json).result.mapNotNull {toResult(it)}
         return newHomePageResponse(HomePageList(request.name,home,isHorizontalImages = false), true)
     }
 
-    private fun toResult(post: Element): SearchResponse {
-        val title = post.select(".card-body h3").text()
-        val url = post.select("a:nth-child(1)").attr("href")
-        val imageUrl = "$mainUrl${post.select("a:nth-child(1) img").attr("src")}"
+    private fun toResult(post: Result?): SearchResponse {
+        val title = post?.title ?: ""
+        val url = "$mainUrl/info/${post?.slug}"
+        val imageUrl = "$apiMainUrl/${post?.thumbnail}"
         return newMovieSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = imageUrl
         }
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val doc = app.get("$mainUrl/search/$query", timeout = 60).document
-        return doc.select(".col-md-2\\.5").mapNotNull { toResult(it) }
+        val mediaType = "application/json".toMediaType()
+        val body = "{\"filters\":{\"keyword\":\"$query\"}}".toRequestBody(mediaType)
+        val json = app.post("$apiMainUrl/movie/filter",
+            requestBody = body,
+            cacheTime = 60).text
+        return AppUtils.parseJson<MovieJson>(json).result.mapNotNull {toResult(it)}
     }
 
     override suspend fun load(url: String): LoadResponse {
         val doc = app.get(url, timeout = 60).document
-        val title = doc.selectFirst("div.text h1")?.text()?.split(" ")?.distinct()?.joinToString(" ").toString() // To remove duplicate words from title
-        val image = mainUrl + doc.select(".clean-block.clean-hero").attr("style").substringAfter("background: url(").substringBefore(") ")
-        val id = "\"post_id\":(\\d*)".toRegex().find(doc.html())?.groups?.get(1)?.value
-        val plot = doc.select("meta[name=\"description\"]").attr("content")
-        val released = "Released: - (\\d*)".toRegex().find(doc.html())?.groups?.get(1)?.value
-        return newMovieLoadResponse(title, url, TvType.Movie, id) {
+        val title = doc.select("p.text-lg").text()
+        val image = doc.select("img.object-contain").attr("src")
+        val link = mainUrl + doc.select("a.btn-watch").attr("href")
+        return newMovieLoadResponse(title, url, TvType.Movie, link) {
             this.posterUrl = image
-            this.plot = plot
-            if (released != null) {
-                this.year = released.toInt()
-            }
+            this.plot = doc.select("p.description > span.text-white").text()
+            this.tags = doc.select("div.categories > a").map { it.text() }
         }
     }
 
@@ -109,7 +115,6 @@ class Cat3MovieProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-
             val serverAjaxURL = "https://cat3movie.org/wp-content/themes/hnzphim/app/load.php?episode_slug=full&server_id=1&post_id=$data"
             val doc = app.get(serverAjaxURL, timeout = 60, headers = mapOf("X-Requested-With" to "XMLHttpRequest")).document
             var url = doc.select("iframe").attr("src").replace("\\", "")
@@ -143,4 +148,18 @@ class Cat3MovieProvider : MainAPI() {
         return secondOccurrence.substringBefore(before)
     }
 
+    data class MovieJson(
+        @JsonProperty("result")
+        val result: List<Result?> = listOf(),
+    )
+
+    data class Result(
+        @JsonProperty("slug")
+        val slug: String = "", // girl-chef-2011
+        @JsonProperty("thumbnail")
+        val thumbnail: String = "", // assets/thumbnail/girl-chef-2011.webp
+        @JsonProperty("title")
+        val title: String = "", // Girl Chef (2011)
+    )
 }
+
