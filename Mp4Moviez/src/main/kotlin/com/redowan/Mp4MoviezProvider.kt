@@ -18,7 +18,7 @@ import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
 class Mp4MoviezProvider : MainAPI() {
-    override var mainUrl = "https://www.mp4moviez.glass"
+    override var mainUrl = "https://www.mp4moviez.capital"
     override var name = "Mp4Moviez"
     override var lang = "hi"
     override val hasMainPage = true
