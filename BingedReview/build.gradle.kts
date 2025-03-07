@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 2
+version = 3
 
 android {
     namespace = "com.redowan"
@@ -23,7 +23,7 @@ cloudstream {
     // List of video source types. Users are able to filter for extensions in a given category.
     // You can find a list of available types here:
     // https://recloudstream.github.io/cloudstream/html/app/com.lagradost.cloudstream3/-tv-type/index.html
-    tvTypes = listOf("Movie")
+    tvTypes = listOf("Others")
     iconUrl = "https://raw.githubusercontent.com/rockhero1234/extensions/refs/heads/master/Screenshot_20241012-211513_Binged%7E3.png"
 }
 

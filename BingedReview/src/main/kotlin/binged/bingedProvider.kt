@@ -18,7 +18,7 @@ import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 class BingedProvider : MainAPI() {
     override var mainUrl = "https://www.binged.com"
     override var name = "Binged(No Streaming)"
-    override val supportedTypes = setOf(TvType.Movie)
+    override val supportedTypes = setOf(TvType.Others)
     override var lang = "en"
     override val hasMainPage = true
 
