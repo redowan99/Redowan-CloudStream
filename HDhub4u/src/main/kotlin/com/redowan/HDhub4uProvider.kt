@@ -39,7 +39,7 @@ class HDhub4uProvider : MainAPI() {
     override val hasDownloadSupport = true
     override val hasQuickSearch = false
     override val supportedTypes = setOf(
-        TvType.Movie, TvType.TvSeries
+        TvType.Movie, TvType.TvSeries, TvType.NSFW
     )
     override val mainPage = mainPageOf(
         "/" to "Latest",

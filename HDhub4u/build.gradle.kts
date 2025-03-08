@@ -21,6 +21,7 @@ cloudstream {
     tvTypes = listOf(
         "Movie",
         "TvSeries",
+        "NSFW"
     )
     language = "en"
 
