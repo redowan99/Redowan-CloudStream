@@ -22,7 +22,7 @@ import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
 class TheMoviesFlixProvider : MainAPI() {
-    override var mainUrl = "https://themoviesflix.ae.org"
+    override var mainUrl = "https://themoviesflix.it.com"
     override var name = "TheMoviesFlix"
     override var lang = "hi"
     override val hasMainPage = true
