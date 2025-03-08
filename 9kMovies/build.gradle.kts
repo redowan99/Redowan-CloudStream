@@ -28,5 +28,5 @@ cloudstream {
     )
     language = "hi"
 
-    iconUrl = "https://9kmovies.com/wp-content/uploads/2024/08/9kmoviescomm.png"
+    iconUrl = "https://9kmovies.claims/m/wp-content/uploads/2019/08/9kmovies.ico"
 }
