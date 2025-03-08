@@ -28,5 +28,5 @@ cloudstream {
     )
     language = "hi"
 
-    iconUrl = "https://themoviesflix.ae.org/wp-content/uploads/2022/08/cropped-cropped-favicon-32x32-1-180x180.png"
+    iconUrl = "https://themoviesflix.it.com/wp-content/uploads/2024/12/cropped-cropped-favicon-32x32-1-180x180.png"
 }
