@@ -99,7 +99,7 @@ class FootReplaysProvider : MainAPI() { // all providers must be an instance of 
     override suspend fun load(url: String): LoadResponse {
         val doc = app.get(url).document
         val title = doc.selectFirst("article h1.single-title")?.text() ?: ""
-        val imageUrl = doc.selectFirst("article.post-8889 img")?.attr("src")
+        val imageUrl = doc.selectFirst(".attachment-pixwell_780x0-2x")?.attr("src")
         val plot = doc.selectFirst(".entry-content > p")?.text()
         val episodesData = mutableListOf<Episode>()
         var episodeNo = 1
