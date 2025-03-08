@@ -25,7 +25,7 @@ import org.jsoup.nodes.Element
 //}
 
 open class NineKMoviesProvider : MainAPI() {
-    override var mainUrl = "https://9kmovies.com.lc/m"
+    override var mainUrl = "https://9kmovies.claims/m"
     override var name = "9kMovies"
     override var lang = "en"
     override val hasMainPage = true
