@@ -7,7 +7,7 @@ android {
 
 cloudstream {
     description = "720p Movies, 1080p movies, Dual Audio Movies, Hindi Dubbed Series, Hollywood Movies"
-    authors = listOf("salman731")
+    authors = listOf("salman731,Redowan")
 
     /**
     * Status int as the following:
