@@ -1,6 +1,5 @@
-import com.android.build.gradle.BaseExtension
 import com.lagradost.cloudstream3.gradle.CloudstreamExtension
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import com.android.build.gradle.BaseExtension
 
 buildscript {
     repositories {
@@ -11,10 +10,10 @@ buildscript {
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:8.7.3")
+        classpath("com.android.tools.build:gradle:8.2.2")
         // Cloudstream gradle plugin which makes everything work and builds plugins
         classpath("com.github.recloudstream:gradle:-SNAPSHOT")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.10")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0")
     }
 }
 
@@ -53,45 +52,45 @@ subprojects {
             targetCompatibility = JavaVersion.VERSION_1_8
         }
 
-        tasks.withType<KotlinCompile>().configureEach {
+        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
             kotlinOptions {
                 jvmTarget = "1.8" // Required
                 // Disables some unnecessary features
-                freeCompilerArgs = freeCompilerArgs + listOf(
-                    "-Xno-call-assertions",
-                    "-Xno-param-assertions",
-                    "-Xno-receiver-assertions"
-                )
+                freeCompilerArgs = freeCompilerArgs +
+                        "-Xno-call-assertions" +
+                        "-Xno-param-assertions" +
+                        "-Xno-receiver-assertions"
             }
         }
     }
 
     dependencies {
-        val runtimeOnly by configurations
+        val apk by configurations
         val implementation by configurations
 
-        val activateCloudstreamApi = true
-        if(activateCloudstreamApi){
-            val apkTasks = listOf("deployWithAdb", "build")
-            val useApk = gradle.startParameter.taskNames.any { taskName ->
-                apkTasks.any { apkTask ->
-                    taskName.contains(apkTask, ignoreCase = true)
-                }
-            }
-            // If the task is specifically to compile the app then use the stubs, otherwise us the library.
-            if (useApk) {
-                // Stubs for all Cloudstream classes
-                runtimeOnly("com.lagradost:cloudstream3:pre-release")
-            } else {
-                // For running locally
-                implementation("com.github.Blatzar:CloudstreamApi:0.1.6")
-            }
-        }
-        else{
-            // Stubs for all Cloudstream classes
-            runtimeOnly("com.github.recloudstream.cloudstream:library:pre-release")
-        }
+        // Stubs for all Cloudstream classes
+        apk("com.github.recloudstream.cloudstream:library:pre-release")
 
+//        Dev code
+
+//        val apkTasks = listOf("deployWithAdb", "build")
+//        val useApk = gradle.startParameter.taskNames.any { taskName ->
+//            apkTasks.any { apkTask ->
+//                taskName.contains(apkTask, ignoreCase = true)
+//            }
+//        }
+//
+//        val implementation by configurations
+//        val apk by configurations
+//
+//        // If the task is specifically to compile the app then use the stubs, otherwise us the library.
+//        if (useApk) {
+//            // Stubs for all Cloudstream classes
+//            apk("com.lagradost:cloudstream3:pre-release")
+//        } else {
+//            // For running locally
+//            implementation("com.github.Blatzar:CloudstreamApi:0.1.6")
+//        }
 
         // these dependencies can include any of those which are added by the app,
         // but you dont need to include any of them if you dont need them
@@ -104,5 +103,5 @@ subprojects {
 }
 
 task<Delete>("clean") {
-    delete(rootProject.layout.buildDirectory)
+    delete(rootProject.buildDir)
 }
