@@ -13,10 +13,9 @@ import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
+import com.lagradost.cloudstream3.utils.AppUtils
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.lagradost.cloudstream3.utils.AppUtils
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 
@@ -151,16 +150,12 @@ class Cat3MovieProvider : MainAPI() {
     }
 
     data class MovieJson(
-        @JsonProperty("result")
         val result: List<Result?> = listOf(),
     )
 
     data class Result(
-        @JsonProperty("slug")
         val slug: String = "", // girl-chef-2011
-        @JsonProperty("thumbnail")
         val thumbnail: String = "", // assets/thumbnail/girl-chef-2011.webp
-        @JsonProperty("title")
         val title: String = "", // Girl Chef (2011)
     )
 }

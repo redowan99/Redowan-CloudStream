@@ -1,6 +1,5 @@
 package com.redowan
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
@@ -268,17 +267,14 @@ class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAP
     private val withoutParenthesesYear = "(19|20)\\d{2}(?!\\w)".toRegex()
 
     data class EmbedUrl(
-        @JsonProperty("data")
         val `data`: Data = Data()
     )
 
     data class Data(
-        @JsonProperty("alternativeSource")
         val alternativeSource: List<AlternativeSource> = listOf()
     )
 
     data class AlternativeSource(
-        @JsonProperty("url")
         val url: String = "" // https://v1.sdsp.xyz/embed/movie/811941
     )
 
