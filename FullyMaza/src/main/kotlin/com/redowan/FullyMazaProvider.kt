@@ -13,12 +13,12 @@ import com.lagradost.cloudstream3.addDubStatus
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newAnimeSearchResponse
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
-import kotlin.text.replace
 
 //suspend fun main() {
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(FullyMazaProvider())
@@ -31,7 +31,7 @@ import kotlin.text.replace
 
 
 class FullyMazaProvider : MainAPI() {
-    override var mainUrl = "https://fullymaza.homes"
+    override var mainUrl = "https://fullymaza.autos"
     override var name = "FullyMaza"
     override var lang = "en"
     override val hasMainPage = true
@@ -126,19 +126,30 @@ class FullyMazaProvider : MainAPI() {
                 .attr("src")
         val plot = doc.select(".blog-starter-standard-post__full-summery > p:nth-child(4)").html()
         val episodesData = mutableListOf<Episode>()
-        doc.select(".blog-starter-standard-post__full-summery.text-left a").forEach {
+
+//        doc.select(".blog-starter-standard-post__full-summery.text-left a").forEach {
+//            val link = it.attr("href")
+//            if (link.contains("checklinko")||link.contains("alinkz")) {
+//                val name = it.text().replace("Download Links", "")
+//                episodesData.add(
+//                    Episode(
+//                        link,
+//                        name,
+//                        null,
+//                        null
+//                    )
+//                )
+//            }
+//        }
+
+        doc.select("h4.tabdownload > a:nth-child(1)").forEach {
             val link = it.attr("href")
-            if (link.contains("checklinko")||link.contains("alinkz")) {
-                val name = it.text().replace("Download Links", "")
-                episodesData.add(
-                    Episode(
-                        link,
-                        name,
-                        null,
-                        null
-                    )
-                )
-            }
+            val name = it.text().replace("Download Links", "")
+            episodesData.add(
+                newEpisode(link){
+                    this.name = name
+                }
+            )
         }
         return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
             this.posterUrl = image
@@ -165,7 +176,7 @@ class FullyMazaProvider : MainAPI() {
         return when {
             lowerCaseCheck == null -> null
             lowerCaseCheck.contains("hdrip") -> SearchQuality.HD
-            lowerCaseCheck.contains("hdts") || lowerCaseCheck.contains(" hdcam ")-> SearchQuality.HdCam
+            lowerCaseCheck.contains("hdts") || lowerCaseCheck.contains(" hdcam ") -> SearchQuality.HdCam
             lowerCaseCheck.contains("pre-dvd") -> SearchQuality.CamRip
             lowerCaseCheck.contains(" cam ") -> SearchQuality.Cam
             lowerCaseCheck.contains("bluray") -> SearchQuality.BlueRay
