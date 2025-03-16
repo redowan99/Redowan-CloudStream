@@ -3,10 +3,10 @@ import com.android.build.gradle.BaseExtension
 
 buildscript {
     repositories {
-        google()
         mavenCentral()
         // Shitpack repo which contains our tools and dependencies
         maven("https://jitpack.io")
+        google()
     }
 
     dependencies {
@@ -19,9 +19,9 @@ buildscript {
 
 allprojects {
     repositories {
-        google()
         mavenCentral()
         maven("https://jitpack.io")
+        google()
     }
 }
 
