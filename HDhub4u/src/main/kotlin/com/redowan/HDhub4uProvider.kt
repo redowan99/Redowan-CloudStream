@@ -166,12 +166,9 @@ class HDhub4uProvider : MainAPI() {
             val episodesData = mutableListOf<Episode>()
             links.forEachIndexed { index, item ->
                 episodesData.add(
-                    newEpisode(
-                        Episode(
-                            item,
-                            "Episode ${index + 1}",
-                        )
-                    )
+                    newEpisode(item){
+                        this.name = "Episode ${index + 1}"
+                    }
                 )
             }
 
