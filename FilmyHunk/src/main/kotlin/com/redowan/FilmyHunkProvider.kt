@@ -12,6 +12,7 @@ import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.base64Decode
 import com.lagradost.cloudstream3.getDurationFromString
 import com.lagradost.cloudstream3.mainPageOf
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
@@ -39,10 +40,6 @@ class FilmyHunkProvider : MainAPI() {
     override val hasDownloadSupport = true
     override val hasQuickSearch = false
     override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries)
-
-    /*private val proxyServer = "https://y.demo.wvusd.homes/" // To bypass cloudflare verification
-    private var isCloudFlareChecked = false
-    private var finalUrl = ""*/
     override val mainPage = mainPageOf(
         "" to "Latest Updates",
         "/category/bollywood-hindi-movies" to "Bollywood Hindi Movies",
@@ -66,26 +63,10 @@ class FilmyHunkProvider : MainAPI() {
     )
 
     override suspend fun getMainPage(
-        page: Int,
-        request: MainPageRequest
+        page: Int, request: MainPageRequest
     ): HomePageResponse {
-        /*if(!isCloudFlareChecked)
-        {
-            val code = app.get(mainUrl,allowRedirects = true, timeout = 30).code
-            isCloudFlareChecked = true
-            if(code == 403 || code == 401)
-            {
-                finalUrl = "$proxyServer$mainUrl"
-            }
-            else
-            {
-                finalUrl = mainUrl
-            }
-        }*/
         val doc = app.get(
-            "$mainUrl${request.data}/page/$page",
-            allowRedirects = true,
-            timeout = 30
+            "$mainUrl${request.data}/page/$page", allowRedirects = true, timeout = 30
         ).document
         val home = doc.select(".col-md-2.col-sm-3.col-xs-6").mapNotNull { toResult(it) }
         return newHomePageResponse(request.name, home, hasNext = true)
@@ -115,14 +96,14 @@ class FilmyHunkProvider : MainAPI() {
         var plot = ""
         var releasedDate = ""
         var duration: Int? = 0
-        val sRegex2 = "[Ss](\\d{1,2})"
+        val sRegex2 = "[Ss](\\d{1,2})".toRegex()
         doc.select(".bw_desc ul li").forEach { item ->
             item.childNodes().forEach { child ->
                 if (child.nextSibling() != null) {
 
                     if (child.outerHtml().lowercase().contains("released")) {
-                        releasedDate =
-                            "(\\d{4})".toRegex().find(child.nextSibling()!!.outerHtml())?.groups?.get(
+                        releasedDate = "(\\d{4})".toRegex()
+                            .find(child.nextSibling()!!.outerHtml())?.groups?.get(
                                 1
                             )?.value.toString()
                     }
@@ -145,7 +126,7 @@ class FilmyHunkProvider : MainAPI() {
         }
 
         if (!title.lowercase().contains("season") && !title.lowercase()
-                .contains("series") && !sRegex2.toRegex().containsMatchIn(title)
+                .contains("series") && !sRegex2.containsMatchIn(title)
         ) {
             val linkList = mutableListOf<String>()
             val links = if (doc.select(".myButton1").isEmpty()) {
@@ -177,54 +158,53 @@ class FilmyHunkProvider : MainAPI() {
             }
         } else {
             val elements = doc.selectFirst(".bw_desc")
-            val seasonRegex = "(\\d) – (\\d)"
-            val seasonRegex2 = "(\\d)-(\\d)"
-            val sRegex = "Season\\s+(\\d{1,2})"
+            val seasonRegex = "(\\d) – (\\d)".toRegex()
+            val seasonRegex2 = "(\\d)-(\\d)".toRegex()
+            val sRegex = "Season\\s+(\\d{1,2})".toRegex()
             val qualityRegex2 = "(\\d{3,4})[pP]".toRegex()
-            val episodeRegex = "([E|e]pisode\\s*(\\d{1,3}))"
-            val episodeRegex2 = "(^[E|e]\\s*(\\d{1,3}))"
+            val episodeRegex = "([E|e]pisode\\s*(\\d{1,3}))".toRegex()
+            val episodeRegex2 = "(^[E|e]\\s*(\\d{1,3}))".toRegex()
             val isMultiSeason =
-                seasonRegex.toRegex().containsMatchIn(title) || seasonRegex2.toRegex()
-                    .containsMatchIn(title)
-            val isMultiWordSeason = sRegex.toRegex().findAll(title).count() > 1
+                seasonRegex.containsMatchIn(title) || seasonRegex2.containsMatchIn(title)
+            val isMultiWordSeason = sRegex.findAll(title).count() > 1
             var startSeason: Int? = 1
             var endSeason: Int? = 1
             val seasonEpisodeMap = mutableMapOf<String, MutableMap<String, MutableList<String>>>()
             if (isMultiSeason) {
-                if (seasonRegex.toRegex().containsMatchIn(title)) {
-                    startSeason = seasonRegex.toRegex().find(title)?.groups?.get(1)?.value?.toInt()
-                    endSeason = seasonRegex.toRegex().find(title)?.groups?.get(2)?.value?.toInt()
-                } else if (seasonRegex2.toRegex().containsMatchIn(title)) {
-                    startSeason = seasonRegex2.toRegex().find(title)?.groups?.get(1)?.value?.toInt()
-                    endSeason = seasonRegex2.toRegex().find(title)?.groups?.get(2)?.value?.toInt()
+                if (seasonRegex.containsMatchIn(title)) {
+                    startSeason = seasonRegex.find(title)?.groups?.get(1)?.value?.toInt()
+                    endSeason = seasonRegex.find(title)?.groups?.get(2)?.value?.toInt()
+                } else if (seasonRegex2.containsMatchIn(title)) {
+                    startSeason = seasonRegex2.find(title)?.groups?.get(1)?.value?.toInt()
+                    endSeason = seasonRegex2.find(title)?.groups?.get(2)?.value?.toInt()
                 }
             } else if (isMultiWordSeason) {
-                endSeason = sRegex.toRegex().findAll(title).count()
+                endSeason = sRegex.findAll(title).count()
             }
             if (startSeason != null && endSeason != null) {
                 for (i in startSeason..endSeason) {
                     var currentSeason = "Season $i"
                     if (startSeason == 1 && endSeason == 1) {
-                        if (sRegex.toRegex().containsMatchIn(title)) {
-                            currentSeason = "Season " + sRegex.toRegex()
-                                .find(title)?.groups?.get(1)?.value.toString()
-                        } else if (sRegex2.toRegex().containsMatchIn(title)) {
-                            currentSeason = "S" + sRegex2.toRegex()
-                                .find(title)?.groups?.get(1)?.value.toString()
+                        if (sRegex.containsMatchIn(title)) {
+                            currentSeason =
+                                "Season " + sRegex.find(title)?.groups?.get(1)?.value.toString()
+                        } else if (sRegex2.containsMatchIn(title)) {
+                            currentSeason =
+                                "S" + sRegex2.find(title)?.groups?.get(1)?.value.toString()
                         }
                     }
                     if (elements != null) {
                         for (j in 0..<elements.children().size) {
                             val item = elements.children()[j]
                             var seasonTxt = ""
-                            if (sRegex.toRegex().containsMatchIn(item.text())) {
-                                seasonTxt = "Season " + sRegex.toRegex().find(item.text())?.groups?.get(
+                            if (sRegex.containsMatchIn(item.text())) {
+                                seasonTxt = "Season " + sRegex.find(item.text())?.groups?.get(
                                     1
                                 )?.value.toString()
 
-                            } else if (sRegex2.toRegex().containsMatchIn(item.text())) {
-                                seasonTxt = "S" + sRegex2.toRegex()
-                                    .find(item.text())?.groups?.get(1)?.value.toString()
+                            } else if (sRegex2.containsMatchIn(item.text())) {
+                                seasonTxt =
+                                    "S" + sRegex2.find(item.text())?.groups?.get(1)?.value.toString()
 
                             }
                             if (item.tagName() == "h4" && (seasonTxt.contains(currentSeason))) {
@@ -236,13 +216,15 @@ class FilmyHunkProvider : MainAPI() {
                                 var nextSibling = item.nextElementSibling()
                                 if (nextSibling != null) {
                                     while (nextSibling?.tagName() == "p") {
-                                            if (nextSibling.text()
-                                                    .isNotEmpty() && qualityRegex2.containsMatchIn(nextSibling.text())
-                                            ) {
-                                                siblingList.add(nextSibling)
-                                            }
-                                                nextSibling = nextSibling.nextElementSibling()
-                                            }
+                                        if (nextSibling.text()
+                                                .isNotEmpty() && qualityRegex2.containsMatchIn(
+                                                nextSibling.text()
+                                            )
+                                        ) {
+                                            siblingList.add(nextSibling)
+                                        }
+                                        nextSibling = nextSibling.nextElementSibling()
+                                    }
                                 }
 
                                 siblingList.forEach { element ->
@@ -251,28 +233,30 @@ class FilmyHunkProvider : MainAPI() {
                                     } else {
                                         element.select(".myButton1")
                                     }
-                                    if (!link.text().lowercase().contains("zip") && link.attr("href")
-                                            .isNotEmpty()
+                                    if (!link.text().lowercase()
+                                            .contains("zip") && link.attr("href").isNotEmpty()
                                     ) {
-                                        val htmlDocument = app.get(link.attr("href"), timeout = 30).document
-                                        val links = if (htmlDocument.select(".myButton1").isEmpty()) {
-                                            htmlDocument.select(".myButton2")
-                                        } else {
-                                            htmlDocument.select(".myButton1")
-                                        }
+                                        val htmlDocument =
+                                            app.get(link.attr("href"), timeout = 30).document
+                                        val links =
+                                            if (htmlDocument.select(".myButton1").isEmpty()) {
+                                                htmlDocument.select(".myButton2")
+                                            } else {
+                                                htmlDocument.select(".myButton1")
+                                            }
                                         links.forEach { item ->
                                             val episodeUrl = item.attr("href")
                                             var episodeName = item.text().trim()
-                                            if (episodeRegex.toRegex().containsMatchIn(episodeName)) {
-                                                episodeName = "Episode " + episodeRegex.toRegex()
-                                                    .find(episodeName)?.groups?.get(2)?.value.toString()
-                                                    .toInt()
-                                            } else if (episodeRegex2.toRegex()
-                                                    .containsMatchIn(episodeName)
-                                            ) {
-                                                episodeName = "Episode " + episodeRegex2.toRegex()
-                                                    .find(episodeName)?.groups?.get(2)?.value.toString()
-                                                    .toInt()
+                                            if (episodeRegex.containsMatchIn(episodeName)) {
+                                                episodeName =
+                                                    "Episode " + episodeRegex.find(episodeName)?.groups?.get(
+                                                            2
+                                                        )?.value.toString().toInt()
+                                            } else if (episodeRegex2.containsMatchIn(episodeName)) {
+                                                episodeName =
+                                                    "Episode " + episodeRegex2.find(episodeName)?.groups?.get(
+                                                            2
+                                                        )?.value.toString().toInt()
                                             }
                                             if (!episodeMap[episodeName].isNullOrEmpty()) {
                                                 episodeMap[episodeName]?.add(episodeUrl)
@@ -300,12 +284,10 @@ class FilmyHunkProvider : MainAPI() {
                         episodeName = "Full Season/Episode (Server ${index + 1})"
                     }
                     episodeData.add(
-                        Episode(
-                            data = entry.value.joinToString("+"),
-                            name = episodeName,
-                            season = sRegex.toRegex().find(k)?.groups?.get(1)?.value?.toInt()
-                        )
-                    )
+                        newEpisode(entry.value.joinToString("+")) {
+                            this.name = episodeName
+                            this.season = sRegex.find(k)?.groups?.get(1)?.value?.toInt()
+                        })
                 }
             }
             return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodeData) {
@@ -363,8 +345,7 @@ class FilmyHunkProvider : MainAPI() {
             if (!link.lowercase().contains("reshare")) {
                 loadExtractor(link, subtitleCallback, callback)
             } else {
-                val id =
-                    "reshare\\.pm/d/(.*)/(.*)".toRegex().find(link)?.groupValues?.get(1) ?: ""
+                val id = "reshare\\.pm/d/(.*)/(.*)".toRegex().find(link)?.groupValues?.get(1) ?: ""
                 val downloadLink = "https://reshare.pm/v1/download?id=$id"
                 val response = app.get(
                     downloadLink,
