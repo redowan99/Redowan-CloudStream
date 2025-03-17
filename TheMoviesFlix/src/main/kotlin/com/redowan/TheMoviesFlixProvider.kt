@@ -47,14 +47,10 @@ class TheMoviesFlixProvider : MainAPI() {
     )
 
     override suspend fun getMainPage(
-        page: Int,
-        request: MainPageRequest
+        page: Int, request: MainPageRequest
     ): HomePageResponse {
-
         val doc = app.get(
-            "$mainUrl${request.data}/page/$page",
-            allowRedirects = true,
-            timeout = 30
+            "$mainUrl${request.data}/page/$page", allowRedirects = true, timeout = 30
         ).document
         val home = doc.select(".latestPost.excerpt").mapNotNull { toResult(it) }
         return newHomePageResponse(request.name, home, hasNext = true)
@@ -111,11 +107,11 @@ class TheMoviesFlixProvider : MainAPI() {
             val elements = doc.selectFirst(".thecontent.clearfix")
             val seasonRegex = "(\\d) – (\\d)"
             val seasonRegex2 = "(\\d)-(\\d)"
-            val sRegex = "Season\\s+(\\d{1,2})"
+            val sRegex = "Season\\s+(\\d{1,2})".toRegex()
             val isMultiSeason =
                 seasonRegex.toRegex().containsMatchIn(title) || seasonRegex2.toRegex()
                     .containsMatchIn(title)
-            val isMultiWordSeason = sRegex.toRegex().findAll(title).count() > 1
+            val isMultiWordSeason = sRegex.findAll(title).count() > 1
             var startSeason: Int? = 1
             var endSeason: Int? = 1
             val seasonEpisodeMap = mutableMapOf<String, MutableMap<String, MutableList<String>>>()
@@ -128,14 +124,14 @@ class TheMoviesFlixProvider : MainAPI() {
                     endSeason = seasonRegex2.toRegex().find(title)?.groups?.get(2)?.value?.toInt()
                 }
             } else if (isMultiWordSeason) {
-                endSeason = sRegex.toRegex().findAll(title).count()
+                endSeason = sRegex.findAll(title).count()
             }
             if (startSeason != null && endSeason != null) {
                 for (i in startSeason..endSeason) {
                     var currentSeason = "Season $i"
                     if (startSeason == 1 && endSeason == 1) {
-                        if (sRegex.toRegex().containsMatchIn(title)) {
-                            currentSeason = "Season " + sRegex.toRegex()
+                        if (sRegex.containsMatchIn(title)) {
+                            currentSeason = "Season " + sRegex
                                 .find(title)?.groups?.get(1)?.value.toString()
                         } else if (sRegex2.toRegex().containsMatchIn(title)) {
                             currentSeason = "S" + sRegex2.toRegex()
@@ -146,11 +142,11 @@ class TheMoviesFlixProvider : MainAPI() {
                         for (j in 0..<elements.children().size) {
                             val item = elements.children()[j]
                             var seasonTxt = ""
-                            if (sRegex.toRegex()
+                            if (sRegex
                                     .containsMatchIn(item.text()) && (item.nextElementSibling()
                                     ?.tagName() ?: "") == "p"
                             ) {
-                                seasonTxt = "Season " + sRegex.toRegex()
+                                seasonTxt = "Season " + sRegex
                                     .find(item.text())?.groups?.get(1)?.value.toString()
 
                             } else if (sRegex2.toRegex()
@@ -161,13 +157,11 @@ class TheMoviesFlixProvider : MainAPI() {
                                     sRegex2.toRegex()
                                         .find(item.text())?.groups?.get(1)?.value.toString()
                                 )
-
                             }
                             if ((item.tagName() == "h3" || item.tagName() == "h4" || (item.tagName() == "p" && item.className()
                                     .contains("has-medium-font-size"))) && (seasonTxt.contains(
                                     currentSeason
-                                )) && (item.nextElementSibling()
-                                    ?.tagName() ?: "") == "p"
+                                )) && (item.nextElementSibling()?.tagName() ?: "") == "p"
                             ) {
                                 var episodeMap = mutableMapOf<String, MutableList<String>>()
                                 if (!seasonEpisodeMap[currentSeason].isNullOrEmpty()) {
@@ -175,7 +169,7 @@ class TheMoviesFlixProvider : MainAPI() {
                                 }
 
                                 var nextSibling = item.nextElementSibling()
-                                while (nextSibling?.tagName() == "p" && nextSibling.children().size == 0) {
+                                while (nextSibling?.tagName() == "p" && nextSibling.children().isEmpty()) {
                                     nextSibling = nextSibling.nextElementSibling()
                                 }
 
@@ -195,8 +189,6 @@ class TheMoviesFlixProvider : MainAPI() {
                                             episodeMap[episodeName] = list
                                         }
                                     }
-
-
                                 }
                                 seasonEpisodeMap[currentSeason] = episodeMap
                             }
@@ -213,14 +205,10 @@ class TheMoviesFlixProvider : MainAPI() {
                         episodeName = "Full Season/Episode (Server ${index + 1})"
                     }
                     episodeData.add(
-                        newEpisode(
-                            Episode(
-                                data = entry.value.joinToString("+"),
-                                name = episodeName,
-                                season = sRegex.toRegex().find(k)?.groups?.get(1)?.value?.toInt()
-                            )
-                        )
-                    )
+                        newEpisode(entry.value.joinToString("+")) {
+                            this.name = episodeName
+                            this.season = sRegex.find(k)?.groups?.get(1)?.value?.toInt()
+                        })
                 }
             }
             return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodeData) {
@@ -228,8 +216,6 @@ class TheMoviesFlixProvider : MainAPI() {
                 this.plot = plot.trim()
             }
         }
-
-
     }
 
     override suspend fun loadLinks(
