@@ -13,6 +13,7 @@ import com.lagradost.cloudstream3.addDubStatus
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newAnimeSearchResponse
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
@@ -131,10 +132,9 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
         val episodesData = mutableListOf<Episode>()
         finalLinks.forEach {
             episodesData.add(
-                Episode(
-                    it.value,
-                    name = it.key + "p",
-                )
+                newEpisode(it.value){
+                    this.name = it.key + "p"
+                }
             )
         }
         return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
