@@ -76,7 +76,7 @@ class CircleFtpProvider : MainAPI() {
                 cacheTime = 60
             )
             // First try mainApiUrl
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             app.get(
                 "$apiUrl/api/posts?categoryExact=${request.data}&page=$page&order=desc&limit=10",
                 verify = false,
@@ -118,7 +118,7 @@ class CircleFtpProvider : MainAPI() {
                 cacheTime = 60
             )
             // First try mainApiUrl
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             app.get(
                 "$apiUrl/api/posts?searchTerm=$query&order=desc",
                 verify = false,
@@ -139,7 +139,7 @@ class CircleFtpProvider : MainAPI() {
                 cacheTime = 60
             )
             // First try mainApiUrl
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             app.get(
                 url.replace("$mainUrl/content/", "$apiUrl/api/posts/"),
                 verify = false,
@@ -178,7 +178,7 @@ class CircleFtpProvider : MainAPI() {
                     val link = if(urlCheck) episodeUrl else linkToIp(episodeUrl)
                     episodesData.add(
                         newEpisode(link){
-                            this.name = "Episode $episodeNum"
+                            //this.name = "Episode $episodeNum"
                             this.episode = episodeNum
                             this.season = seasonNum
                         }
