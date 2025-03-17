@@ -14,6 +14,7 @@ import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.getDurationFromString
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newAnimeSearchResponse
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
@@ -176,12 +177,11 @@ class CircleFtpProvider : MainAPI() {
                     val episodeUrl = it.link
                     val link = if(urlCheck) episodeUrl else linkToIp(episodeUrl)
                     episodesData.add(
-                        Episode(
-                            link,
-                            name = null,
-                            seasonNum,
-                            episodeNum
-                        )
+                        newEpisode(link){
+                            this.name = "Episode $episodeNum"
+                            this.episode = episodeNum
+                            this.season = seasonNum
+                        }
                     )
                 }
             }
