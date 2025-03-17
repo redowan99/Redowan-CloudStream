@@ -160,14 +160,10 @@ class MlsbdProvider : MainAPI() { // all providers must be an instance of MainAP
 
                     episodeNum++
                     episodesData.add(
-                        newEpisode(
-                            Episode(
-                                episodeUrl,
-                                "Episode $episodeNum",
-                                1,
-                                episodeNum
-                            )
-                        )
+                        newEpisode(episodeUrl) {
+                            this.name = "Episode $episodeNum"
+                            this.episode = episodeNum
+                        }
                     )
                 }
                 return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
