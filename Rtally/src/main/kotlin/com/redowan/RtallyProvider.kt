@@ -12,6 +12,7 @@ import com.lagradost.cloudstream3.addDubStatus
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newAnimeSearchResponse
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
@@ -153,10 +154,7 @@ class RtallyProvider : MainAPI() {
             }
             linkList.forEachIndexed {index, it ->
                 episodesData.add(
-                    Episode(
-                        it,
-                        name = "Episode ${index.plus(1)}}"
-                    )
+                    newEpisode(it)
                 )
             }
             return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
