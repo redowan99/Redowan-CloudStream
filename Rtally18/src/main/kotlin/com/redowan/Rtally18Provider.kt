@@ -12,6 +12,7 @@ import com.lagradost.cloudstream3.addDubStatus
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newAnimeSearchResponse
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
@@ -132,18 +133,13 @@ class Rtally18Provider : MainAPI() {
             }
         } else {
             val episodesData = mutableListOf<Episode>()
-            var episodeNum = 0
             doc.select("div.space-x-2.px-2").forEach {
-                episodeNum++
                 val link = it.select(".grid > a:nth-child(1)").attr("href")
                 val name = it.select(".line-clamp-1").text().replace("$title ", "")
                 episodesData.add(
-                    Episode(
-                        link,
-                        name,
-                        null,
-                        episodeNum
-                    )
+                    newEpisode(link){
+                        this.name = name
+                    }
                 )
             }
             return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
