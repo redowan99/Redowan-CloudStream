@@ -12,6 +12,7 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
@@ -64,8 +65,7 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
     }
 
     override suspend fun getMainPage(
-        page: Int,
-        request: MainPageRequest
+        page: Int, request: MainPageRequest
     ): HomePageResponse {
         login()
         val doc = app.get("$mainUrl/s/${request.data}/$page", cookies = loginCookie!!).document
@@ -113,32 +113,32 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
 
         val episodesData = mutableListOf<Episode>()
         var seasonNum = 0
-        doc.select("table.table:nth-child(1) > tbody:nth-child(1) > tr a").reversed().forEach{ season ->
-            seasonNum++
-            var episodeNum = 0
+        doc.select("table.table:nth-child(1) > tbody:nth-child(1) > tr a").reversed()
+            .forEach { season ->
+                seasonNum++
+                var episodeNum = 0
 
-            val seasonUrl = mainUrl + season.attr("href")
-            val seasonDoc = app.get(seasonUrl, cookies = loginCookie!!).document
-            seasonDoc.select("div.container:nth-child(6) > div").forEach { episode ->
-                val episodeName = episode.selectFirst("h4")?.childNode(0).toString() + "EP"+ (episodeNum+1)
-                val episodeImage = episode.selectFirst("div")?.attr("style")?.let { extractBGImageUrl(it) }
-                val episodeDescription = episode.selectFirst("div.season_overview")?.text()
-                val episodeLink = episode.select("div.mt-2 >h5>a").attr("href")
-                episodeNum++
-                episodesData.add(
-                    Episode(
-                        data = episodeLink,
-                        name = episodeName,
-                        posterUrl = episodeImage,
-                        season = seasonNum,
-                        episode = episodeNum,
-                        description = episodeDescription
-                    )
-                )
+                val seasonUrl = mainUrl + season.attr("href")
+                val seasonDoc = app.get(seasonUrl, cookies = loginCookie!!).document
+                seasonDoc.select("div.container:nth-child(6) > div").forEach { episode ->
+                    val episodeName = episode.selectFirst("h4")?.childNode(0).toString()
+                    val episodeImage =
+                        episode.selectFirst("div")?.attr("style")?.let { extractBGImageUrl(it) }
+                    val episodeDescription = episode.selectFirst("div.season_overview")?.text()
+                    val episodeLink = episode.select("div.mt-2 >h5>a").attr("href")
+                    episodeNum++
+                    episodesData.add(
+                        newEpisode(episodeLink) {
+                            this.name = episodeName
+                            this.posterUrl = episodeImage
+                            this.season = seasonNum
+                            this.episode = episodeNum
+                            this.description = episodeDescription
+                        })
+                }
             }
-        }
 
-        return newTvSeriesLoadResponse(title, url, TvType.TvSeries,episodesData) {
+        return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
             this.posterUrl = img
             this.plot = doc.select(".storyline").text()
             this.tags = doc.select(".ganre-wrapper > a").map { it.text().replace(",", "") }
@@ -158,8 +158,7 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
         val name = html.attr("alt")
         return ActorData(
             actor = Actor(
-                name,
-                img
+                name, img
             ), roleString = post.select("div.col-lg-2 > p.text-center.text-white").text()
         )
     }
