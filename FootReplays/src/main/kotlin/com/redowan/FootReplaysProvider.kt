@@ -36,6 +36,7 @@ class FootReplaysProvider : MainAPI() { // all providers must be an instance of 
     override val hasDownloadSupport = true
     override val hasQuickSearch = false
     override val hasChromecastSupport = true
+    override val supportedTypes = setOf(TvType.Others)
     override val mainPage = mainPageOf(
         "/" to "Latest Match",
         "//" to "Most Viewed",
@@ -56,11 +57,13 @@ class FootReplaysProvider : MainAPI() { // all providers must be an instance of 
                 val doc = app.get(mainUrl).document
                 doc.select(".rb-col-t6.rb-col-m12").mapNotNull { toLatestResult(it) }
             }
+
             "//" -> {
                 val doc = app.get(mainUrl).document
                 doc.select(".elementor-widget-container .widget-post-content .rb-col-m12")
                     .mapNotNull { toLatestResult(it) }
             }
+
             else -> {
                 val doc = app.get("$mainUrl/${request.data}/page/$page/").document
                 doc.select(".content-inner > div").mapNotNull { toResult(it) }
@@ -102,7 +105,6 @@ class FootReplaysProvider : MainAPI() { // all providers must be an instance of 
         val imageUrl = doc.selectFirst(".attachment-pixwell_780x0-2x")?.attr("src")
         val plot = doc.selectFirst(".entry-content > p")?.text()
         val episodesData = mutableListOf<Episode>()
-        var episodeNo = 1
         doc.select("table.video-table tbody > tr").forEach { it ->
             if (it.text().contains("OK.ru")) {
                 val episodeTitle =
@@ -110,11 +112,10 @@ class FootReplaysProvider : MainAPI() { // all providers must be an instance of 
                 val dataHtml = it.selectFirst("td > a")?.attr("onclick")
                 val data = dataHtml?.let { it1 -> regex.find(it1)?.groupValues?.get(1) }
                 episodesData.add(newEpisode(data?.let { it1 ->
-                    Episode(
-                        it1, episodeTitle, episode = episodeNo
-                    )
+                    newEpisode(it1) {
+                        this.name = episodeTitle
+                    }
                 }))
-                episodeNo++
             }
         }
         return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
