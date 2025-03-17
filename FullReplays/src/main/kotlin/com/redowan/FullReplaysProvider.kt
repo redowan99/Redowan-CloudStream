@@ -11,6 +11,7 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
@@ -90,10 +91,9 @@ class FullReplaysProvider : MainAPI() {
         }
         episodeLinksMap.map { (episodeName, episodeLinks) ->
             episodesData.add(
-                Episode(
-                    data = episodeLinks.toString(),
-                    name = episodeName
-                )
+                newEpisode(episodeLinks.toString()){
+                    this.name = episodeName
+                }
             )
         }
         return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
