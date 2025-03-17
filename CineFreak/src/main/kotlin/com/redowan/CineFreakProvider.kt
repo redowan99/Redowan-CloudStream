@@ -11,6 +11,7 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
@@ -120,12 +121,11 @@ class CineFreakProvider : MainAPI() {
                 }
                 if (!season.isNullOrEmpty() && !episode.isNullOrEmpty()) {
                     episodeData.add(
-                        Episode(
-                            list.joinToString("+"),
-                            episode,
-                            season.toInt(),
-                            episodeNo
-                        )
+                        newEpisode(list.joinToString("+")){
+                            this.name = episode
+                            this.season = season.toInt()
+                            this.episode = episodeNo
+                        }
                     )
                 }
                 episodeNo++
@@ -187,7 +187,7 @@ class CineFreakProvider : MainAPI() {
     }
 
     private val providerZenCloud = "ZenCloud"
-    private val providerNeoDrive = "NeoDrive"
+    //private val providerNeoDrive = "NeoDrive"
     private val redirectRegex = "location.href='(.*)'".toRegex()
     private suspend fun extractZenCloudLink(
         button: Element,
@@ -213,28 +213,28 @@ class CineFreakProvider : MainAPI() {
         }
     }
 
-    private suspend fun extractNeoDriveLink(
-        link: String,
-        quality: Int,
-        callback: (ExtractorLink) -> Unit
-    ) {
-        val dlLink = link.replace("/f/", "/d/")
-        val doc = app.get(dlLink, timeout = 30).document
-        val downloadButton = doc.select(".card-body button:contains(Download Now)").firstOrNull()
-        downloadButton?.let {
-            val redirectUrl = redirectRegex
-                .find(it.attr("onclick"))?.groupValues?.getOrNull(1)
-            callback.invoke(
-                ExtractorLink(
-                    providerZenCloud,
-                    providerNeoDrive,
-                    redirectUrl.orEmpty(),
-                    "",
-                    quality
-                )
-            )
-        }
-    }
+//    private suspend fun extractNeoDriveLink(
+//        link: String,
+//        quality: Int,
+//        callback: (ExtractorLink) -> Unit
+//    ) {
+//        val dlLink = link.replace("/f/", "/d/")
+//        val doc = app.get(dlLink, timeout = 30).document
+//        val downloadButton = doc.select(".card-body button:contains(Download Now)").firstOrNull()
+//        downloadButton?.let {
+//            val redirectUrl = redirectRegex
+//                .find(it.attr("onclick"))?.groupValues?.getOrNull(1)
+//            callback.invoke(
+//                ExtractorLink(
+//                    providerZenCloud,
+//                    providerNeoDrive,
+//                    redirectUrl.orEmpty(),
+//                    "",
+//                    quality
+//                )
+//            )
+//        }
+//    }
 
     private fun getVideoQuality(string: String?): Int {
         return getVideoQualityRegex.find(string ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
