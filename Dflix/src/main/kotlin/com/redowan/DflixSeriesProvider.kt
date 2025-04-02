@@ -139,10 +139,20 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
             }
 
         return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
-            this.posterUrl = img
-            this.plot = doc.select(".storyline").text()
-            this.tags = doc.select(".ganre-wrapper > a").map { it.text().replace(",", "") }
-            this.actors = doc.select("div.col-lg-2").map { actor(it) }
+    this.posterUrl = img
+    this.plot = doc.select(".storyline").text()
+    this.tags = doc.select(".ganre-wrapper > a").map { it.text().replace(",", "") }
+    this.actors = doc.select("div.col-lg-2").map { actor(it) }
+
+    // Extract IDs from meta tags or hidden elements
+    val malId = doc.select("meta[property='mal:id']").attr("content")
+    val aniListId = doc.select("meta[property='anilist:id']").attr("content")
+    val simklId = doc.select("meta[property='simkl:id']").attr("content")
+
+    // Add IDs for sync if they are valid
+    malId?.toIntOrNull()?.let { addMalId(it) }
+    aniListId?.toIntOrNull()?.let { addAniListId(it) }
+    simklId?.toIntOrNull()?.let { addSimklId(it) }
         }
     }
 
