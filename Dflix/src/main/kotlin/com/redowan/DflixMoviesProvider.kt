@@ -5,6 +5,9 @@ import com.lagradost.cloudstream3.Actor
 import com.lagradost.cloudstream3.ActorData
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
+import com.lagradost.cloudstream3.LoadResponse.Companion.addAniListId
+import com.lagradost.cloudstream3.LoadResponse.Companion.addMalId
+import com.lagradost.cloudstream3.LoadResponse.Companion.addSimklId
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageRequest
 import com.lagradost.cloudstream3.SearchQuality
@@ -116,6 +119,16 @@ class DflixMoviesProvider : MainAPI() { // all providers must be an instance of 
             this.tags = doc.select(".ganre-wrapper > a").map { it.text().replace(",", "") }
             this.actors = doc.select("div.col-lg-2").map { actor(it) }
             this.recommendations = doc.select("div.badge-outline > a").map { qualityRecommendations(it,title,img) }
+
+            // Extract IDs from the page
+            val malId = doc.select("meta[property='mal:id']").attr("content")
+            val aniListId = doc.select("meta[property='anilist:id']").attr("content")
+            val simklId = doc.select("meta[property='simkl:id']").attr("content")
+
+            // Add IDs for syncing if they are valid numbers
+            malId.toIntOrNull()?.let { addMalId(it) }
+            aniListId.toIntOrNull()?.let { addAniListId(it) }
+            simklId.toIntOrNull()?.let { addSimklId(it) }
         }
     }
     private fun qualityRecommendations(post: Element, title:String, imageLink:String): SearchResponse{
