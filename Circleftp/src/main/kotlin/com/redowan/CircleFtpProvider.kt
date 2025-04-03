@@ -34,7 +34,7 @@ class CircleFtpProvider : MainAPI() {
     override var mainUrl = "http://new.circleftp.net"
     private var mainApiUrl = "http://new.circleftp.net:5000"
     private val apiUrl = "http://15.1.1.50:5000"
-    override var name = "Circle FTP"
+    override var name = "(BDIX) Circle FTP"
     override var lang = "bn"
     override val hasMainPage = true
     override val hasDownloadSupport = true

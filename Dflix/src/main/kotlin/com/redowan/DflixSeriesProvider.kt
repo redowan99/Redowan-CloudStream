@@ -33,7 +33,7 @@ import org.jsoup.nodes.Element
 
 class DflixSeriesProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://dflix.discoveryftp.net"
-    override var name = "Dflix Series"
+    override var name = "(BDIX) Dflix Series"
     override val hasMainPage = true
     override val hasDownloadSupport = true
     override val hasQuickSearch = false
@@ -113,10 +113,11 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
 
         val episodesData = mutableListOf<Episode>()
         var seasonNum = 0
+        var episodeNum = 0
         doc.select("table.table:nth-child(1) > tbody:nth-child(1) > tr a").reversed()
             .forEach { season ->
                 seasonNum++
-                var episodeNum = 0
+                episodeNum = 0
 
                 val seasonUrl = mainUrl + season.attr("href")
                 val seasonDoc = app.get(seasonUrl, cookies = loginCookie!!).document
@@ -134,7 +135,8 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
                             this.season = seasonNum
                             this.episode = episodeNum
                             this.description = episodeDescription
-                        })
+                        }
+                    )
                 }
             }
 
