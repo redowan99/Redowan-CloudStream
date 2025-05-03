@@ -18,6 +18,7 @@ import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.loadExtractor
+import com.lagradost.cloudstream3.utils.newExtractorLink
 
 class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://skymovieshd.diy"
@@ -178,12 +179,10 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         val url2 = doc.selectFirst("div.box:nth-child(2)  a")?.attr("href")
         if (url2 != null) {
             callback.invoke(
-                ExtractorLink(
+                newExtractorLink(
                     "Fastxyz",
                     "Fastxyz-Cloudflare",
-                    url2,
-                    "",
-                    Qualities.Unknown.value,
+                    url2
                 )
             )
         }
@@ -215,12 +214,10 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
             if (link.contains("pixeldra")) {
                 val pixeldrainLink = link.replace("/u/", "/api/file/")
                 callback.invoke(
-                    ExtractorLink(
+                    newExtractorLink(
                         "Pixeldrain[Watch]",
                         "Pixeldrain",
-                        pixeldrainLink,
-                        link,
-                        getVideoQuality(header),
+                        pixeldrainLink
                     )
                 )
             } else if (text.contains("Download [Server : 10Gbps]")) {
@@ -229,22 +226,18 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
                     response.headers["location"].toString().split("link=").getOrNull(1)
                         ?: link
                 callback.invoke(
-                    ExtractorLink(
+                    newExtractorLink(
                         "Google[Download]",
                         "Google[Download]",
-                        downloadLink,
-                        "",
-                        getVideoQuality(header),
+                        downloadLink
                     )
                 )
             } else if (link.contains("fastdl")) {
                 callback.invoke(
-                    ExtractorLink(
+                    newExtractorLink(
                         "Fastdl",
                         "Fastdl[Download]",
-                        link,
-                        "",
-                        getVideoQuality(header),
+                        link
                     )
                 )
             }
