@@ -285,7 +285,6 @@ class HindMoviezProvider : MainAPI() {
             val res = app.get(item, timeout = 30, allowRedirects = true)
             val doc = res.document
             if (res.url.contains("hpage.site")) {
-                val quality = getVideoQuality(doc.select(".container h2").text())
                 val links = doc.select(".container a")
                 links.forEach { item ->
                     callback.invoke(
