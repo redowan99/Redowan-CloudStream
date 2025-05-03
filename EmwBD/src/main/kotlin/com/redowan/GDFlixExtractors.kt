@@ -4,7 +4,6 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.utils.ExtractorApi
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.getQualityFromName
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import okhttp3.FormBody
 
@@ -21,11 +20,6 @@ open class GDFlix : ExtractorApi() {
     override val mainUrl: String = "https://new4.gdflix.cfd"
     override val requiresReferer = false
 
-    private suspend fun extractbollytag(url:String): String {
-        val tagdoc= app.get(url).text
-        val tags ="""\b\d{3,4}p\b""".toRegex().find(tagdoc) ?. value ?. trim() ?:""
-        return tags
-    }
 
     private suspend fun extractbollytag2(url:String): String {
         val tagdoc= app.get(url).text
@@ -40,7 +34,6 @@ open class GDFlix : ExtractorApi() {
         callback: (ExtractorLink) -> Unit
     ) {
         var originalUrl = url
-        val tags = extractbollytag(originalUrl)
         val tagquality = extractbollytag2(originalUrl)
 
         if (originalUrl.startsWith("$mainUrl/goto/token/")) {

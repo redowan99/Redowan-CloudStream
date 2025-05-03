@@ -17,7 +17,6 @@ import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import okhttp3.FormBody
 import org.jsoup.nodes.Element
@@ -114,7 +113,7 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
 
         val episodesData = mutableListOf<Episode>()
         var seasonNum = 0
-        var episodeNum = 0
+        var episodeNum:Int
         doc.select("table.table:nth-child(1) > tbody:nth-child(1) > tr a").reversed()
             .forEach { season ->
                 seasonNum++
@@ -180,10 +179,5 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
             )
         )
         return true
-    }
-
-    private fun getVideoQuality(str: String?): Int {
-        return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
-            ?: Qualities.Unknown.value
     }
 }

@@ -17,7 +17,6 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
@@ -172,14 +171,12 @@ class CineFreakProvider : MainAPI() {
         val links = data.split("+")
         links.forEach { link ->
             val document = app.get(link, timeout = 30).document
-            val name = document.select(".file-title").text().replace("CINEFREAK.NET - ", "")
-            val quality = getVideoQuality(name)
             val buttons = document.select(".card-body button")
 
             buttons.firstOrNull {
                 it.text().contains("ZenCloud") || it.text().contains("Instant Download")
             }
-                ?.let { extractZenCloudLink(it, quality, callback) }
+                ?.let { extractZenCloudLink(it, callback) }
 
 //            buttons.firstOrNull { it.text().contains("Cloud [Resumable]") }
 //                ?.let { extractNeoDriveLink(link, quality, callback) }
@@ -192,7 +189,6 @@ class CineFreakProvider : MainAPI() {
     private val redirectRegex = "location.href='(.*)'".toRegex()
     private suspend fun extractZenCloudLink(
         button: Element,
-        quality: Int,
         callback: (ExtractorLink) -> Unit
     ) {
         val redirectUrl = redirectRegex
@@ -234,13 +230,6 @@ class CineFreakProvider : MainAPI() {
 //            )
 //        }
 //    }
-
-    private fun getVideoQuality(string: String?): Int {
-        return getVideoQualityRegex.find(string ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
-            ?: Qualities.Unknown.value
-    }
-
-    private val getVideoQualityRegex = Regex("(\\d{3,4})[pP]")
 
     private fun getSearchQuality(check: String?): SearchQuality? {
         val lowercaseCheck = check?.lowercase()

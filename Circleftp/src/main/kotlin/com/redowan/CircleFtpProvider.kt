@@ -276,17 +276,6 @@ class CircleFtpProvider : MainAPI() {
         return null
     }
 
-    /**
-     * Extracts the video resolution (in pixels) from a string.
-     *
-     * @param string The input string containing the resolution (e.g., "720p", "1080P").
-     * @return The resolution as an integer, or `Qualities.Unknown.value` if no resolution is found.
-     */
-    private fun getVideoQuality(string: String?): Int {
-        return Regex("(\\d{3,4})[pP]").find(string ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
-            ?: Qualities.Unknown.value
-    }
-
     data class PageData(
         val posts: List<Post>
     )
