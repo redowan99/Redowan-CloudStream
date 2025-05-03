@@ -25,6 +25,7 @@ import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.toRatingInt
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.newExtractorLink
 
 
 //suspend fun main() {
@@ -144,12 +145,10 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
                 val downloadUrl = newItem.select("p:nth-child(3) > input:nth-child(1)").attr("value")
                 server++
                 callback.invoke(
-                    ExtractorLink(
+                    newExtractorLink(
                         this.name,
                         "Server$server",
-                        downloadUrl,
-                        this.mainUrl,
-                        quality,
+                        downloadUrl
                     )
                 )
             }

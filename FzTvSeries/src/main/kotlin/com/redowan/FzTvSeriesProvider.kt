@@ -15,7 +15,7 @@ import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
 
 class FzTvSeriesProvider : MainAPI() { // all providers must be an instance of MainAPI
@@ -120,12 +120,10 @@ class FzTvSeriesProvider : MainAPI() { // all providers must be an instance of M
         doc.select(".downloadlinks2").forEach{newItem ->
             server++
             callback.invoke(
-                ExtractorLink(
+                newExtractorLink(
                     this.name,
                     "Server$server",
-                    newItem.select("p:nth-child(2) > input:nth-child(1)").attr("value"),
-                    this.mainUrl,
-                    quality = Qualities.Unknown.value
+                    newItem.select("p:nth-child(2) > input:nth-child(1)").attr("value")
                 )
             )
         }
