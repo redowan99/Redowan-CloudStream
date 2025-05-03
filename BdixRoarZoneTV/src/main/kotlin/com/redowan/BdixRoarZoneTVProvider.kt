@@ -13,6 +13,7 @@ import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newLiveSearchResponse
 import com.lagradost.cloudstream3.newLiveStreamLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
 
@@ -98,7 +99,8 @@ class BdixRoarZoneTVProvider : MainAPI() {
             newExtractorLink(
                 mainUrl,
                 this.name,
-                url = data
+                url = data,
+                type = ExtractorLinkType.M3U8
             )
         )
         return true
