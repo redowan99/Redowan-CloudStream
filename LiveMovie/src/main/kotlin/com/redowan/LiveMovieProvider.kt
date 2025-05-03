@@ -10,6 +10,7 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
@@ -50,9 +51,17 @@ class LiveMovieProvider : MainAPI() {
         val doc = if (request.data == "" && page == 1) {
             app.get(mainUrl, allowRedirects = true, timeout = 30).document
         } else {
-            app.get("$mainUrl${request.data}page/$page/",allowRedirects = true, timeout = 30).document
+            app.get(
+                "$mainUrl${request.data}page/$page/",
+                allowRedirects = true,
+                timeout = 30
+            ).document
         }
-        val itemElement = if(request.name == "Recently Added") {".items.normal .item.movies"} else {".item.movies"}
+        val itemElement = if (request.name == "Recently Added") {
+            ".items.normal .item.movies"
+        } else {
+            ".item.movies"
+        }
         val home = doc.select(itemElement).mapNotNull { toResult(it) }
         return newHomePageResponse(request.name, home, hasNext = true)
     }
@@ -76,28 +85,28 @@ class LiveMovieProvider : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val doc = app.get("$mainUrl/?s=$query",allowRedirects = true, timeout = 30).document
+        val doc = app.get("$mainUrl/?s=$query", allowRedirects = true, timeout = 30).document
         val searchResponse = doc.select(".result-item")
         return searchResponse.mapNotNull { toSearchResult(it) }
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val doc = app.get(url,allowRedirects = true, timeout = 30).document
-        val title = doc.select("meta[property=\"og:title\"]").attr("content").replace(" - LiveMovie","")
+        val doc = app.get(url, allowRedirects = true, timeout = 30).document
+        val title =
+            doc.select("meta[property=\"og:title\"]").attr("content").replace(" - LiveMovie", "")
         val poster = doc.selectFirst(".poster img")?.attr("src")
         val description = doc.selectFirst("meta[property=\"og:description\"]")?.attr("content")
         val tags = doc.select(".sgeneros a")
         val playerText = doc.select(".dooplay_player_option .title").text()
-        if(playerText.lowercase().contains("player"))
-        {
+        if (playerText.lowercase().contains("player")) {
             val playerList = doc.select(".dooplay_player_option")
             val linkList = mutableListOf<String>()
-            playerList.forEach { item->
+            playerList.forEach { item ->
                 val type = item.attr("data-type")
                 val post = item.attr("data-post")
                 val nume = item.attr("data-nume")
-                val requestBody = getRequestBody(post,nume,type)
-                val ajaxResponse = app.post(ajaxUrl,requestBody = requestBody).text
+                val requestBody = getRequestBody(post, nume, type)
+                val ajaxResponse = app.post(ajaxUrl, requestBody = requestBody).text
                 val jsonObj = JSONObject(ajaxResponse)
                 val link = jsonObj.get("embed_url")
                 linkList.add(link.toString())
@@ -109,28 +118,25 @@ class LiveMovieProvider : MainAPI() {
                     this.plot = description
                 }
 
-                if(!tags.isEmpty())
-                {
-                    this.tags = tags.map {it.text()}
+                if (!tags.isEmpty()) {
+                    this.tags = tags.map { it.text() }
                 }
             }
-        }
-        else
-        {
+        } else {
             val episodeData = mutableListOf<Episode>()
             val list = doc.selectFirst(".wp-content")
             list?.children()?.forEach { item ->
-                if(item.tagName() == "h1" || item.tagName() == "h2") {
-                    if(item.children().size == 1 && (item.children().first()?.tagName()
+                if (item.tagName() == "h1" || item.tagName() == "h2") {
+                    if (item.children().size == 1 && (item.children().first()?.tagName()
                             ?: "") == "strong"
                     ) {
                         val name = item.select("strong")
                         val link = item.nextElementSibling()?.select("a")?.attr("href") ?: ""
-                        episodeData.add(Episode(link,name.text(),null,null))
+                        episodeData.add(newEpisode(link) { this.name = name.text() })
                     } else if (item.children().size == 2) {
                         val name = item.select("strong")
                         val link = item.select("a").attr("href")
-                        episodeData.add(Episode(link,name.text(),null,null))
+                        episodeData.add(newEpisode(link) { this.name = name.text() })
                     }
                 }
             }
@@ -159,17 +165,15 @@ class LiveMovieProvider : MainAPI() {
                     this.plot = description
                 }
 
-                if(!tags.isEmpty())
-                {
-                    this.tags = tags.map {it.text()}
+                if (!tags.isEmpty()) {
+                    this.tags = tags.map { it.text() }
                 }
             }
         }
 
     }
 
-    private fun getRequestBody (post:String,nume:String,type:String): FormBody
-    {
+    private fun getRequestBody(post: String, nume: String, type: String): FormBody {
         return FormBody.Builder()
             .addEncoded("action", "doo_player_ajax")
             .addEncoded("post", post)
@@ -186,8 +190,12 @@ class LiveMovieProvider : MainAPI() {
     ): Boolean {
 
         val list = data.split("+")
-        list.forEach { item->
-            loadExtractor(item.replace("listeamed.net/v/","listeamed.net/e/"), subtitleCallback, callback)
+        list.forEach { item ->
+            loadExtractor(
+                item.replace("listeamed.net/v/", "listeamed.net/e/"),
+                subtitleCallback,
+                callback
+            )
         }
 
         return true

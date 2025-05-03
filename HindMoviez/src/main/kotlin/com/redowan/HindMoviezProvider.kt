@@ -302,12 +302,10 @@ class HindMoviezProvider : MainAPI() {
                 links.forEach { item ->
                     if (item.text().contains("HCloud")) {
                         callback.invoke(
-                            ExtractorLink(
+                            newExtractorLink(
                                 "H-Cloud (VLC)",
                                 "H-Cloud (VLC)",
-                                url = item.attr("href"),
-                                "",
-                                quality = quality,
+                                url = item.attr("href")
                             )
                         )
                     } else if (item.attr("href").contains("hindcdn.site")) {
@@ -321,12 +319,10 @@ class HindMoviezProvider : MainAPI() {
                                 "HindCdn H-Cloud (VLC)"
                             }
                             callback.invoke(
-                                ExtractorLink(
+                                newExtractorLink(
                                     host,
                                     host,
-                                    url = item.attr("href"),
-                                    "",
-                                    quality = quality,
+                                    url = item.attr("href")
                                 )
                             )
                         }
@@ -335,12 +331,10 @@ class HindMoviezProvider : MainAPI() {
                             app.get(item.attr("href"), timeout = 30, allowRedirects = true).document
                         val link = doc.select("a")
                         callback.invoke(
-                            ExtractorLink(
+                            newExtractorLink(
                                 "GDirect (VLC)",
                                 "GDirect (VLC)",
-                                url = link.attr("href"),
-                                "",
-                                quality = quality,
+                                url = link.attr("href")
                             )
                         )
                     }
