@@ -5,6 +5,7 @@ import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.utils.ExtractorApi
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.getQualityFromName
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import okhttp3.FormBody
 
 class GDFlix1 : GDFlix() {
@@ -52,12 +53,10 @@ open class GDFlix : ExtractorApi() {
                 val link=it.attr("href")
                 val trueurl=app.get("$mainUrl$link", timeout = 30L).document.selectFirst("a.btn-success")?.attr("href") ?:""
                 callback.invoke(
-                    ExtractorLink(
+                    newExtractorLink(
                         "GDFlix[Fast Cloud]",
                         "GDFLix[Fast Cloud] $tagquality",
-                        trueurl,
-                        "",
-                        getQualityFromName(tags)
+                        trueurl
                     )
                 )
             }
@@ -99,12 +98,10 @@ open class GDFlix : ExtractorApi() {
                     downloadlink = downloadlink.replace("\\", "")
 
                     callback.invoke(
-                        ExtractorLink(
+                        newExtractorLink(
                             "GDFlix[IndexBot](VLC)",
                             "GDFlix[IndexBot](VLC) $tagquality",
-                            downloadlink,
-                            "https://indexbot.lol/",
-                            getQualityFromName(tags)
+                            downloadlink
                         )
                     )
                 }
@@ -114,12 +111,10 @@ open class GDFlix : ExtractorApi() {
                 val instantLink = it.attr("href")
                 val link = app.get(instantLink, timeout = 30L, allowRedirects = false).headers["Location"]?.split("url=") ?. getOrNull(1) ?: ""
                 callback.invoke(
-                    ExtractorLink(
+                    newExtractorLink(
                         "GDFlix[Instant Download]",
                         "GDFlix[Instant Download] $tagquality",
-                        link,
-                        "",
-                        getQualityFromName(tags)
+                        link
                     )
                 )
             }

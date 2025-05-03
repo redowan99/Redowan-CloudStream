@@ -16,6 +16,7 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.loadExtractor
 import com.lagradost.cloudstream3.utils.newExtractorLink
@@ -24,9 +25,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
     override var mainUrl = "https://skymovieshd.diy"
     override var name = "SkymoviesHD"
     override val supportedTypes = setOf(
-        TvType.Movie,
-        TvType.TvSeries,
-        TvType.NSFW
+        TvType.Movie, TvType.TvSeries, TvType.NSFW
     )
 
 
@@ -61,11 +60,11 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
     )
 
     override suspend fun getMainPage(
-        page: Int,
-        request: MainPageRequest
+        page: Int, request: MainPageRequest
     ): HomePageResponse {
         val doc = app.get(
-            "$mainUrl/category/${request.data}/$page.html", cacheTime = 60).document
+            "$mainUrl/category/${request.data}/$page.html", cacheTime = 60
+        ).document
         val homeResponse = doc.select("div.L")
         val home = homeResponse.mapNotNull { post ->
             toResult(post)
@@ -105,7 +104,9 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         if (links.text().contains("Episode") || links.text().contains("720p Links")) {
             val episodesData = mutableListOf<Episode>()
             links.select("a").forEach {
-                if (it.text() != "") episodesData.add(Episode(it.attr("href"), it.text()))
+                if (it.text() != "") episodesData.add(newEpisode(it.attr("href")) {
+                    this.name = it.text()
+                })
             }
             return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
                 this.posterUrl = imageUrl
@@ -118,9 +119,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
             for (i in aLinks.indices) {
                 if (aLinks[i].text() != "") {
                     link += aLinks[i].attr("href") + " ; "
-                    if (aLinks[i].attr("href")
-                            .contains("howblogs")
-                    ) break
+                    if (aLinks[i].attr("href").contains("howblogs")) break
                 }
             }
             return newMovieLoadResponse(title, url, TvType.Movie, link) {
@@ -144,9 +143,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
     }
 
     private suspend fun postMan(
-        url: String,
-        subtitleCallback: (SubtitleFile) -> Unit,
-        callback: (ExtractorLink) -> Unit
+        url: String, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit
     ) {
         if (url.contains("howblogs")) howBlogs(url, callback)
         //else if (url.contains("fastxyz")) fastxyz(url, subtitleCallback, callback)
@@ -155,8 +152,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
     }
 
     private suspend fun howBlogs(
-        url: String,
-        callback: (ExtractorLink) -> Unit
+        url: String, callback: (ExtractorLink) -> Unit
     ) {
         val doc = app.get(url).document
         var link: String
@@ -168,9 +164,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
     }
 
     private suspend fun fastxyz(
-        data: String,
-        subtitleCallback: (SubtitleFile) -> Unit,
-        callback: (ExtractorLink) -> Unit
+        data: String, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit
     ) {
         val doc = app.get(data.replaceBefore("/drive/", "https://hubcloud.club")).document
         val url1 = doc.selectFirst("div.box:nth-child(1)  a")?.attr("href")
@@ -180,17 +174,14 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         if (url2 != null) {
             callback.invoke(
                 newExtractorLink(
-                    "Fastxyz",
-                    "Fastxyz-Cloudflare",
-                    url2
+                    "Fastxyz", "Fastxyz-Cloudflare", url2
                 )
             )
         }
     }
 
     private suspend fun hubCloud(
-        data: String,
-        callback: (ExtractorLink) -> Unit
+        data: String, callback: (ExtractorLink) -> Unit
     ) {
         val doc = app.get(data, allowRedirects = true).document
         val gamerLink: String
@@ -198,8 +189,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
         if (data.contains("drive")) {
             val scriptTag = doc.selectFirst("script:containsData(url)")?.toString()
             gamerLink =
-                scriptTag?.let { Regex("var url = '([^']*)'").find(it)?.groupValues?.get(1) }
-                    ?: ""
+                scriptTag?.let { Regex("var url = '([^']*)'").find(it)?.groupValues?.get(1) } ?: ""
         } else {
             gamerLink = doc.selectFirst("div.vd > center > a")?.attr("href") ?: ""
         }
@@ -215,29 +205,22 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
                 val pixeldrainLink = link.replace("/u/", "/api/file/")
                 callback.invoke(
                     newExtractorLink(
-                        "Pixeldrain[Watch]",
-                        "Pixeldrain",
-                        pixeldrainLink
+                        "Pixeldrain[Watch]", "Pixeldrain", pixeldrainLink
                     )
                 )
             } else if (text.contains("Download [Server : 10Gbps]")) {
                 val response = app.get(link, allowRedirects = false)
                 val downloadLink =
-                    response.headers["location"].toString().split("link=").getOrNull(1)
-                        ?: link
+                    response.headers["location"].toString().split("link=").getOrNull(1) ?: link
                 callback.invoke(
                     newExtractorLink(
-                        "Google[Download]",
-                        "Google[Download]",
-                        downloadLink
+                        "Google[Download]", "Google[Download]", downloadLink
                     )
                 )
             } else if (link.contains("fastdl")) {
                 callback.invoke(
                     newExtractorLink(
-                        "Fastdl",
-                        "Fastdl[Download]",
-                        link
+                        "Fastdl", "Fastdl[Download]", link
                     )
                 )
             }
@@ -245,8 +228,7 @@ class SkymoviesHDProvider : MainAPI() { // all providers must be an instance of 
     }
 
     private fun getVideoQuality(str: String?): Int {
-        return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)
-            ?.toIntOrNull()
+        return Regex("(\\d{3,4})[pP]").find(str ?: "")?.groupValues?.getOrNull(1)?.toIntOrNull()
             ?: Qualities.Unknown.value
     }
 }

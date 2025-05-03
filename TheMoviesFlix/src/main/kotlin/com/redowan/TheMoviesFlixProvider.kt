@@ -19,6 +19,7 @@ import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.loadExtractor
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
 
 class TheMoviesFlixProvider : MainAPI() {
@@ -224,7 +225,6 @@ class TheMoviesFlixProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-
         val links = data.split("+")
         links.forEach { link ->
             if (link.lowercase().contains("veryfastdownload")) {
@@ -234,12 +234,10 @@ class TheMoviesFlixProvider : MainAPI() {
                     1
                 )?.value.toString()
                 callback.invoke(
-                    ExtractorLink(
+                    newExtractorLink(
                         "G-Direct",
                         "G-Direct",
-                        url = gLink,
-                        "",
-                        quality = Qualities.Unknown.value,
+                        url = gLink
                     )
                 )
             } else {

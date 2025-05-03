@@ -1,13 +1,12 @@
 package com.redowan
 
-import com.lagradost.api.Log
 import com.lagradost.cloudstream3.app
-import com.lagradost.cloudstream3.extractors.StreamSB
 import com.lagradost.cloudstream3.extractors.StreamTape
 import com.lagradost.cloudstream3.utils.ExtractorApi
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.Qualities
-import com.lagradost.cloudstream3.utils.*
+import com.lagradost.cloudstream3.utils.getAndUnpack
+import com.lagradost.cloudstream3.utils.httpsify
+import com.lagradost.cloudstream3.utils.newExtractorLink
 
 open class EmbedPk : ExtractorApi() {
     override var name = "EmbedPk"
@@ -20,12 +19,10 @@ open class EmbedPk : ExtractorApi() {
             getAndUnpack(this.text).let { unpackedText ->
                     val finalLink = unpackedText.substringAfter("sources:[{src:\"").substringBefore("\",")
                     return listOf(
-                        ExtractorLink(
+                        newExtractorLink(
                             name,
                             name,
-                            httpsify(finalLink),
-                            url,
-                            Qualities.Unknown.value,
+                            httpsify(finalLink)
                         )
                     )
             }
