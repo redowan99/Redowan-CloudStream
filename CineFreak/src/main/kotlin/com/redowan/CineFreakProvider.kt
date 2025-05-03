@@ -18,6 +18,7 @@ import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 
@@ -202,12 +203,10 @@ class CineFreakProvider : MainAPI() {
             val downloadUrl = redirectRegex
                 .find(onClickLink)?.groupValues?.getOrNull(1)
             callback.invoke(
-                ExtractorLink(
+                newExtractorLink(
                     providerZenCloud,
                     providerZenCloud,
-                    downloadUrl.orEmpty(),
-                    "",
-                    quality
+                    downloadUrl.orEmpty()
                 )
             )
         }

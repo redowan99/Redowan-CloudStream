@@ -20,6 +20,7 @@ import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.loadExtractor
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.json.JSONObject
 import org.jsoup.nodes.Element
 
@@ -355,12 +356,10 @@ class FilmyHunkProvider : MainAPI() {
                 val json = JSONObject(response)
                 val url = json.getString("direct_link")
                 callback.invoke(
-                    ExtractorLink(
+                    newExtractorLink(
                         "P-Direct",
                         "P-Direct",
-                        url = url,
-                        "",
-                        quality = getVideoQuality(json.getString("file_name")),
+                        url = url
                     )
                 )
             }

@@ -17,6 +17,7 @@ import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import com.lagradost.nicehttp.getHeaders
 import org.jsoup.nodes.Element
 
@@ -111,14 +112,10 @@ class FibWatchProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         callback.invoke(
-            ExtractorLink(
+            newExtractorLink(
                 mainUrl,
                 this.name,
-                url = data,
-                mainUrl,
-                quality = Qualities.Unknown.value,
-                isM3u8 = false,
-                isDash = false
+                url = data
             )
         )
         return true

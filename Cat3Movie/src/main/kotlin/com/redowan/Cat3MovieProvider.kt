@@ -16,6 +16,7 @@ import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.AppUtils
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 
@@ -65,17 +66,25 @@ class Cat3MovieProvider : MainAPI() {
         "fantasy" to "Fantasy",
         "newage-porn" to "Newage Porn",
     )
+
     override suspend fun getMainPage(
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
         val mediaType = "application/json".toMediaType()
-        val body = "{\"filters\":{\"category\":\"${request.data}\"},\"page\":$page}".toRequestBody(mediaType)
-        val json = app.post("$apiMainUrl/movie/filter",
+        val body = "{\"filters\":{\"category\":\"${request.data}\"},\"page\":$page}".toRequestBody(
+            mediaType
+        )
+        val json = app.post(
+            "$apiMainUrl/movie/filter",
             requestBody = body,
-            cacheTime = 60).text
-        val home = AppUtils.parseJson<MovieJson>(json).result.mapNotNull {toResult(it)}
-        return newHomePageResponse(HomePageList(request.name,home,isHorizontalImages = false), true)
+            cacheTime = 60
+        ).text
+        val home = AppUtils.parseJson<MovieJson>(json).result.mapNotNull { toResult(it) }
+        return newHomePageResponse(
+            HomePageList(request.name, home, isHorizontalImages = false),
+            true
+        )
     }
 
     private fun toResult(post: Result?): SearchResponse {
@@ -90,10 +99,12 @@ class Cat3MovieProvider : MainAPI() {
     override suspend fun search(query: String): List<SearchResponse> {
         val mediaType = "application/json".toMediaType()
         val body = "{\"filters\":{\"keyword\":\"$query\"}}".toRequestBody(mediaType)
-        val json = app.post("$apiMainUrl/movie/filter",
+        val json = app.post(
+            "$apiMainUrl/movie/filter",
             requestBody = body,
-            cacheTime = 60).text
-        return AppUtils.parseJson<MovieJson>(json).result.mapNotNull {toResult(it)}
+            cacheTime = 60
+        ).text
+        return AppUtils.parseJson<MovieJson>(json).result.mapNotNull { toResult(it) }
     }
 
     override suspend fun load(url: String): LoadResponse {
@@ -114,23 +125,25 @@ class Cat3MovieProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-            val serverAjaxURL = "https://cat3movie.org/wp-content/themes/hnzphim/app/load.php?episode_slug=full&server_id=1&post_id=$data"
-            val doc = app.get(serverAjaxURL, timeout = 60, headers = mapOf("X-Requested-With" to "XMLHttpRequest")).document
-            var url = doc.select("iframe").attr("src").replace("\\", "")
-            url = url.replace("\"","")
-            val hlsDoc = app.get(url).document
-            val m3u8Link = getSecondOccurrenceBetween(hlsDoc.html())
-            callback.invoke(
-                ExtractorLink(
-                    "HlsVip",
-                    "HlsVip",
-                    m3u8Link.toString(),
-                    "",
-                    Qualities.Unknown.value,
-                    isM3u8 = true
-                )
+        val serverAjaxURL =
+            "https://cat3movie.org/wp-content/themes/hnzphim/app/load.php?episode_slug=full&server_id=1&post_id=$data"
+        val doc = app.get(
+            serverAjaxURL,
+            timeout = 60,
+            headers = mapOf("X-Requested-With" to "XMLHttpRequest")
+        ).document
+        var url = doc.select("iframe").attr("src").replace("\\", "")
+        url = url.replace("\"", "")
+        val hlsDoc = app.get(url).document
+        val m3u8Link = getSecondOccurrenceBetween(hlsDoc.html())
+        callback.invoke(
+            newExtractorLink(
+                "HlsVip",
+                "HlsVip",
+                m3u8Link.toString(),
             )
-            return true
+        )
+        return true
     }
 
     private fun getSecondOccurrenceBetween(input: String): String? {

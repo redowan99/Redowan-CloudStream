@@ -20,6 +20,7 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.AppUtils
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
 
 //suspend fun main() {
@@ -225,14 +226,10 @@ class CircleFtpProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         callback.invoke(
-            ExtractorLink(
+            newExtractorLink(
                 mainApiUrl,
                 this.name,
-                url = data,
-                mainApiUrl,
-                quality = getVideoQuality(data),
-                isM3u8 = false,
-                isDash = false
+                url = data
             )
         )
         return true

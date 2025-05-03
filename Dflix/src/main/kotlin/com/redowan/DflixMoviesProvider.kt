@@ -20,6 +20,7 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
 
 
@@ -145,14 +146,10 @@ class DflixMoviesProvider : MainAPI() { // all providers must be an instance of 
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         callback.invoke(
-            ExtractorLink(
+            newExtractorLink(
                 mainUrl,
                 this.name,
-                url = data,
-                mainUrl,
-                quality = getVideoQuality(data),
-                isM3u8 = false,
-                isDash = false
+                url = data
             )
         )
         return true
