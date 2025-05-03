@@ -10,6 +10,7 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
@@ -188,12 +189,11 @@ class HindMoviezProvider : MainAPI() {
                     }
                     for ((k, v) in episodeMap) {
                         episodeData.add(
-                            Episode(
-                                v.joinToString("+"),
-                                k,
-                                i,
-                                episodeMap.keys.indexOf(k) + 1
-                            )
+                            newEpisode(v.joinToString("+")){
+                                this.name = k
+                                this.season = i
+                                this.episode = episodeMap.keys.indexOf(k) + 1
+                            }
                         )
                     }
 

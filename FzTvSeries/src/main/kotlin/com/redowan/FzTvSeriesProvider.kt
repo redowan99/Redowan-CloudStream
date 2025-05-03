@@ -11,6 +11,7 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
@@ -22,9 +23,7 @@ class FzTvSeriesProvider : MainAPI() { // all providers must be an instance of M
     override var mainUrl = "https://fztvseries.live"
     override var name = "FzTvSeries"
     override val supportedTypes = setOf(
-        TvType.TvSeries,
-        TvType.Anime,
-        TvType.Cartoon
+        TvType.TvSeries, TvType.Anime, TvType.Cartoon
     )
 
     // enable this when your provider has a main page
@@ -42,11 +41,11 @@ class FzTvSeriesProvider : MainAPI() { // all providers must be an instance of M
     )
 
     override suspend fun getMainPage(
-        page: Int,
-        request : MainPageRequest
+        page: Int, request: MainPageRequest
     ): HomePageResponse {
         val doc = app.get("$mainUrl/${request.data}$page").document
-        val homeResponse = doc.select("div.mainbox3 > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1)")
+        val homeResponse =
+            doc.select("div.mainbox3 > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1)")
         val home = homeResponse.mapNotNull { post ->
             toResult(post)
         }
@@ -54,17 +53,18 @@ class FzTvSeriesProvider : MainAPI() { // all providers must be an instance of M
     }
 
     private fun toResult(post: Element): SearchResponse {
-        val url = "$mainUrl/"+ post.selectXpath("td[1]/a").attr("href")
+        val url = "$mainUrl/" + post.selectXpath("td[1]/a").attr("href")
         val title = post.selectXpath("td[2]/span/a/small/b").text()
         return newMovieSearchResponse(title, url, TvType.Movie) {
-            this.posterUrl = "$mainUrl/" + post.selectXpath("td[1]/div/a/img")
-                .attr("src")
+            this.posterUrl = "$mainUrl/" + post.selectXpath("td[1]/div/a/img").attr("src")
         }
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val doc = app.get("$mainUrl/search.php?search=${query}&beginsearch=Search&vsearch=&by=series").document
-        val searchResponse = doc.select("div.mainbox3 > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1)")
+        val doc =
+            app.get("$mainUrl/search.php?search=${query}&beginsearch=Search&vsearch=&by=series").document
+        val searchResponse =
+            doc.select("div.mainbox3 > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1)")
         return searchResponse.mapNotNull { post ->
             toResult(post)
         }
@@ -72,36 +72,44 @@ class FzTvSeriesProvider : MainAPI() { // all providers must be an instance of M
 
     override suspend fun load(url: String): LoadResponse {
         val doc = app.get(url).document
-        val title = doc.selectXpath("/html/body/div[9]/div[1]/table/tbody/tr/td[2]/span/a/small/b").text()
+        val title =
+            doc.selectXpath("/html/body/div[9]/div[1]/table/tbody/tr/td[2]/span/a/small/b").text()
         var season = 1
         val episodesData = mutableListOf<Episode>()
-        doc.select("div.mainbox2").forEach{item ->
-            if ("Season $season"==item.text()){
-
+        doc.select("div.mainbox2").forEach { item ->
+            if ("Season $season" == item.text()) {
                 var episodeNum = 0
                 val newUrl = "$mainUrl/" + item.select("a").attr("href")
                 val newDoc = app.get(newUrl).document
-                newDoc.select("div.mainbox > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) >" +
-                        " td:nth-child(2) > span:nth-child(1)").forEach{episode->
-                    episodeNum ++
-                    episodesData.add(Episode(
-                        "$mainUrl/" + episode.select("span:nth-child(1) > a:nth-child(2)").attr("href"),
-                        episode.select("span:nth-child(1) > small:nth-child(1) > b:nth-child(1)").text().replace("(.*) - ".toRegex(),""),
-                        season,
-                        episodeNum,
-                        description = episode.select("span:nth-child(1) > small:nth-child(6)")
-                            .text().replace(" Stars:(.*)".toRegex(),"")
-                        )
-                    )
+                newDoc.select(
+                    "div.mainbox > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) >" + " td:nth-child(2) > span:nth-child(1)"
+                ).forEach { episode ->
+                    episodeNum++
+                    episodesData.add(
+                        newEpisode(
+                            "$mainUrl/" + episode.select("span:nth-child(1) > a:nth-child(2)")
+                                .attr("href")
+                        ) {
+                            this.name =
+                                episode.select("span:nth-child(1) > small:nth-child(1) > b:nth-child(1)")
+                                    .text().replace("(.*) - ".toRegex(), "")
+                            this.season = season
+                            this.episode = episodeNum
+                            this.description =
+                                episode.select("span:nth-child(1) > small:nth-child(6)").text()
+                                    .replace(" Stars:(.*)".toRegex(), "")
+                        })
                 }
                 season++
-
             }
-
         }
         return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
-            this.posterUrl = "$mainUrl/" + doc.selectXpath("/html/body/div[9]/div[1]/table/tbody/tr/td[1]/div/a/img").attr("src")
-            this.plot = doc.selectXpath("/html/body/div[9]/div[1]/table/tbody/tr/td[2]/span/small[2]").text()
+            this.posterUrl =
+                "$mainUrl/" + doc.selectXpath("/html/body/div[9]/div[1]/table/tbody/tr/td[1]/div/a/img")
+                    .attr("src")
+            this.plot =
+                doc.selectXpath("/html/body/div[9]/div[1]/table/tbody/tr/td[2]/span/small[2]")
+                    .text()
         }
     }
 
@@ -117,7 +125,7 @@ class FzTvSeriesProvider : MainAPI() { // all providers must be an instance of M
         val sudoDlUrl = "$mainUrl/" + doc.select("#dlink2").attr("href")
         doc = app.get(sudoDlUrl, cookies = cookie).document
         var server = 0
-        doc.select(".downloadlinks2").forEach{newItem ->
+        doc.select(".downloadlinks2").forEach { newItem ->
             server++
             callback.invoke(
                 newExtractorLink(
@@ -127,6 +135,6 @@ class FzTvSeriesProvider : MainAPI() { // all providers must be an instance of M
                 )
             )
         }
-    return true
+        return true
     }
 }

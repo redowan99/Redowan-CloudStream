@@ -15,6 +15,7 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
 
 //suspend fun main() {
@@ -116,14 +117,10 @@ class OomoyeProvider : MainAPI() { // all providers must be an instance of MainA
                 }
                 val finalName = "$extractedName - $categoryName $providerName"
                 callback.invoke(
-                    ExtractorLink(
+                    newExtractorLink(
                         this.name,
                         finalName,
-                        url = link,
-                        mainUrl,
-                        quality = getVideoQuality(linkTitle),
-                        isM3u8 = false,
-                        isDash = false
+                        url = link
                     )
                 )
             }
