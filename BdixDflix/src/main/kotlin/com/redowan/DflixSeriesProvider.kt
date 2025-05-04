@@ -173,7 +173,7 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
     ): Boolean {
         callback.invoke(
             newExtractorLink(
-                mainUrl,
+                data,
                 this.name,
                 url = data
             )

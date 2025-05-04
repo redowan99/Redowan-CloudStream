@@ -70,7 +70,7 @@ class BdixMyMovieBazarTVProvider : MainAPI() {
     }
     override suspend fun load(url: String): LoadResponse {
         val channel = channels.first { it["link"] == url }
-        return newLiveStreamLoadResponse(name = channel["name"].toString(), url = mainUrl, dataUrl = channel["link"].toString()) {
+        return newLiveStreamLoadResponse(name = channel["name"].toString(), url = url, dataUrl = url) {
             this.posterUrl = channel["logo"].toString()
             this.recommendations = channelResponse()
         }
@@ -84,7 +84,7 @@ class BdixMyMovieBazarTVProvider : MainAPI() {
     ): Boolean {
         callback.invoke(
             newExtractorLink(
-                mainUrl, this.name, url = data, type = ExtractorLinkType.M3U8
+                data, this.name, url = data, type = ExtractorLinkType.M3U8
             ){
                 this.referer = "$mainUrl/live-tv"
             }

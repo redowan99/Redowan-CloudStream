@@ -226,7 +226,7 @@ class CircleFtpProvider : MainAPI() {
     ): Boolean {
         callback.invoke(
             newExtractorLink(
-                mainApiUrl,
+                data,
                 this.name,
                 url = data
             )

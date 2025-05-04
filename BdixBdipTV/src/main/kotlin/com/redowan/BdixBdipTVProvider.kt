@@ -78,10 +78,11 @@ class BdixBdipTVProvider : MainAPI() {
     private val tokenRegex = Regex("token=([^&]+)")
     override suspend fun load(url: String): LoadResponse {
         val splitLink = url.split(" ; ")
-        val redirectUrl = app.get("$mainUrl/play.php?stream=${splitLink[2]}", referer = mainUrl).text
+        val url1 = "$mainUrl/play.php?stream=${splitLink[2]}"
+        val redirectUrl = app.get(url1, referer = mainUrl).text
         val token = tokenRegex.find(redirectUrl)?.value.toString()
         val m3uLink = "http://103.89.248.14:8082/${splitLink[2]}/index.fmp4.m3u8?$token"
-        return newLiveStreamLoadResponse(name = splitLink[1], url = mainUrl, dataUrl = m3uLink) {
+        return newLiveStreamLoadResponse(name = splitLink[1], url = url1, dataUrl = m3uLink) {
             this.posterUrl = splitLink[0]
         }
     }
@@ -94,7 +95,7 @@ class BdixBdipTVProvider : MainAPI() {
     ): Boolean {
         callback.invoke(
             newExtractorLink(
-                mainUrl,
+                data,
                 this.name,
                 url = data,
                 type = ExtractorLinkType.M3U8

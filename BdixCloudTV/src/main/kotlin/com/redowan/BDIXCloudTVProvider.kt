@@ -54,17 +54,18 @@ class BDIXCloudTVProvider : MainAPI() {
         }
         return newHomePageResponse(home, hasNext = false)
     }
-
+    private var token = ""
+    private var tokenLink = ""
     private val tokenRegex = Regex("token=([^&]+)")
     override suspend fun load(url: String): LoadResponse {
         val splitLink = url.split(" ; ")
         val doc = app.get(splitLink[0]).document
-        val tokenLink = doc.selectFirst("iframe")?.attr("src") ?: ""
-        val token = tokenRegex.find(tokenLink)?.value.toString()
+        tokenLink = doc.selectFirst("iframe")?.attr("src") ?: ""
+        if(token.isBlank()) token = tokenRegex.find(tokenLink)?.value.toString()
         val link = tokenLink.replaceAfter(token,"").replace("embed.html?","index.fmp4.m3u8?")
         return newLiveStreamLoadResponse(
             name = splitLink[1],
-            url = mainUrl,
+            url = splitLink[0],
             dataUrl = link,
         ) {
             posterUrl = splitLink[2]
@@ -79,11 +80,13 @@ class BDIXCloudTVProvider : MainAPI() {
     ): Boolean {
         callback.invoke(
             newExtractorLink(
-                mainUrl,
+                data,
                 this.name,
                 url = data,
                 type = ExtractorLinkType.M3U8
-            )
+            ) {
+                this.referer = tokenLink
+            }
         )
         return true
     }

@@ -79,12 +79,11 @@ class BdixRoarZoneTVProvider : MainAPI() {
     private val tokenRegex = Regex("token=([^&]+)")
     override suspend fun load(url: String): LoadResponse {
         val splitLink = url.split(" ; ")
-        val redirectUrl =
-            app.head("http://tv.roarzone.info/player.php?stream=${splitLink[2]}").url
+        val url1 = "http://tv.roarzone.info/player.php?stream=${splitLink[2]}"
+        val redirectUrl = app.head(url1).url
         val token = tokenRegex.find(redirectUrl)?.value.toString()
-        val m3uLink =
-            "http://peer19.roarzone.info:8080/roarzone/${splitLink[2]}/index.fmp4.m3u8?$token"
-        return newLiveStreamLoadResponse(name = splitLink[1], url = mainUrl, dataUrl = m3uLink) {
+        val m3uLink = "http://peer19.roarzone.info:8080/roarzone/${splitLink[2]}/index.fmp4.m3u8?$token"
+        return newLiveStreamLoadResponse(name = splitLink[1], url = url1, dataUrl = m3uLink) {
             this.posterUrl = splitLink[0]
         }
     }
@@ -97,7 +96,7 @@ class BdixRoarZoneTVProvider : MainAPI() {
     ): Boolean {
         callback.invoke(
             newExtractorLink(
-                mainUrl,
+                data,
                 this.name,
                 url = data,
                 type = ExtractorLinkType.M3U8
