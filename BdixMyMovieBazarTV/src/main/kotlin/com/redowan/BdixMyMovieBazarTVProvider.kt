@@ -2,6 +2,7 @@ package com.redowan
 
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
+import com.lagradost.cloudstream3.LiveSearchResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageRequest
@@ -16,7 +17,7 @@ import com.lagradost.cloudstream3.utils.newExtractorLink
 
 //suspend fun main() {
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(BdixMyMovieBazarTVProvider())
-////    providerTester.testMainPage(verbose = true)
+//    providerTester.testMainPage(verbose = true)
 //    providerTester.testLoad("https://tv.mymoviebazar.net/stream/stream13.m3u8")
 //}
 
@@ -51,25 +52,27 @@ class BdixMyMovieBazarTVProvider : MainAPI() {
         page: Int, request: MainPageRequest
     ): HomePageResponse {
         val home = mutableListOf<HomePageList>()
-        val response = channels.map { channel ->
+        home.add(
+            HomePageList(
+                "Live Tv", channelResponse(), isHorizontalImages = true
+            )
+        )
+        return newHomePageResponse(home, hasNext = false)
+    }
+    private fun channelResponse(): List<LiveSearchResponse> {
+        return channels.map { channel ->
             newLiveSearchResponse(
                 channel["name"].toString(), channel["link"].toString()
             ) {
                 this.posterUrl = channel["logo"].toString()
             }
         }
-        home.add(
-            HomePageList(
-                "Live Tv", response, isHorizontalImages = true
-            )
-        )
-        return newHomePageResponse(home, hasNext = false)
     }
-
     override suspend fun load(url: String): LoadResponse {
         val channel = channels.first { it["link"] == url }
         return newLiveStreamLoadResponse(name = channel["name"].toString(), url = mainUrl, dataUrl = channel["link"].toString()) {
             this.posterUrl = channel["logo"].toString()
+            this.recommendations = channelResponse()
         }
     }
 
