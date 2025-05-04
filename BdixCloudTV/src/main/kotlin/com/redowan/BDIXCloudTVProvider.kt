@@ -47,7 +47,7 @@ class BDIXCloudTVProvider : MainAPI() {
             }
             home.add(
                 HomePageList(
-                    it.key, response, isHorizontalImages = false
+                    it.key, response, isHorizontalImages = true
                 )
             )
         }
