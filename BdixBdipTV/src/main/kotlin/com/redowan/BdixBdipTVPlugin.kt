@@ -8,5 +8,6 @@ import android.content.Context
 class BdixBdipTVPlugin: Plugin() {
     override fun load(context: Context) {
         registerMainAPI(BdixBdipTVProvider())
+        registerMainAPI(BdixIptvidnProvider())
     }
 }

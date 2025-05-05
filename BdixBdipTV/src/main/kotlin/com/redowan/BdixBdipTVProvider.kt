@@ -23,7 +23,7 @@ import org.jsoup.nodes.Element
 //    providerTester.testLoad("http://tv.bdiptv.net/assets/images/sonyyay.jpg ; SONY YAY ; SONY-YAY")
 //}
 
-class BdixBdipTVProvider : MainAPI() {
+open class BdixBdipTVProvider : MainAPI() {
     override var mainUrl = "http://tv.bdiptv.net/"
     override var name = "(BDIX) BDIP TV"
     override var lang = "bn"
@@ -81,7 +81,7 @@ class BdixBdipTVProvider : MainAPI() {
         val url1 = "$mainUrl/play.php?stream=${splitLink[2]}"
         val redirectUrl = app.get(url1, referer = mainUrl).text
         val token = tokenRegex.find(redirectUrl)?.value.toString()
-        val m3uLink = "http://103.89.248.14:8082/${splitLink[2]}/index.fmp4.m3u8?$token"
+        val m3uLink = "${splitLink[2]}/index.fmp4.m3u8?$token"
         return newLiveStreamLoadResponse(name = splitLink[1], url = url1, dataUrl = m3uLink) {
             this.posterUrl = splitLink[0]
         }
@@ -97,7 +97,7 @@ class BdixBdipTVProvider : MainAPI() {
             newExtractorLink(
                 data,
                 this.name,
-                url = data,
+                url = "http://103.89.248.14:8082/${data}",
                 type = ExtractorLinkType.M3U8
             )
         )
