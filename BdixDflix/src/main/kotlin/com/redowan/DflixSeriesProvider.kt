@@ -17,6 +17,7 @@ import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import okhttp3.FormBody
 import org.jsoup.nodes.Element
@@ -26,8 +27,8 @@ import org.jsoup.nodes.Element
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(DflixSeriesProvider())
 ////    providerTester.testAll()
 ////    providerTester.testMainPage(verbose = true)
-//    providerTester.testSearch(query = "game of",verbose = true)
-////    providerTester.testLoad("https://dflix.discoveryftp.net/s/view/5967")
+////    providerTester.testSearch(query = "game of",verbose = true)
+//    providerTester.testLoad("https://dflix.discoveryftp.net/s/view/5967")
 //}
 
 
@@ -37,7 +38,6 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
     override val hasMainPage = true
     override val hasDownloadSupport = true
     override val hasQuickSearch = false
-    override val instantLinkLoading = true
     override var lang = "bn"
     override val supportedTypes = setOf(
         TvType.TvSeries,
@@ -113,31 +113,10 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
 
         val episodesData = mutableListOf<Episode>()
         var seasonNum = 0
-        var episodeNum:Int
         doc.select("table.table:nth-child(1) > tbody:nth-child(1) > tr a").reversed()
             .forEach { season ->
                 seasonNum++
-                episodeNum = 0
-
-                val seasonUrl = mainUrl + season.attr("href")
-                val seasonDoc = app.get(seasonUrl, cookies = loginCookie!!).document
-                seasonDoc.select("div.container:nth-child(6) > div").forEach { episode ->
-                    val episodeName = episode.selectFirst("h4")?.childNode(0).toString()
-                    val episodeImage =
-                        episode.selectFirst("div")?.attr("style")?.let { extractBGImageUrl(it) }
-                    val episodeDescription = episode.selectFirst("div.season_overview")?.text()
-                    val episodeLink = episode.select("div.mt-2 >h5>a").attr("href")
-                    episodeNum++
-                    episodesData.add(
-                        newEpisode(episodeLink) {
-                            this.name = episodeName
-                            this.posterUrl = episodeImage
-                            this.season = seasonNum
-                            this.episode = episodeNum
-                            this.description = episodeDescription
-                        }
-                    )
-                }
+                extractedSeason(seasonNum, season, episodesData)
             }
 
         return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
@@ -145,6 +124,34 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
             this.plot = doc.select(".storyline").text()
             this.tags = doc.select(".ganre-wrapper > a").map { it.text().replace(",", "") }
             this.actors = doc.select("div.col-lg-2").map { actor(it) }
+        }
+    }
+
+    private suspend fun extractedSeason(
+        seasonNum: Int,
+        season: Element?,
+        episodesData: MutableList<Episode>
+    ) {
+        var episodeNum = 0
+
+        val seasonUrl = mainUrl + season?.attr("href")
+        val seasonDoc = app.get(seasonUrl, cookies = loginCookie!!).document
+        seasonDoc.select("div.container:nth-child(6) > div").forEach { episode ->
+            val episodeName = episode.selectFirst("h4")?.childNode(0).toString()
+            val episodeImage =
+                episode.selectFirst("div")?.attr("style")?.let { extractBGImageUrl(it) }
+            val episodeDescription = episode.selectFirst("div.season_overview")?.text()
+            val episodeLink = episode.select("div.mt-2 >h5>a").attr("href")
+            episodeNum++
+            episodesData.add(
+                newEpisode(episodeLink) {
+                    this.name = episodeName
+                    this.posterUrl = episodeImage
+                    this.season = seasonNum
+                    this.episode = episodeNum
+                    this.description = episodeDescription
+                }
+            )
         }
     }
 
@@ -175,7 +182,8 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
             newExtractorLink(
                 data,
                 this.name,
-                url = data
+                url = data,
+                type = ExtractorLinkType.VIDEO
             )
         )
         return true

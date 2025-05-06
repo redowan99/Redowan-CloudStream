@@ -19,6 +19,7 @@ import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
 
@@ -38,7 +39,6 @@ class DflixMoviesProvider : MainAPI() { // all providers must be an instance of 
     override val hasMainPage = true
     override val hasDownloadSupport = true
     override val hasQuickSearch = false
-    override val instantLinkLoading = true
     override var lang = "bn"
     override val supportedTypes = setOf(
         TvType.Movie,
@@ -148,7 +148,8 @@ class DflixMoviesProvider : MainAPI() { // all providers must be an instance of 
             newExtractorLink(
                 data,
                 this.name,
-                url = data
+                url = data,
+                type = ExtractorLinkType.VIDEO
             )
         )
         return true

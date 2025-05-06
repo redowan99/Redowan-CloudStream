@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 7
+version = 8
 
 android {
     namespace = "com.redowan"
@@ -25,7 +25,14 @@ cloudstream {
     // https://recloudstream.github.io/cloudstream/html/app/com.lagradost.cloudstream3/-tv-type/index.html
     tvTypes = listOf(
         "Movie",
-        "AnimeMovie"
+        "TvSeries",
+        "Anime",
+        "AnimeMovie",
+        "OVA",
+        "Cartoon",
+        "AsianDrama",
+        "Others",
+        "Documentary",
     )
     language = "bn"
 
