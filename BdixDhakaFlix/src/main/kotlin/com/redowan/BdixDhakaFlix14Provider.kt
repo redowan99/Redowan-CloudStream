@@ -33,7 +33,7 @@ import java.nio.charset.StandardCharsets
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(BdixDhakaFlix14Provider())
 ////    providerTester.testAll()
 ////    providerTester.testMainPage(verbose = true)
-////   providerTester.testSearch(query = "dragon", verbose = true)
+//   providerTester.testSearch(query = "dragon", verbose = true)
 ////    providerTester.testLoad("http://172.16.50.14/DHAKA-FLIX-14/Animation%20Movies%20%281080p%29/009%20Re-Cyborg%20%282012%29%201080p%20%5BDual%20Audio%5D/")
 //}
 
@@ -92,10 +92,10 @@ open class BdixDhakaFlix14Provider : MainAPI() {
             "{\"action\":\"get\",\"search\":{\"href\":\"/$serverName/\",\"pattern\":\"$query\",\"ignorecase\":true}}".toRequestBody(
                     "application/json".toMediaType()
                 )
-        val doc = app.post("$mainUrl/$serverName", requestBody = body).text
+        val doc = app.post("$mainUrl/$serverName/", requestBody = body).text
         val searchJson = AppUtils.parseJson<SearchResult>(doc)
         val searchResponse: MutableList<SearchResponse> = mutableListOf()
-        searchJson.search.take(30).map { post ->
+        searchJson.search.take(40).map { post ->
             if (post.size == null) {
                 val href = post.href
                 val name = nameFromUrl(href)
