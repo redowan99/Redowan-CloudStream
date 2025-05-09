@@ -33,8 +33,10 @@ import java.nio.charset.StandardCharsets
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(BdixDhakaFlix14Provider())
 ////    providerTester.testAll()
 ////    providerTester.testMainPage(verbose = true)
-//   providerTester.testSearch(query = "dragon", verbose = true)
+////   providerTester.testSearch(query = "dragon", verbose = true)
 ////    providerTester.testLoad("http://172.16.50.14/DHAKA-FLIX-14/Animation%20Movies%20%281080p%29/009%20Re-Cyborg%20%282012%29%201080p%20%5BDual%20Audio%5D/")
+//    //Tv Series
+//    providerTester.testLoad("http://172.16.50.14/DHAKA-FLIX-14/KOREAN%20TV%20%26%20WEB%20Series/Squid%20Game%20%28TV%20Series%202021%E2%80%932025%29%201080p%20%5BMulti%20Audio%5D/")
 //}
 
 open class BdixDhakaFlix14Provider : MainAPI() {
@@ -118,48 +120,38 @@ open class BdixDhakaFlix14Provider : MainAPI() {
 
     override suspend fun load(url: String): LoadResponse {
         val doc = app.get(url).document
-        var name = ""
-        var imageLink = ""
-        var link = ""
-        val imageFormat: List<String> = listOf(".jpg", ".png", ".jpeg")
+        val imageLink = mainUrl + doc.select("td.fb-n > a[href~=(?i)\\.(png|jpe?g)]").attr("href")
+        val tableHtml = doc.select("tbody > tr:gt(1)")
 
         if (containsAnyLoop(url, tvSeriesKeyword)) {
             val episodesData = mutableListOf<Episode>()
             var seasonNum = 0
-            name = nameFromUrl(url)
-            doc.select("tbody > tr:gt(1)").forEach {
+            val name = nameFromUrl(url)
+            tableHtml.forEach {
                 seasonNum++
+                val aHtml = it.selectFirst("td.fb-n > a")
+                val link = mainUrl + aHtml?.attr("href")
                 if (it.selectFirst("td.fb-i > img")?.attr("alt") == "folder") {
-                    link = mainUrl + it.select("td.fb-n > a").attr("href")
                     seasonExtractor(link, episodesData, seasonNum)
-                } else if (imageLink.isEmpty() and containsAnyLoop(it.text(), imageFormat)) {
-                    imageLink = mainUrl + it.select("td.fb-n > a").attr("href")
                 }
-                else{
-                    val folderHtml = it.select("td.fb-n > a")
-                    val tittle = folderHtml.text()
-                    val link2 = mainUrl + folderHtml.attr("href")
+                else if(aHtml?.selectFirst("a[href~=(?i)\\.(mkv|mp4)]") != null){
+                    val tittle = aHtml.text()
                     episodesData.add(
-                        newEpisode(link2) {
+                        newEpisode(link) {
                             this.name = tittle
-                            this.season = 0
+                            this.season = 1
                         }
                     )
                 }
             }
+
             return newTvSeriesLoadResponse(name, url, TvType.TvSeries, episodesData) {
                 this.posterUrl = imageLink
             }
         } else {
-            doc.select("tbody > tr:gt(1)").forEach {
-                if (it.text().contains(".jpg", true)) {
-                    imageLink = mainUrl + it.select("td.fb-n > a").attr("href")
-                } else {
-                    val folderHtml = it.select("td.fb-n > a")
-                    name = folderHtml.text()
-                    link = mainUrl + folderHtml.attr("href")
-                }
-            }
+            val folderHtml = tableHtml.select("td.fb-n > a[href~=(?i)\\.(mkv|mp4)]")
+            val name = folderHtml.text().toString()
+            val link = mainUrl + folderHtml.attr("href")
             return newMovieLoadResponse(name, url, TvType.Movie, link) {
                 this.posterUrl = imageLink
             }
@@ -171,9 +163,9 @@ open class BdixDhakaFlix14Provider : MainAPI() {
     ) {
         val doc = app.get(url).document
         var episodeNum = 0
-        doc.select("tbody > tr:gt(1)").forEach {
+        doc.select("tbody > tr:gt(1) > td.fb-n > a[href~=(?i)\\.(mkv|mp4)]").forEach {
             episodeNum++
-            val folderHtml = it.select("td.fb-n > a")
+            val folderHtml = it.select("a")
             val name = folderHtml.text()
             val link = mainUrl + folderHtml.attr("href")
             episodesData.add(
