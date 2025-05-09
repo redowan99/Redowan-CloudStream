@@ -23,15 +23,15 @@ import org.jsoup.nodes.Element
 //suspend fun main() {
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(FullyMazaProvider())
 ////    providerTester.testLoadLinks("https://checklinko.top/60382/")
-//    providerTester.testAll()
-////    providerTester.testMainPage(verbose = true)
+////    providerTester.testAll()
+//    providerTester.testMainPage(verbose = true)
 ////    providerTester.testSearch(query = "gun",verbose = true)
 ////    providerTester.testLoad("https://fullymaza.pw/2024/06/die-in-a-gunfight-2021-hdrip-hindi-dual-audio-480p-720p-1080p/")
 //}
 
 
 class FullyMazaProvider : MainAPI() {
-    override var mainUrl = "https://fullymaza.autos"
+    override var mainUrl = "https://fullymaza.qpon"
     override var name = "FullyMaza"
     override var lang = "en"
     override val hasMainPage = true
@@ -53,15 +53,9 @@ class FullyMazaProvider : MainAPI() {
     )
 
     override suspend fun getMainPage(
-        page: Int,
-        request: MainPageRequest
+        page: Int, request: MainPageRequest
     ): HomePageResponse {
-        val doc = app.get(
-            "$mainUrl${request.data}page/$page",
-            cacheTime = 60,
-            timeout = 30,
-            allowRedirects = true
-        ).document
+        val doc = app.get("$mainUrl${request.data}page/$page", timeout = 30).document
         val home = if (request.name == "Latest") {
             doc.select("article.movi-item > div").mapNotNull { toLatestResult(it) }
         } else {
@@ -71,14 +65,12 @@ class FullyMazaProvider : MainAPI() {
     }
 
     private val nonAscii = Regex("[^\\x00-\\x7F]")
-
     private fun toLatestResult(post: Element): SearchResponse {
         val title = post.select(".movi-title > a:nth-child(1)").text().replace(nonAscii, "")
         val url = post.select(".movi-title > a:nth-child(1)").attr("href")
         val check = title.lowercase()
         return newAnimeSearchResponse(title, url, TvType.Movie) {
-            this.posterUrl = post.selectFirst(".thumbnail-wrapper > img:nth-child(1)")
-                ?.attr("src")
+            this.posterUrl = post.selectFirst(".thumbnail-wrapper > img:nth-child(1)")?.attr("src")
             this.quality = getQualityFromString(check)
             addDubStatus(
                 dubExist = when {
@@ -86,29 +78,25 @@ class FullyMazaProvider : MainAPI() {
                     "dual audio" in check -> true
                     "multi audio" in check -> true
                     else -> false
-                },
-                subExist = false
+                }, subExist = false
             )
         }
     }
 
     private fun toResult(post: Element): SearchResponse {
         val title = post.select(".res-grid-title").text().replace(nonAscii, "")
-        val url = post.select(".blog-starter-standard-post__post-title > a:nth-child(1)")
-            .attr("href")
+        val url = post.select(".blog-starter-standard-post__post-title > a:nth-child(1)").attr("href")
         val check = title.lowercase()
         return newAnimeSearchResponse(title, url, TvType.Movie) {
-            this.posterUrl = post.selectFirst(".thumbnail-wrapper > img:nth-child(1)")
-                ?.attr("src")
-            //this.quality = getSearchQuality(check)
+            this.posterUrl = post.selectFirst(".thumbnail-wrapper > img:nth-child(1)")?.attr("src")
+            this.quality = getQualityFromString(check)
             addDubStatus(
                 dubExist = when {
                     "dubbed" in check -> true
                     "dual audio" in check -> true
                     "multi audio" in check -> true
                     else -> false
-                },
-                subExist = false
+                }, subExist = false
             )
         }
     }
@@ -126,30 +114,13 @@ class FullyMazaProvider : MainAPI() {
                 .attr("src")
         val plot = doc.select(".blog-starter-standard-post__full-summery > p:nth-child(4)").html()
         val episodesData = mutableListOf<Episode>()
-
-//        doc.select(".blog-starter-standard-post__full-summery.text-left a").forEach {
-//            val link = it.attr("href")
-//            if (link.contains("checklinko")||link.contains("alinkz")) {
-//                val name = it.text().replace("Download Links", "")
-//                episodesData.add(
-//                    Episode(
-//                        link,
-//                        name,
-//                        null,
-//                        null
-//                    )
-//                )
-//            }
-//        }
-
         doc.select("h4.tabdownload > a:nth-child(1)").forEach {
             val link = it.attr("href")
             val name = it.text().replace("Download Links", "")
             episodesData.add(
-                newEpisode(link){
+                newEpisode(link) {
                     this.name = name
-                }
-            )
+                })
         }
         return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
             this.posterUrl = image
@@ -200,10 +171,12 @@ class FullyMazaProvider : MainAPI() {
      * @param check The input string.
      * @return The year as an integer, or `null` if no match is found.
      */
+    private val yearWithParentheses = "(?<=\\()\\d{4}(?=\\))".toRegex()
+    private val yearWithOutParentheses = "(19|20)\\d{2}(?!\\w)".toRegex()
     private fun getYearFromString(check: String?): Int? {
         return check?.let {
-            "(?<=\\()\\d{4}(?=\\))".toRegex().find(it)?.value?.toIntOrNull()
-                ?: "(19|20)\\d{2}(?!\\w)".toRegex().find(it)?.value?.toIntOrNull()
+            yearWithParentheses.find(it)?.value?.toIntOrNull()
+                ?: yearWithOutParentheses.find(it)?.value?.toIntOrNull()
         }
     }
 }
