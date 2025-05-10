@@ -89,6 +89,18 @@ class BdixMyMovieBazarTVProvider : MainAPI() {
                 this.referer = "$mainUrl/live-tv"
             }
         )
+        channels.map { channel ->
+            callback.invoke(
+                newExtractorLink(
+                    channel["link"].toString(),
+                    channel["name"].toString(),
+                    url = channel["link"].toString(),
+                    type = ExtractorLinkType.M3U8
+                ) {
+                    this.referer = "$mainUrl/live-tv"
+                }
+            )
+        }
         return true
     }
 }
