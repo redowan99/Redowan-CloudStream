@@ -17,13 +17,19 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.loadExtractor
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
 
+//suspend fun main() {
+//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(TheMoviesFlixProvider())
+//    providerTester.testAll()
+////    providerTester.testMainPage(verbose = true)
+////    providerTester.testSearch(query = "rome", verbose = true)
+//}
+
 class TheMoviesFlixProvider : MainAPI() {
-    override var mainUrl = "https://themoviesflix.it.com"
+    override var mainUrl = "https://themoviesflix.email"
     override var name = "TheMoviesFlix"
     override var lang = "hi"
     override val hasMainPage = true
@@ -61,7 +67,7 @@ class TheMoviesFlixProvider : MainAPI() {
         val url = post.select(".title.front-view-title a").attr("href")
         val title = post.select(".title.front-view-title a").text()
         val imageUrl = post.select(".featured-thumbnail img").attr("src")
-        val imageWithUrl = "$url+$imageUrl"
+        val imageWithUrl = "$url + $imageUrl"
         return newMovieSearchResponse(title, imageWithUrl, TvType.Movie) {
             this.posterUrl = imageUrl
         }
@@ -69,12 +75,12 @@ class TheMoviesFlixProvider : MainAPI() {
 
     override suspend fun search(query: String): List<SearchResponse> {
         val doc = app.get("$mainUrl/?s=$query", allowRedirects = true, timeout = 30).document
-        val searchResponse = doc.select(".latestPost.excerpt ")
+        val searchResponse = doc.select(".latestPost.excerpt")
         return searchResponse.mapNotNull { toResult(it) }
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val urls = url.split("+")
+        val urls = url.split(" + ")
         val doc = app.get(urls[0], allowRedirects = true, timeout = 30).document
         val title =
             doc.select(".title.single-title.entry-title").text().replace("Download", "").trim()
@@ -170,7 +176,9 @@ class TheMoviesFlixProvider : MainAPI() {
                                 }
 
                                 var nextSibling = item.nextElementSibling()
-                                while (nextSibling?.tagName() == "p" && nextSibling.children().isEmpty()) {
+                                while (nextSibling?.tagName() == "p" && nextSibling.children()
+                                        .isEmpty()
+                                ) {
                                     nextSibling = nextSibling.nextElementSibling()
                                 }
 
