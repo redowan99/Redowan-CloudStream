@@ -1,5 +1,6 @@
 package com.redowan
 
+import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
@@ -9,9 +10,10 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
-import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
+import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
@@ -25,7 +27,7 @@ import org.jsoup.nodes.Element
 //}
 
 open class NineKMoviesProvider : MainAPI() {
-    override var mainUrl = "https://9kmovies.claims/m"
+    override var mainUrl = "https://9kmovies.ren/m"
     override var name = "9kMovies"
     override var lang = "en"
     override val hasMainPage = true
@@ -46,27 +48,18 @@ open class NineKMoviesProvider : MainAPI() {
     override suspend fun getMainPage(
         page: Int, request: MainPageRequest
     ): HomePageResponse {
-
-        // This is necessary for load more posts on homepage
-        val doc = if (request.data == "" && page == 1) {
-            app.get(mainUrl).document
-        } else if (request.data == "" && page > 1) {
-            app.get("$mainUrl/page/$page").document
-        } else {
-            app.get("$mainUrl${request.data}page/$page").document
-        }
-        //Log.d("salman731 element size",doc.select(".thumb.col-md-2.col-sm-4.col-xs-6").size.toString())
+        val doc = app.get("$mainUrl${request.data}page/$page").document
         val home = doc.select(".thumb.col-md-2.col-sm-4.col-xs-6").mapNotNull { toResult(it) }
-        //Log.d("salman731 total size",home.toString().length.toString())
         return newHomePageResponse(request.name, home, hasNext = true)
     }
 
     private fun toResult(post: Element): SearchResponse {
-        val url = post.select("figure figcaption a").attr("href")
-        val title = post.select("figure figcaption a p").text()
+        val url = post.select("figure> figcaption> a").attr("href")
+        val title = post.select("figure> figcaption> a").text()
         val imageUrl = post.select("figure img").attr("src")
         return newMovieSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = imageUrl
+            this.posterHeaders = mapOf("Referer" to " https://9kmovies.ren/")
         }
     }
 
@@ -80,12 +73,16 @@ open class NineKMoviesProvider : MainAPI() {
         val doc = app.get(url).document
         val title = doc.select(".page-body h2").text()
         val imageUrl = doc.select(".page-body > h2 > img").attr("src")
-        val info = doc.select(".page-body p:nth-of-type(1)").text()
-        val link = doc.select("a.buttn.red").joinToString(";") { it.attr("href") }
-        val story =
-            ("(?<=Storyline,).*|(?<=Story : ).*|(?<=Storyline : ).*|(?<=Description : ).*|(?<=Description,).*(?<=Story,).*").toRegex()
-                .find(info)?.value
-        return newMovieLoadResponse(title, url, TvType.Movie, link) {
+        val story = doc.selectFirst(".page-body > p:nth-child(4)")?.html()
+        val episodesData = mutableListOf<Episode>()
+        doc.select("a.buttn.direct").forEach {
+            episodesData.add(
+                newEpisode(it.attr("href")){
+                    this.name = it.text().replace(" Link 1", "")
+                }
+            )
+        }
+        return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
             this.posterUrl = imageUrl
             this.plot = story?.trim()
         }
@@ -97,13 +94,10 @@ open class NineKMoviesProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        data.split(";").forEach { url ->
-            val doc = app.post(url).document
-            val links = doc.select(".col-sm-8.col-sm-offset-2.well.view-well a")
-            links.forEach {
-                val link = it.attr("href").replace("/v/","/e/")
-                loadExtractor(link, subtitleCallback, callback)
-            }
+        val doc = app.post(data).document
+        doc.select(".col-sm-8.col-sm-offset-2.well.view-well a").forEach {
+            val link = it.attr("href")//.replace("/v/","/e/")
+            loadExtractor(link, subtitleCallback, callback)
         }
         return true
     }
