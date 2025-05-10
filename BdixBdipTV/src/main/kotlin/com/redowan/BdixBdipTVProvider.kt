@@ -31,6 +31,7 @@ open class BdixBdipTVProvider : MainAPI() {
     override val hasDownloadSupport = false
     override val hasQuickSearch = false
     override val supportedTypes = setOf(TvType.Live)
+    open val liveServer = "http://103.89.248.14:8082/"
     private val category = mapOf(
         "lsports" to "Live Sports",
         "sports" to "Sports",
@@ -97,7 +98,7 @@ open class BdixBdipTVProvider : MainAPI() {
             newExtractorLink(
                 data,
                 this.name,
-                url = "http://103.89.248.14:8082/${data}",
+                url = "$liveServer$data",
                 type = ExtractorLinkType.M3U8
             )
         )
