@@ -135,7 +135,7 @@ open class BdixBdipTVProvider : MainAPI() {
         return true
     }
 
-    fun levenshteinDistance(s1: String, s2: String): Int {
+    private fun levenshteinDistance(s1: String, s2: String): Int {
         // ... (same Levenshtein distance function as before)
         val m = s1.length
         val n = s2.length
@@ -159,7 +159,7 @@ open class BdixBdipTVProvider : MainAPI() {
         return dp[m][n]
     }
 
-    fun partialRatioLevenshtein(s1: String, s2: String): Int {
+    private fun partialRatioLevenshtein(s1: String, s2: String): Int {
         val shorter: String
         val longer: String
 
