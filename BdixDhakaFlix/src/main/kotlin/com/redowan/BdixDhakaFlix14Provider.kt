@@ -16,7 +16,6 @@ import com.lagradost.cloudstream3.newAnimeSearchResponse
 import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
-import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.AppUtils
 import com.lagradost.cloudstream3.utils.ExtractorLink
@@ -84,7 +83,10 @@ open class BdixDhakaFlix14Provider : MainAPI() {
                 dubExist = when {
                     "Dual" in name -> true
                     else -> false
-                }, subExist = false
+                }, subExist = when {
+                    "ESub" in name -> true
+                    else -> false
+                }
             )
         }
     }
@@ -92,8 +94,8 @@ open class BdixDhakaFlix14Provider : MainAPI() {
     override suspend fun search(query: String): List<SearchResponse> {
         val body =
             "{\"action\":\"get\",\"search\":{\"href\":\"/$serverName/\",\"pattern\":\"$query\",\"ignorecase\":true}}".toRequestBody(
-                    "application/json".toMediaType()
-                )
+                "application/json".toMediaType()
+            )
         val doc = app.post("$mainUrl/$serverName/", requestBody = body).text
         val searchJson = AppUtils.parseJson<SearchResult>(doc)
         val searchResponse: MutableList<SearchResponse> = mutableListOf()
@@ -102,9 +104,19 @@ open class BdixDhakaFlix14Provider : MainAPI() {
                 val href = post.href
                 val name = nameFromUrl(href)
                 searchResponse.add(
-                    newMovieSearchResponse(
+                    newAnimeSearchResponse(
                         name, href
-                    )
+                    ) {
+                        addDubStatus(
+                            dubExist = when {
+                                "Dual" in name -> true
+                                else -> false
+                            }, subExist = when {
+                                "ESub" in name -> true
+                                else -> false
+                            }
+                        )
+                    }
                 )
             }
         }
@@ -133,8 +145,7 @@ open class BdixDhakaFlix14Provider : MainAPI() {
                 val link = mainUrl + aHtml?.attr("href")
                 if (it.selectFirst("td.fb-i > img")?.attr("alt") == "folder") {
                     seasonExtractor(link, episodesData, seasonNum)
-                }
-                else if(aHtml?.selectFirst("a[href~=(?i)\\.(mkv|mp4)]") != null){
+                } else if (aHtml?.selectFirst("a[href~=(?i)\\.(mkv|mp4)]") != null) {
                     val tittle = aHtml.text()
                     episodesData.add(
                         newEpisode(link) {
