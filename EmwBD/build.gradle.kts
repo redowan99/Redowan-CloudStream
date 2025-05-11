@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 11
+version = 12
 
 android {
     namespace = "com.redowan"
@@ -16,13 +16,14 @@ cloudstream {
     * 2: Slow
     * 3: Beta only
     * */
-    status = 0 // will be 3 if unspecified
+    status = 1 // will be 3 if unspecified
 
     tvTypes = listOf(
         "Movie",
         "TvSeries",
         "AnimeMovie",
-        "AsianDrama"
+        "AsianDrama",
+        "NSFW"
     )
     language = "bn"
 
