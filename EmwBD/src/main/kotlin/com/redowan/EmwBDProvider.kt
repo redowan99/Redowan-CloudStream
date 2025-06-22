@@ -23,12 +23,9 @@ import org.jsoup.nodes.Element
 
 //suspend fun main() {
 //    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(EmwBDProvider())
-////    providerTester.testLoadLinks("https://new1.filepress.shop/file/66f107ab98fd7b89339181f8 + https://m.gdfile.org/file/HRSEE6xpdThp + https://gdmirrorbot.nl/file/l3b5eb9 + https://new4.gdflix.cfd/file/4Isc0LmYGI")
 //    providerTester.testAll()
 ////    providerTester.testMainPage(verbose = true)
 ////    providerTester.testSearch(query = "gun",verbose = true)
-////    providerTester.testLoad("https://www.emwbd.xyz/rajkumar-2024-bengali-full-movie-480p-720p-hd-download/")
-////    providerTester.testLoad("https://www.emwbd.xyz/meghna-konnya-2024-bengali-dp-web-dl-download/")
 //}
 
 class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAPI
@@ -40,15 +37,17 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
     override val hasQuickSearch = false
     override val mainPage = mainPageOf(
         "/" to "Latest Movies",
-        "/category/bangladeshi-movies/" to "Bangladeshi Movies",
-        "/category/bengali-dub-drama/" to "Bangla Dub Drama",
-        "/category/bengali-dub-movies/" to "Bangla Dub Movies",
-        "/category/kolkata-bengali-movies/" to "Bengali Movies",
-        "/category/bengali-web-series/" to "Bengali Web Series",
+        "/category/bangla-movie/" to "Bangla Movies",
+        "/category/bangla-dubbed/" to "Bangla Dubbed",
+        "/category/bangla-series/" to "Bangla Series",
+        "/category/kolkata-movie/" to "Kolkata Movies",
+        "/category/hollywood/" to "Hollywood Movies",
+        "/category/animation/" to "Animation",
+        "/category/bollywood/" to "Bollywood Movies",
+        "/category/hindi-dubbed/" to "Hindi Dubbed",
+        "/category/south-movie/" to "South Indian Movies",
+        "/category/china-korean-japan/" to "China.Korean.Japan",
         "/category/web-series/" to "Web Series",
-        "/category/hollywood-movies/" to "Hollywood Movies",
-        "/category/bollywood-movies/" to "Bollywood Movies",
-        "/category/south-indian-movies/" to "South Indian Movies",
         "/category/tv-shows/" to "TV Shows"
     )
     override val supportedTypes = setOf(
@@ -132,8 +131,11 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
     ): Boolean {
         val doc = app.get(data, headers = headers).document
         doc.select("button.download-button").forEach {button ->
-            val redirectUrl = redirectRegex.find(button.attr("onclick"))?.groupValues?.getOrNull(1)
-            loadExtractor(redirectUrl.toString(), subtitleCallback, callback)
+            if(button.text().contains("Stream")) {
+                val redirectUrl =
+                    redirectRegex.find(button.attr("onclick"))?.groupValues?.getOrNull(1)
+                loadExtractor(redirectUrl.toString(), subtitleCallback, callback)
+            }
         }
         return true
     }

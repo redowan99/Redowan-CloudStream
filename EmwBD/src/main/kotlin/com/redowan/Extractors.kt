@@ -7,6 +7,10 @@ class Do7go : DoodLaExtractor() {
     override var mainUrl: String = "https://do7go.com"
 }
 
+class Doply : DoodLaExtractor() {
+    override var mainUrl: String = "https://doply.net"
+}
+
 class Movearnpre : VidHidePro() {
     override val mainUrl: String = "https://movearnpre.com"
 }

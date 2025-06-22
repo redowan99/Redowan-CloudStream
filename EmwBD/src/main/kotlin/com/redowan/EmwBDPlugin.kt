@@ -9,6 +9,7 @@ class EmwBDPlugin: Plugin() {
     override fun load(context: Context) {
         registerMainAPI(EmwBDProvider())
         registerExtractorAPI(Do7go())
+        registerExtractorAPI(Doply())
         registerExtractorAPI(Movearnpre())
     }
 }
