@@ -106,11 +106,11 @@ open class BdixICCFtpProvider : MainAPI() {
     override suspend fun load(url: String): LoadResponse {
         val doc = app.get(url).document
         val table = doc.select(".table > tbody:nth-child(1)")
-        val title = table.selectFirst("tr:nth-child(1)")?.text() ?: ""
-        val year = table.selectFirst("tr:nth-child(2) > td:nth-child(2)")?.text()?.toIntOrNull()
-        val genre = table.selectFirst("tr:nth-child(5) > td:nth-child(2)")?.text()?.split(",")
-        val plot = table.selectFirst("tr:nth-child(12) > td:nth-child(2)")?.text()
-        val duration = table.selectFirst("tr:nth-child(4) > td:nth-child(2)")?.text()
+        val title = table.select("tr:nth-child(1)").text()
+        val year = table.select("tr:nth-child(2) > td:nth-child(2)").text().toIntOrNull()
+        val genre = table.select("tr:nth-child(5) > td:nth-child(2)").text().split(",")
+        val plot = table.select("tr:nth-child(12) > td:nth-child(2)").text()
+        val duration = table.select("tr:nth-child(4) > td:nth-child(2)").text()
         val trailer = doc.selectFirst(".pull-left")?.attr("data-thevideo")
         val trailerData = mutableListOf<TrailerData>()
         if(!trailer.isNullOrEmpty()) {
