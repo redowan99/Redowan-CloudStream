@@ -42,17 +42,28 @@ open class BdixICCFtpProvider : MainAPI() {
     override val instantLinkLoading = true
     override var lang = "bn"
     override val supportedTypes = setOf(
-        TvType.Movie, TvType.AnimeMovie, TvType.TvSeries, TvType.AsianDrama
+        TvType.Movie,
+        TvType.TvSeries,
+        TvType.Anime,
+        TvType.AnimeMovie,
+        TvType.Cartoon,
+        TvType.AsianDrama,
+        TvType.Documentary,
+        TvType.OVA,
+        TvType.Others
     )
 
     override val mainPage = mainPageOf(
         "index.php?category=0" to "Latest",
-//        "English Movies (1080p)/($year) 1080p/" to "English Movies",
-//        "Hindi Movies/($year)/" to "Hindi Movies",
-//        "IMDb Top-250 Movies/" to "IMDb Top-250 Movies",
-//        "SOUTH INDIAN MOVIES/Hindi Dubbed/($year)/" to "Hindi Dubbed",
-//        "SOUTH INDIAN MOVIES/South Movies/$year/" to "South Movies",
-//        "/KOREAN TV %26 WEB Series/" to "Korean TV & WEB Series"
+        "index.php?category=59" to "Bangla Movies",
+        "index.php?category=2" to "Hindi Movies",
+        "index.php?category=19" to "English Movies",
+        "index.php?category=43" to "Dual Audio",
+        "index.php?category=32" to "South Movies",
+        "index.php?category=33" to "Animated",
+        "index.php?category=36" to "English Series",
+        "index.php?category=37" to "Hindi Series",
+        "index.php?category=41" to "Documentary"
     )
 
     override suspend fun getMainPage(
@@ -112,7 +123,7 @@ open class BdixICCFtpProvider : MainAPI() {
             )
         }
         val image = mainUrl + doc.selectFirst(".col-md-4 > img")?.attr("src")
-        var downloadEpisode = doc.select(".btn-group > ul > li")
+        val downloadEpisode = doc.select(".btn-group > ul > li")
         if(downloadEpisode.isEmpty()){
             val link = doc.selectFirst("a.btn")?.attr("href")
             return newMovieLoadResponse(title, url, TvType.Movie, link) {
@@ -125,14 +136,14 @@ open class BdixICCFtpProvider : MainAPI() {
             }
         }
         else{
-            downloadEpisode = downloadEpisode.select("span").remove()
             val episodesData = mutableListOf<Episode>()
             downloadEpisode.forEach {
                 val link = it.select("a").attr("href")
                 val name = it.select("a").text()
+                val span = it.select("span").text()
                 episodesData.add(
                     newEpisode(link){
-                        this.name = name
+                        this.name = name.replace(span,"")
                     }
                 )
             }
