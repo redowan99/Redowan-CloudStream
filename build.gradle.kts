@@ -1,5 +1,6 @@
 import com.android.build.gradle.BaseExtension
 import com.lagradost.cloudstream3.gradle.CloudstreamExtension
+import org.gradle.kotlin.dsl.register
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
@@ -71,7 +72,7 @@ subprojects {
         val cloudstream by configurations
         val implementation by configurations
 
-        cloudstream("com.github.recloudstream.cloudstream:pre-release")
+        cloudstream("com.github.recloudstream.cloudstream:-SNAPSHOT")
 
         // These dependencies can include any of those which are added by the app,
         // but you don't need to include any of them if you don't need them.
@@ -79,11 +80,11 @@ subprojects {
         implementation(kotlin("stdlib")) // Adds Standard Kotlin Features
         implementation("com.github.Blatzar:NiceHttp:0.4.13") // HTTP Lib
         implementation("org.jsoup:jsoup:1.21.2") // HTML Parser
-        implementation("com.github.recloudstream.cloudstream:library:pre-release")
+        implementation("com.github.recloudstream.cloudstream:library:-SNAPSHOT")
         implementation("com.github.jens-muenker:fuzzywuzzy-kotlin:1.0.1")
     }
 }
 
-task<Delete>("clean") {
+tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
