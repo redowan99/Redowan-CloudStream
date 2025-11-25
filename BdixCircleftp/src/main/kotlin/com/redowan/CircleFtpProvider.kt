@@ -58,9 +58,13 @@ class CircleFtpProvider : MainAPI() {
         "22" to "Dubbed TV Series",
         "2" to "Hindi Movies",
         "5" to "Hindi TV Series",
-        "3" to "South Indian Dubbed Movie",
-        "21" to "Anime Series",
+        "238" to "Indian TV Show",
+        "7" to "English & Foreign Hindi Dubbed Movies",
+        "8" to "Foreign Language Movies",
+        "3" to "South Indian Dubbed Movies",
+        "4" to "South Indian Movies",
         "1" to "Animation Movies",
+        "21" to "Anime Series",
         "85" to "Documentary",
         "15" to "WWE"
     )
@@ -226,8 +230,8 @@ class CircleFtpProvider : MainAPI() {
     ): Boolean {
         callback.invoke(
             newExtractorLink(
-                data,
-                this.name,
+                source = this.name,
+                name = this.name,
                 url = data
             )
         )
@@ -241,7 +245,7 @@ class CircleFtpProvider : MainAPI() {
      * @return The initial numeric part as an integer, or `null` if the string doesn't start with a number or is null.
      */
     private fun selectUntilNonInt(string: String?): Int? {
-        return string?.let { Regex("^.*?(?=\\D|\$)").find(it)?.value?.toIntOrNull() }
+        return string?.let { Regex("^.*?(?=\\D|$)").find(it)?.value?.toIntOrNull() }
     }
 
     /**
