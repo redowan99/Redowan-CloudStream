@@ -107,18 +107,24 @@ class FzMoviesProvider : MainAPI() { // all providers must be an instance of Mai
         val doc = app.get(url).document
         val year = doc.select(".moviedesc > textcolor1:nth-child(9) > a:nth-child(1)").text().toIntOrNull()
         val title = doc.select(".moviename > span:nth-child(1)").text() +" "+ year
-        var rating: Int? = null
-        doc.select("textcolor11").forEach{
-            if(it.text().matches("\\b\\d.\\d\\b".toRegex())) rating = it.text().toRatingInt()
+        val episodesData = mutableListOf<Episode>()
+        doc.select("a#downloadoptionslink2").forEach {
+            val fileName = it.text()
+            val link = "$mainUrl/" + it.select("a").attr("href")
+            episodesData.add(
+                newEpisode(link) {
+                    this.name = fileName
+                }
+            )
         }
-        return newMovieLoadResponse(title, url, TvType.Movie,url) {
+
+        return newTvSeriesLoadResponse(title, url, TvType.TvSeries,episodesData) {
             this.posterUrl = mainUrl + doc.select(".moviedesc > span:nth-child(1) > img:nth-child(1)")
                 .attr("src")
             this.year = year
             this.plot = doc.select(".moviedesc > span:nth-child(5) > textcolor1:nth-child(1)").text()
             this.duration = doc.select(".moviedesc > textcolor2:nth-child(7)")
                 .text().substringBefore(" ").toIntOrNull()
-            this.rating = rating
             this.tags = doc.select("[itemprop=genre]").map { it.text() }
             addTrailer(doc.select(".fieldset-auto-width > iframe:nth-child(2)").attr("src"))
             addImdbUrl(doc.select(".moviedesc > textcolor2:nth-child(162) > span:nth-child(1)").text())

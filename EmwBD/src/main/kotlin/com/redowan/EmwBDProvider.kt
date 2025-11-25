@@ -11,7 +11,6 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.addDubStatus
 import com.lagradost.cloudstream3.app
-import com.lagradost.cloudstream3.toRatingInt
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newAnimeSearchResponse
 import com.lagradost.cloudstream3.newEpisode
@@ -103,7 +102,6 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
         val year = getYearFromString(title)
         val image = doc.select(".wp-post-image").attr("src")
         val episodesData = mutableListOf<Episode>()
-        val rating = doc.selectFirst(".rating")?.text().toRatingInt()
         val genre = doc.selectFirst("div.movie-card-view:nth-child(2) > p:nth-child(4) > b:nth-child(1)")?.text()?.split(",")
         doc.select("a.btn").forEach {
             val name = it.text()
@@ -117,7 +115,6 @@ class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAP
         return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
             this.posterUrl = image
             this.year = year
-            this.rating = rating
             this.tags = genre
         }
     }
