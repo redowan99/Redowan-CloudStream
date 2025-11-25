@@ -4,6 +4,7 @@ import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageRequest
+import com.lagradost.cloudstream3.Score
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
@@ -83,7 +84,7 @@ class Mp4MoviezProvider : MainAPI() {
         return newMovieLoadResponse(title, url, TvType.Movie, link) {
             this.posterUrl = imageUrl
             this.plot = plot.trim()
-            if (!rating.contains("N/A")) this.rating = rating.toFloat().toInt()
+            if (!rating.contains("N/A")) this.score = Score.from(rating,5)
             this.year = releasedDate?.toInt()
         }
     }
