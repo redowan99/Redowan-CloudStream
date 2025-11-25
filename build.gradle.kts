@@ -6,16 +6,15 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 buildscript {
     repositories {
         mavenCentral()
-        // Shitpack repo which contains our tools and dependencies
         maven("https://jitpack.io")
         google()
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:8.7.3")
+        classpath("com.android.tools.build:gradle:8.13.0")
         // Cloudstream gradle plugin which makes everything work and builds plugins
         classpath("com.github.recloudstream:gradle:-SNAPSHOT")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.21")
     }
 }
 
@@ -48,7 +47,7 @@ subprojects {
         defaultConfig {
             minSdk = 21
             compileSdkVersion(35)
-            targetSdk = 35
+            targetSdk = 36
         }
 
         compileOptions {
@@ -72,16 +71,16 @@ subprojects {
         val cloudstream by configurations
         val implementation by configurations
 
-        // Stubs for all cloudstream classes
         cloudstream("com.github.recloudstream.cloudstream:pre-release")
 
         // These dependencies can include any of those which are added by the app,
         // but you don't need to include any of them if you don't need them.
         // https://github.com/recloudstream/cloudstream/blob/master/app/build.gradle.kts
         implementation(kotlin("stdlib")) // Adds Standard Kotlin Features
-        implementation("com.github.Blatzar:NiceHttp:0.4.12") // HTTP Lib
-        implementation("org.jsoup:jsoup:1.18.3") // HTML Parser
-        implementation("com.github.recloudstream.cloudstream:library-jvm:pre-release")
+        implementation("com.github.Blatzar:NiceHttp:0.4.13") // HTTP Lib
+        implementation("org.jsoup:jsoup:1.21.2") // HTML Parser
+        implementation("com.github.recloudstream.cloudstream:library:pre-release")
+        implementation("com.github.jens-muenker:fuzzywuzzy-kotlin:1.0.1")
     }
 }
 
