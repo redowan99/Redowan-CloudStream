@@ -41,32 +41,20 @@
         "name": "BdixBdipTV"
     },
     {
-        "iconUrl": "http://new.circleftp.net/static/media/logo.fce2c9029060a10687b8.png",
-        "apiVersion": 1,
-        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
-        "fileSize": 19489,
-        "status": 1,
-        "language": "bn",
-        "authors": [
-            "Redowan"
-        ],
-        "tvTypes": [
-            "Movie",
-            "TvSeries",
-            "Anime",
-            "AnimeMovie",
-            "OVA",
-            "Cartoon",
-            "AsianDrama",
-            "Others",
-            "Documentary"
-        ],
-        "version": 25,
-        "internalName": "BdixCircleftp",
-        "description": "Only works in Bangladesh. Works even in internet Shutdown",
-        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/BdixCircleftp.cs3",
-        "name": "BdixCircleftp"
-    },
+  "iconUrl": "http://new.circleftp.net/static/media/logo.fce2c9029060a10687b8.png",
+  "apiVersion": 1,
+  "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+  "fileSize": 19489,
+  "status": 1,
+  "language": "bn",
+  "authors": ["Redowan"],
+  "tvTypes": ["Movie", "TvSeries", "Anime", "AnimeMovie", "OVA", "Cartoon", "AsianDrama", "Others", "Documentary"],
+  "version": 26,
+  "internalName": "BdixCircleftp",
+  "description": "Only works in Bangladesh. Works even in internet Shutdown",
+  "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/BdixCircleftp.cs3",
+  "name": "BdixCircleftp"
+},
     {
         "iconUrl": "http://172.19.178.180/assets/logos/Cloudtv.png",
         "apiVersion": 1,
