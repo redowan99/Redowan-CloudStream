@@ -2,11 +2,15 @@ package com.redowan
 
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.lagradost.cloudstream3.Actor
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
+import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
+import com.lagradost.cloudstream3.LoadResponse.Companion.addTMDbId
 import com.lagradost.cloudstream3.MainAPI
 import com.lagradost.cloudstream3.MainPageRequest
+import com.lagradost.cloudstream3.Score
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
@@ -27,6 +31,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.jsoup.nodes.Element
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
+import kotlinx.coroutines.*
 
 data class TmdbSearchResponse(val results: List<TmdbItem>?)
 data class TmdbItem(
@@ -52,6 +57,10 @@ open class BdixDhakaFlix14Provider : MainAPI() {
     open val tvSeriesKeyword: List<String>? = listOf("KOREAN%20TV%20%26%20WEB%20Series", "TV-WEB-Series")
     open val serverName: String = "DHAKA-FLIX-14"
 
+    companion object {
+        private val cache = mutableMapOf<String, TmdbItem?>()
+    }
+
     override val mainPage = mainPageOf(
         "Animation Movies (1080p)/" to "Animation Movies",
         "English Movies (1080p)/($year) 1080p/" to "English Movies",
@@ -64,28 +73,47 @@ open class BdixDhakaFlix14Provider : MainAPI() {
 
     private fun cleanTitle(title: String): String {
         return title
-            // 1. Remove Prefixes like "01-", "007 ", "009 "
-            .replace(Regex("""^\d{2,3}[- ]"""), "")
-            // 2. Remove Type & Year blocks like "(TV Series 2011–2017)" or "(2024– )" or "[2004]"
-            .replace(Regex("""(?i)\((?:TV\s(?:Mini[- ]?)?Series|TV\sCartoon|TV\sMini-Series)\s?\d{4}.*?\)|[\(\[]\d{4}.*?[\)\]]"""), "")
-            // 3. Remove Technical Tags: 1080p, 720p, [Dual Audio], (Dual Audio), NF, AMZN, HDRip, etc.
-            .replace(Regex("""(?i)\d{3,4}p|\[.*?\]|\((?:Dual|Multi|Bangla|Tamil|Telugu|English|Hindi)\sAudio\)|NF|AMZN|HDRip|WEBRip|AMZN|Bluray|Web-Dl"""), "")
+            // 1. Remove Prefixes like "001. "
+            .replace(Regex("""^\d{1,3}\.\s*"""), "")
+            // 2. Remove everything including the year block like (2024) or (TV Series 2024)
+            .replace(Regex("""\s*\([^)]*?\d{4}.*?\).*$"""), "")
             .replace("  ", " ")
             .trim()
     }
 
-    private suspend fun getExternalMetadata(rawName: String, isTv: Boolean): TmdbItem? {
+    private suspend fun getExternalMetadata(rawName: String, isTv: Boolean, fullDetails: Boolean = false): TmdbItem? {
         val clean = cleanTitle(rawName)
+        val cacheKey = "${if (isTv) "tv" else "movie"}_$clean"
+        
+        if (cache.containsKey(cacheKey) && (!fullDetails || cache[cacheKey]?.credits != null)) {
+            return cache[cacheKey]
+        }
+
         val type = if (isTv) "tv" else "movie"
         return try {
-            app.get(
+            val search = app.get(
                 "https://api.themoviedb.org/3/search/$type",
                 params = mapOf(
                     "api_key" to "e6333b32409e02a4a6eba6fb7ff866bb",
                     "query" to clean
                 ),
-                timeout = 10
+                timeout = 10,
+                cacheTime = 60 // Cache search results for 60 minutes
             ).parsed<TmdbSearchResponse>().results?.firstOrNull()
+
+            val result = if (fullDetails && search?.id != null) {
+                app.get(
+                    "https://api.themoviedb.org/3/$type/${search.id}",
+                    params = mapOf(
+                        "api_key" to "e6333b32409e02a4a6eba6fb7ff866bb",
+                        "append_to_response" to "videos,credits"
+                    ),
+                    cacheTime = 60
+                ).parsed<TmdbItem>()
+            } else search
+            
+            cache[cacheKey] = result
+            result
         } catch (e: Exception) {
             null
         }
@@ -93,62 +121,67 @@ open class BdixDhakaFlix14Provider : MainAPI() {
 
     override suspend fun getMainPage(
         page: Int, request: MainPageRequest
-    ): HomePageResponse {
+    ): HomePageResponse = coroutineScope {
         val doc = app.get("$mainUrl/$serverName/${request.data}").document
         val homeResponse = doc.select("tbody > tr:gt(1):lt(12)")
-        val home = homeResponse.mapNotNull { post ->
-            getPostResult(post)
-        }
-        return newHomePageResponse(request.name, home, false)
+        val home = homeResponse.map { post ->
+            async { getPostResult(post) }
+        }.awaitAll().filterNotNull()
+        newHomePageResponse(request.name, home, false)
     }
 
-    private fun getPostResult(post: Element): SearchResponse {
-        val folderHtml = post.select("td.fb-n > a")
+    private suspend fun getPostResult(post: Element): SearchResponse? {
+        val folderHtml = post.selectFirst("td.fb-n > a") ?: return null
         val name = folderHtml.text()
+        if (name.isBlank()) return null
         val url = mainUrl + folderHtml.attr("href")
-        return newAnimeSearchResponse(name, url, TvType.Movie) {
+        val isTv = containsAnyLoop(url, tvSeriesKeyword)
+
+        // Metadata Enrichment for Homepage
+        val meta = getExternalMetadata(name, isTv)
+        val tmdbPoster = meta?.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
+
+        return newAnimeSearchResponse(name, url, if (isTv) TvType.TvSeries else TvType.Movie) {
+            this.posterUrl = tmdbPoster
+            this.score = Score.from10(meta?.voteAverage)
             addDubStatus(
-                dubExist = when {
-                    "Dual" in name -> true
-                    else -> false
-                }, subExist = when {
-                    "ESub" in name -> true
-                    else -> false
-                }
+                dubExist = "Dual" in name,
+                subExist = "ESub" in name
             )
         }
     }
 
-    override suspend fun search(query: String): List<SearchResponse> {
+    override suspend fun search(query: String): List<SearchResponse> = coroutineScope {
         val body =
             "{\"action\":\"get\",\"search\":{\"href\":\"/$serverName/\",\"pattern\":\"$query\",\"ignorecase\":true}}".toRequestBody(
                 "application/json".toMediaType()
             )
         val doc = app.post("$mainUrl/$serverName/", requestBody = body).text
         val searchJson = AppUtils.parseJson<SearchResult>(doc)
-        val searchResponse: MutableList<SearchResponse> = mutableListOf()
+        
         searchJson.search.take(40).map { post ->
-            if (post.size == null) {
-                val href = post.href
-                val name = nameFromUrl(href)
-                searchResponse.add(
-                    newAnimeSearchResponse(
-                        name, href
-                    ) {
+            async {
+                if (post.size == null) {
+                    val href = post.href
+                    val name = nameFromUrl(href)
+                    val url = if (href.startsWith("http")) href else mainUrl + href
+                    val isTv = containsAnyLoop(url, tvSeriesKeyword)
+                    
+                    // Metadata Enrichment for Search
+                    val meta = getExternalMetadata(name, isTv)
+                    val tmdbPoster = meta?.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
+
+                    newAnimeSearchResponse(name, url, if (isTv) TvType.TvSeries else TvType.Movie) {
+                        this.posterUrl = tmdbPoster
+                        this.score = Score.from10(meta?.voteAverage)
                         addDubStatus(
-                            dubExist = when {
-                                "Dual" in name -> true
-                                else -> false
-                            }, subExist = when {
-                                "ESub" in name -> true
-                                else -> false
-                            }
+                            dubExist = "Dual" in name,
+                            subExist = "ESub" in name
                         )
                     }
-                )
+                } else null
             }
-        }
-        return searchResponse
+        }.awaitAll().filterNotNull()
     }
 
     private val nameRegex = Regex(""".*/([^/]+)(?:/[^/]*)*$""")
@@ -163,9 +196,10 @@ open class BdixDhakaFlix14Provider : MainAPI() {
         val rawName = nameFromUrl(url)
         val isTv = containsAnyLoop(url, tvSeriesKeyword)
 
-        // Metadata Enrichment
-        val meta = getExternalMetadata(rawName, isTv)
+        // Metadata Enrichment - Request full details here
+        val meta = getExternalMetadata(rawName, isTv, fullDetails = true)
         val tmdbPoster = meta?.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
+        val tmdbBackdrop = meta?.backdropPath?.let { "https://image.tmdb.org/t/p/w1280$it" }
         
         // Local Poster Search
         val allImages = doc.select("td.fb-n > a[href~=(?i)\\.(png|jpe?g)]").map { it.attr("href") }
@@ -201,15 +235,16 @@ open class BdixDhakaFlix14Provider : MainAPI() {
 
             return newTvSeriesLoadResponse(rawName, url, TvType.TvSeries, episodesData) {
                 this.posterUrl = finalPoster
+                this.backgroundPosterUrl = tmdbBackdrop
                 this.plot = meta?.overview
                 this.year = (meta?.firstAirDate ?: meta?.releaseDate)?.split("-")?.firstOrNull()?.toIntOrNull()
             }
         } else {
             val folderHtml = tableHtml.select("td.fb-n > a[href~=(?i)\\.(mkv|mp4)]")
-            val name = folderHtml.text().toString()
             val link = mainUrl + folderHtml.attr("href")
-            return newMovieLoadResponse(name, url, TvType.Movie, link) {
+            return newMovieLoadResponse(rawName, url, TvType.Movie, link) {
                 this.posterUrl = finalPoster
+                this.backgroundPosterUrl = tmdbBackdrop
                 this.plot = meta?.overview
                 this.year = meta?.releaseDate?.split("-")?.firstOrNull()?.toIntOrNull()
             }
