@@ -14,7 +14,7 @@ buildscript {
     dependencies {
         classpath("com.android.tools.build:gradle:8.13.0")
         // Cloudstream gradle plugin which makes everything work and builds plugins
-        classpath("com.github.recloudstream:gradle:-SNAPSHOT")
+        classpath("com.github.recloudstream.gradle:gradle:81b1d424d2")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.21")
     }
 }
@@ -82,6 +82,7 @@ subprojects {
         implementation("org.jsoup:jsoup:1.21.2") // HTML Parser
         implementation("com.github.recloudstream.cloudstream:library:-SNAPSHOT")
         implementation("com.github.jens-muenker:fuzzywuzzy-kotlin:1.0.1")
+        implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.2")
     }
 }
 

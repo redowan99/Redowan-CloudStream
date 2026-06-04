@@ -31,10 +31,10 @@ import java.nio.charset.StandardCharsets
 data class TmdbSearchResponse(val results: List<TmdbItem>?)
 data class TmdbItem(
     val id: Int?,
-    @JsonProperty("poster_path") val posterPath: String?,
-    @JsonProperty("overview") val overview: String?,
-    @JsonProperty("release_date") val releaseDate: String?,
-    @JsonProperty("first_air_date") val firstAirDate: String?
+    @param:JsonProperty("poster_path") val posterPath: String?,
+    @param:JsonProperty("overview") val overview: String?,
+    @param:JsonProperty("release_date") val releaseDate: String?,
+    @param:JsonProperty("first_air_date") val firstAirDate: String?
 )
 
 open class BdixDhakaFlix14Provider : MainAPI() {
@@ -203,7 +203,6 @@ open class BdixDhakaFlix14Provider : MainAPI() {
                 this.posterUrl = finalPoster
                 this.plot = meta?.overview
                 this.year = (meta?.firstAirDate ?: meta?.releaseDate)?.split("-")?.firstOrNull()?.toIntOrNull()
-                meta?.id?.let { addTMDbId(it.toString()) }
             }
         } else {
             val folderHtml = tableHtml.select("td.fb-n > a[href~=(?i)\\.(mkv|mp4)]")
@@ -213,7 +212,6 @@ open class BdixDhakaFlix14Provider : MainAPI() {
                 this.posterUrl = finalPoster
                 this.plot = meta?.overview
                 this.year = meta?.releaseDate?.split("-")?.firstOrNull()?.toIntOrNull()
-                meta?.id?.let { addTMDbId(it.toString()) }
             }
         }
     }
