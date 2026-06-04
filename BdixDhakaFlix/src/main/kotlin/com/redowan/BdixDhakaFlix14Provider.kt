@@ -15,6 +15,7 @@ import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.addDubStatus
+import com.lagradost.cloudstream3.LoadResponse.Companion.addImdbId
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newAnimeSearchResponse
@@ -34,25 +35,23 @@ import java.nio.charset.StandardCharsets
 import kotlinx.coroutines.*
 
 data class TmdbSearchResponse(val results: List<TmdbItem>?)
+
 data class TmdbItem(
     val id: Int?,
-    @JsonProperty("poster_path") val posterPath: String?,
-    @JsonProperty("backdrop_path") val backdropPath: String?,
-    @JsonProperty("overview") val overview: String?,
-    @JsonProperty("release_date") val releaseDate: String?,
-    @JsonProperty("first_air_date") val firstAirDate: String?,
-    @JsonProperty("vote_average") val voteAverage: Double?,
-    val videos: TmdbVideoResponse? = null,
-    val credits: TmdbCreditsResponse? = null
-)
+    @param:JsonProperty("poster_path") val posterPath: String?,
+    @param:JsonProperty("backdrop_path") val backdropPath: String?,
+    @param:JsonProperty("overview") val overview: String?,
+    @param:JsonProperty("release_date") val releaseDate: String?,
+    @param:JsonProperty("first_air_date") val firstAirDate: String?,
+    @param:JsonProperty("vote_average") val voteAverage: Double?,
+    @param:JsonProperty("credits") val credits: Any?
+) {
+    // will be filled when external_ids are fetched
+    var imdbId: String? = null
+}
 
-data class TmdbVideoResponse(val results: List<TmdbVideo>?)
-data class TmdbVideo(val key: String?, val site: String?, val type: String?)
-data class TmdbCreditsResponse(val cast: List<TmdbCast>?)
-data class TmdbCast(
-    val name: String?,
-    @JsonProperty("profile_path") val profilePath: String?,
-    val character: String?
+data class ExternalIdsResponse(
+    @param:JsonProperty("imdb_id") val imdbId: String?
 )
 
 open class BdixDhakaFlix14Provider : MainAPI() {
@@ -97,7 +96,7 @@ open class BdixDhakaFlix14Provider : MainAPI() {
     private suspend fun getExternalMetadata(rawName: String, isTv: Boolean, fullDetails: Boolean = false): TmdbItem? {
         val clean = cleanTitle(rawName)
         val cacheKey = "${if (isTv) "tv" else "movie"}_$clean"
-        
+
         if (cache.containsKey(cacheKey) && (!fullDetails || cache[cacheKey]?.credits != null)) {
             return cache[cacheKey]
         }
@@ -124,7 +123,20 @@ open class BdixDhakaFlix14Provider : MainAPI() {
                     cacheTime = 60
                 ).parsed<TmdbItem>()
             } else search
-            
+
+            if (result != null && result.id != null) {
+                try {
+                    val external = app.get(
+                        "https://api.themoviedb.org/3/$type/${result.id}/external_ids",
+                        params = mapOf("api_key" to "e6333b32409e02a4a6eba6fb7ff866bb"),
+                        timeout = 10
+                    ).parsed<ExternalIdsResponse>()
+                    result.imdbId = external?.imdbId
+                } catch (_: Exception) {
+                    // ignore external ids failures
+                }
+            }
+
             cache[cacheKey] = result
             result
         } catch (e: Exception) {
@@ -251,9 +263,10 @@ open class BdixDhakaFlix14Provider : MainAPI() {
                 this.backgroundPosterUrl = tmdbBackdrop
                 this.plot = meta?.overview
                 this.year = (meta?.firstAirDate ?: meta?.releaseDate)?.split("-")?.firstOrNull()?.toIntOrNull()
-                this.score = Score.from10(meta?.voteAverage)
-                meta?.id?.let { addTMDbId(it.toString()) }
-                addActors(meta?.credits?.cast?.map { Actor(it.name ?: "", it.profilePath?.let { "https://image.tmdb.org/t/p/w500$it" }) })
+                // Add IMDb id (from TMDB external_ids) to help trackers like Simkl match
+                meta?.imdbId?.let { addImdbId(it) }
+                // Map TMDB vote_average (0-10) to Score
+                meta?.voteAverage?.let { this.score = Score.from10(it) }
             }
         } else {
             val folderHtml = tableHtml.select("td.fb-n > a[href~=(?i)\\.(mkv|mp4)]")
@@ -263,9 +276,8 @@ open class BdixDhakaFlix14Provider : MainAPI() {
                 this.backgroundPosterUrl = tmdbBackdrop
                 this.plot = meta?.overview
                 this.year = meta?.releaseDate?.split("-")?.firstOrNull()?.toIntOrNull()
-                this.score = Score.from10(meta?.voteAverage)
-                meta?.id?.let { addTMDbId(it.toString()) }
-                addActors(meta?.credits?.cast?.map { Actor(it.name ?: "", it.profilePath?.let { "https://image.tmdb.org/t/p/w500$it" }) })
+                meta?.imdbId?.let { addImdbId(it) }
+                meta?.voteAverage?.let { this.score = Score.from10(it) }
             }
         }
     }

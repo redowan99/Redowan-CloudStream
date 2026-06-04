@@ -14,9 +14,10 @@ buildscript {
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:9.1.1")
-        classpath("com.github.recloudstream.gradle:gradle:81b1d424d2")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0")
+        classpath("com.android.tools.build:gradle:8.13.0")
+        // Cloudstream gradle plugin which makes everything work and builds plugins
+        classpath("com.github.recloudstream:gradle:81b1d424d2")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.21")
     }
 }
 
@@ -45,7 +46,9 @@ fun Project.android(configuration: LibraryExtension.() -> Unit) {
 }
 
 subprojects {
+    // Skip applying Android / cloudstream plugin configuration to the JVM test helper module
     apply(plugin = "com.android.library")
+    apply(plugin = "kotlin-android")
     apply(plugin = "com.lagradost.cloudstream3.gradle")
 
     cloudstream {
@@ -102,6 +105,7 @@ subprojects {
         implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 
         implementation("com.github.jens-muenker:fuzzywuzzy-kotlin:1.0.1")
+        implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.2")
     }
 }
 
