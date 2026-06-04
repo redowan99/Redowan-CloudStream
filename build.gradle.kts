@@ -47,7 +47,6 @@ fun Project.android(configuration: LibraryExtension.() -> Unit) {
 
 subprojects {
     // Skip applying Android / cloudstream plugin configuration to the JVM test helper module
-    if (project.name == "provider-tester") return@subprojects
     apply(plugin = "com.android.library")
     apply(plugin = "kotlin-android")
     apply(plugin = "com.lagradost.cloudstream3.gradle")
