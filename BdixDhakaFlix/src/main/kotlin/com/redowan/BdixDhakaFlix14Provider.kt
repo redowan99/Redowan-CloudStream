@@ -70,10 +70,6 @@ open class BdixDhakaFlix14Provider : MainAPI() {
     open val tvSeriesKeyword: List<String>? = listOf("KOREAN%20TV%20%26%20WEB%20Series", "TV-WEB-Series")
     open val serverName: String = "DHAKA-FLIX-14"
 
-    companion object {
-        private val cache = mutableMapOf<String, TmdbItem?>()
-    }
-
     override val mainPage = mainPageOf(
         "Animation Movies (1080p)/" to "Animation Movies",
         "English Movies (1080p)/($year) 1080p/" to "English Movies",
@@ -96,12 +92,6 @@ open class BdixDhakaFlix14Provider : MainAPI() {
 
     private suspend fun getExternalMetadata(rawName: String, isTv: Boolean, fullDetails: Boolean = false): TmdbItem? {
         val clean = cleanTitle(rawName)
-        val cacheKey = "${if (isTv) "tv" else "movie"}_$clean"
-        
-        if (cache.containsKey(cacheKey) && (!fullDetails || cache[cacheKey]?.credits != null)) {
-            return cache[cacheKey]
-        }
-
         val type = if (isTv) "tv" else "movie"
         return try {
             val search = app.get(
@@ -114,7 +104,7 @@ open class BdixDhakaFlix14Provider : MainAPI() {
                 cacheTime = 60 // Cache search results for 60 minutes
             ).parsed<TmdbSearchResponse>().results?.firstOrNull()
 
-            val result = if (fullDetails && search?.id != null) {
+            if (fullDetails && search?.id != null) {
                 app.get(
                     "https://api.themoviedb.org/3/$type/${search.id}",
                     params = mapOf(
@@ -124,9 +114,6 @@ open class BdixDhakaFlix14Provider : MainAPI() {
                     cacheTime = 60
                 ).parsed<TmdbItem>()
             } else search
-            
-            cache[cacheKey] = result
-            result
         } catch (e: Exception) {
             null
         }
