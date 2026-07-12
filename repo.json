@@ -1,8 +1,8 @@
 {
-    "name": "Redowan's BDIX repository",
-    "description": "Redowan's BDIX repository",
+    "name": "CS3",
+    "description": "Repository",
     "manifestVersion": 1,
     "pluginLists": [
-      "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/plugins.json"
+      "https://raw.githubusercontent.com/haIo117/cs3/refs/heads/builds/plugins.json"
     ]
 }
