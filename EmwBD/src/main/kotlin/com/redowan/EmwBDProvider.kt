@@ -28,7 +28,7 @@ import org.jsoup.nodes.Element
 //}
 
 class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAPI
-    override var mainUrl = "https://www.emwbd1.fun/"
+    override var mainUrl = "https://www.emwbd.cyou/"
     override var name = "EmwBD"
     override var lang = "bn"
     override val hasMainPage = true
