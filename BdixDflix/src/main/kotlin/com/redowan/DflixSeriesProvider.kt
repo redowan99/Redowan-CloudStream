@@ -28,12 +28,12 @@ import org.jsoup.nodes.Element
 ////    providerTester.testAll()
 ////    providerTester.testMainPage(verbose = true)
 ////    providerTester.testSearch(query = "game of",verbose = true)
-//    providerTester.testLoad("https://dflix.discoveryftp.net/s/view/5967")
+//    providerTester.testLoad("https://movies.discoveryftp.net/s/view/5967")
 //}
 
 
 class DflixSeriesProvider : MainAPI() { // all providers must be an instance of MainAPI
-    override var mainUrl = "https://dflix.discoveryftp.net"
+    override var mainUrl = "https://movies.discoveryftp.net/s"
     override var name = "(BDIX) Dflix Series"
     override val hasMainPage = true
     override val hasDownloadSupport = true
