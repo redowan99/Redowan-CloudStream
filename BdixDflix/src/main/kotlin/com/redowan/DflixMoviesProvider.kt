@@ -29,13 +29,13 @@ import org.jsoup.nodes.Element
 ////    providerTester.testAll()
 //    providerTester.testMainPage(verbose = true)
 ////    providerTester.testSearch(query = "gun",verbose = true)
-////    providerTester.testLoad("https://dflix.discoveryftp.net/m/view/34449")
+////    providerTester.testLoad("https://movies.discoveryftp.net/m/view/36357")
 //}
 
 
 class DflixMoviesProvider : MainAPI() { // all providers must be an instance of MainAPI
-    override var mainUrl = "https://dflix.discoveryftp.net"
-    override var name = "(BDIX) Dflix Movies"
+    override var mainUrl = "https://movies.discoveryftp.net/"
+    override var name = "(BDIX) Discovery Movies"
     override val hasMainPage = true
     override val hasDownloadSupport = true
     override val hasQuickSearch = false
@@ -57,7 +57,7 @@ class DflixMoviesProvider : MainAPI() { // all providers must be an instance of 
     private suspend fun login() {
         if (loginCookie?.size != 2) {
             val client =
-                app.get("https://dflix.discoveryftp.net/login/demo", allowRedirects = false)
+                app.get("https://movies.discoveryftp.net/", allowRedirects = false)
             loginCookie = client.cookies
         }
     }
