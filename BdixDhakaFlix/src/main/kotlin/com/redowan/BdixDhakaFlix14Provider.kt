@@ -49,7 +49,7 @@ open class BdixDhakaFlix14Provider : MainAPI() {
     override val supportedTypes = setOf(
         TvType.Movie, TvType.AnimeMovie, TvType.TvSeries
     )
-    open val year = 2025
+    open val year = 2026
     open val tvSeriesKeyword: List<String>? = listOf("KOREAN%20TV%20%26%20WEB%20Series")
     open val serverName: String = "DHAKA-FLIX-14"
 
