@@ -1,6 +1,6 @@
 [
     {
-        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/9kMovies.cs3",
+        "url": "https://raw.githubusercontent.com/helal-c/Redowan-CloudStream/builds/9kMovies.cs3",
         "status": 1,
         "version": 7,
         "name": "9kMovies",
@@ -11,7 +11,7 @@
         ],
         "description": "Included:10HitMovies",
         "fileSize": 14521,
-        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "repositoryUrl": "https://github.com/helal-c/Redowan-CloudStream",
         "language": "hi",
         "tvTypes": [
             "Movie",
@@ -23,7 +23,7 @@
         "fileHash": "sha256-8d4b1f6c06be702f7605da760d2b6184fbc06712624e698dcf17249ec7ce1f3b"
     },
     {
-        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/BdixBdipTV.cs3",
+        "url": "https://raw.githubusercontent.com/helal-c/Redowan-CloudStream/builds/BdixBdipTV.cs3",
         "status": 1,
         "version": 6,
         "name": "BdixBdipTV",
@@ -33,7 +33,7 @@
         ],
         "description": "BDIX Live Tv in Bangladesh",
         "fileSize": 11548,
-        "repositoryUrl": "https://github.com/redowan99/Redowan-CloudStream",
+        "repositoryUrl": "https://github.com/helal-c/Redowan-CloudStream",
         "language": "bn",
         "tvTypes": [
             "Live"
@@ -43,7 +43,7 @@
         "fileHash": "sha256-b2e2722ab7e98401132020344ccfe89075a1d2e325835fd5642ae05fef421663"
     },
     {
-        "url": "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/builds/BdixCircleftp.cs3",
+        "url": "https://raw.githubusercontent.com/helal-c/Redowan-CloudStream/builds/BdixCircleftp.cs3",
         "status": 1,
         "version": 25,
         "name": "BdixCircleftp",
