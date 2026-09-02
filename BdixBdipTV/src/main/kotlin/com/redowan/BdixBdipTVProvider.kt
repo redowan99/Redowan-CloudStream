@@ -19,7 +19,6 @@ import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
 
-
 open class BdixBdipTVProvider : MainAPI() {
     override var mainUrl = "http://tv.bdiptv.net"
     override var name = "(BDIX) BDIP TV"
@@ -29,6 +28,7 @@ open class BdixBdipTVProvider : MainAPI() {
     override val hasQuickSearch = false
     override val supportedTypes = setOf(TvType.Live)
     open val liveServer = "http://103.89.248.14:8082/"
+
     private val category = mapOf(
         "lsports" to "Live Sports",
         "sports" to "Sports",
@@ -103,17 +103,17 @@ open class BdixBdipTVProvider : MainAPI() {
         }
     }
 
-    private val tokenRegex = Regex("""token=([^&"']+)""")
     override suspend fun load(url: String): LoadResponse {
         val splitLink = url.split(" ; ")
         val stream = splitLink.getOrNull(2) ?: ""
-        val url1 = "$mainUrl/play.php?stream=$stream"
-        val res = app.get(url1, referer = mainUrl)
-        val textAndUrl = res.text + " " + res.url
-        val token = tokenRegex.find(textAndUrl)?.value ?: ""
-        val m3uLink = "$stream/index.fmp4.m3u8?$token"
-        return newLiveStreamLoadResponse(name = splitLink.getOrElse(1) { name }, url = url, dataUrl = m3uLink) {
-            this.posterUrl = splitLink.getOrNull(0)
+        val playUrl = "$mainUrl/play.php?stream=$stream"
+        val doc = app.get(playUrl, referer = mainUrl).document
+        val iframeSrc = doc.selectFirst("iframe")?.attr("src") ?: ""
+        val m3uLink = iframeSrc.replace("embed.html", "index.fmp4.m3u8")
+        val title = splitLink.getOrElse(1) { name }
+        val poster = splitLink.getOrNull(0)
+        return newLiveStreamLoadResponse(name = title, url = url, dataUrl = m3uLink) {
+            this.posterUrl = poster
         }
     }
 
@@ -125,9 +125,9 @@ open class BdixBdipTVProvider : MainAPI() {
     ): Boolean {
         callback.invoke(
             newExtractorLink(
-                data,
-                this.name,
-                url = "$liveServer$data",
+                source = this.name,
+                name = this.name,
+                url = data,
                 type = ExtractorLinkType.M3U8
             )
         )
