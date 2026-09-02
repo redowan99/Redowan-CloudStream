@@ -17,6 +17,11 @@ import com.lagradost.cloudstream3.newLiveStreamLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.newExtractorLink
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import org.jsoup.nodes.Element
 
 open class BdixBdipTVProvider : MainAPI() {
@@ -41,25 +46,48 @@ open class BdixBdipTVProvider : MainAPI() {
         "music" to "Music"
     )
 
+    private suspend fun isChannelWorking(stream: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            runCatching {
+                val playUrl = "$mainUrl/play.php?stream=$stream"
+                val doc = app.get(playUrl, referer = mainUrl, timeout = 2L).document
+                val iframeSrc = doc.selectFirst("iframe")?.attr("src") ?: return@runCatching false
+                val m3uLink = iframeSrc.replace("embed.html", "index.fmp4.m3u8")
+                val res = app.get(m3uLink, referer = mainUrl, timeout = 1L)
+                res.isSuccessful && res.text.contains("#EXTM3U")
+            }.getOrDefault(false)
+        }
+    }
+
     override suspend fun getMainPage(
         page: Int,
         request: MainPageRequest
-    ): HomePageResponse {
+    ): HomePageResponse = coroutineScope {
         val doc = app.get(mainUrl).document
         val home = mutableListOf<HomePageList>()
-        category.forEach { name ->
-            val response = doc.select("div.item.${name.key}").mapNotNull {
-                getResult(it)
-            }
-            home.add(
-                HomePageList(
-                    name.value,
-                    response,
-                    isHorizontalImages = false
+        category.forEach { cat ->
+            val posts = doc.select("div.item.${cat.key}")
+            val workingItems = posts.map { post ->
+                async(Dispatchers.IO) {
+                    val result = getResult(post)
+                    val stream = result.url.split(" ; ").getOrNull(2) ?: ""
+                    if (stream.isNotBlank() && isChannelWorking(stream)) {
+                        result
+                    } else null
+                }
+            }.awaitAll().filterNotNull()
+
+            if (workingItems.isNotEmpty()) {
+                home.add(
+                    HomePageList(
+                        cat.value,
+                        workingItems,
+                        isHorizontalImages = false
+                    )
                 )
-            )
+            }
         }
-        return newHomePageResponse(home, hasNext = false)
+        newHomePageResponse(home, hasNext = false)
     }
 
     private val hrefRegex = Regex("""play\.php\?stream=([^']+)""")
