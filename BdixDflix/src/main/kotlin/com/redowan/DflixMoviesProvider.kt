@@ -42,11 +42,24 @@ class DflixMoviesProvider : MainAPI() { // all providers must be an instance of 
         "category/Others" to "Others"
     )
 
+    private fun fixImageUrl(url: String?): String? {
+        if (url.isNullOrBlank()) return null
+        var fixed = url.trim()
+        if (fixed.startsWith("//")) {
+            fixed = "https:$fixed"
+        } else if (fixed.startsWith("http://")) {
+            fixed = fixed.replace("http://", "https://")
+        } else if (!fixed.startsWith("http")) {
+            fixed = "$mainUrl/${fixed.removePrefix("/")}"
+        }
+        return fixed.replace("300//", "300/").replace("1080//", "1080/").replace("media//", "media/")
+    }
+
     override suspend fun getMainPage(
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        val doc = app.get("$mainUrl/m/${request.data}/$page").document
+        val doc = app.get("$mainUrl/m/${request.data}/$page", referer = "$mainUrl/m", timeout = 30L).document
         val homeResponse = doc.select("div.card")
         val home = homeResponse.mapNotNull { post ->
             toResult(post)
@@ -55,25 +68,24 @@ class DflixMoviesProvider : MainAPI() { // all providers must be an instance of 
     }
 
     private fun toResult(post: Element): SearchResponse {
-        val url = mainUrl + post.select("div.card > a:nth-child(1)").attr("href")
-        val title = post.select("div.card > div:nth-child(2) > h3:nth-child(1)").text() + ' ' +
+        val rawHref = post.select("div.card > a:nth-child(1), a.cfocus, a").attr("href")
+        val url = if (rawHref.startsWith("http")) rawHref else mainUrl + rawHref
+        val title = post.select("div.card > div:nth-child(2) > h3:nth-child(1), h3").text() + ' ' +
                 post.select("div.feedback > span:nth-child(1)").text()
+        val posterSrc = post.selectFirst("div.poster > img:nth-child(1), img")?.attr("src")
         return newAnimeSearchResponse(title, url, TvType.Movie) {
-            this.posterUrl = post.selectFirst("div.poster > img:nth-child(1)")?.attr("src")
+            this.posterUrl = fixImageUrl(posterSrc)
             val check = post.select("div.card > a:nth-child(1) > span:nth-child(1)").text()
             this.quality = getSearchQuality(check)
             addDubStatus(
-                dubExist = when {
-                    "DUAL" in check -> true
-                    else -> false
-                },
+                dubExist = "DUAL" in check,
                 subExist = false
             )
         }
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val doc = app.get("$mainUrl/m/find/$query").document
+        val doc = app.get("$mainUrl/m/find/$query", referer = "$mainUrl/m", timeout = 30L).document
         val searchResponse = doc.select("div.card:not(:has(div.poster.disable))")
         return searchResponse.mapNotNull { post ->
             toResult(post)
@@ -81,38 +93,41 @@ class DflixMoviesProvider : MainAPI() { // all providers must be an instance of 
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val doc = app.get(url).document
+        val doc = app.get(url, referer = "$mainUrl/m", timeout = 30L).document
         val title = doc.select(".movie-detail-content > h3:nth-child(1)").text()
         val dataUrl = doc.select("div.col-md-12:nth-child(3) > div:nth-child(1) > a:nth-child(1)")
             .attr("href")
         val size = doc.select(".badge.badge-fill").text()
-        val img = doc.select(".movie-detail-banner > img:nth-child(1)").attr("src")
+        val img = fixImageUrl(doc.select(".movie-detail-banner > img:nth-child(1)").attr("src"))
         return newMovieLoadResponse(title, url, TvType.Movie, dataUrl) {
             this.posterUrl = img
             this.plot = "<b>$size</b><br><br>" + doc.select(".storyline").text()
             this.tags = doc.select(".ganre-wrapper > a").map { it.text().replace(",", "") }
             this.actors = doc.select("div.col-lg-2").map { actor(it) }
-            this.recommendations = doc.select("div.badge-outline > a").map { qualityRecommendations(it,title,img) }
+            this.recommendations = doc.select("div.badge-outline > a").map { qualityRecommendations(it, title, img ?: "") }
         }
     }
 
-    private fun qualityRecommendations(post: Element, title:String, imageLink:String): SearchResponse{
-        val movieName = title +" "+ post.text()
-        val movieUrl = mainUrl + post.attr("href")
-        return newMovieSearchResponse(movieName,movieUrl,TvType.Movie) {
+    private fun qualityRecommendations(post: Element, title: String, imageLink: String): SearchResponse {
+        val movieName = title + " " + post.text()
+        val rawHref = post.attr("href")
+        val movieUrl = if (rawHref.startsWith("http")) rawHref else mainUrl + rawHref
+        return newMovieSearchResponse(movieName, movieUrl, TvType.Movie) {
             this.posterUrl = imageLink
         }
     }
 
     private fun actor(post: Element): ActorData {
-        val html = post.select("div.col-lg-2 > a:nth-child(1) > img:nth-child(1)")
-        val img = html.attr("src")
-        val name = html.attr("alt")
+        val imgTag = post.selectFirst("div.col-lg-2 > a:nth-child(1) > img:nth-child(1), img")
+        val img = fixImageUrl(imgTag?.attr("src"))
+        val name = imgTag?.attr("alt")?.ifBlank { post.select("p").firstOrNull()?.text() } ?: ""
+        val role = post.select("p.text-center.text-white").text()
         return ActorData(
             actor = Actor(
                 name,
                 img
-            ), roleString = post.select("div.col-lg-2 > p.text-center.text-white").text()
+            ),
+            roleString = role
         )
     }
 

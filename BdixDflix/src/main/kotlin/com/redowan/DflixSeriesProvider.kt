@@ -45,10 +45,23 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
         "category/Dubbed" to "Dubbed"
     )
 
+    private fun fixImageUrl(url: String?): String? {
+        if (url.isNullOrBlank()) return null
+        var fixed = url.trim()
+        if (fixed.startsWith("//")) {
+            fixed = "https:$fixed"
+        } else if (fixed.startsWith("http://")) {
+            fixed = fixed.replace("http://", "https://")
+        } else if (!fixed.startsWith("http")) {
+            fixed = "$mainUrl/${fixed.removePrefix("/")}"
+        }
+        return fixed.replace("300//", "300/").replace("1080//", "1080/").replace("media//", "media/")
+    }
+
     override suspend fun getMainPage(
         page: Int, request: MainPageRequest
     ): HomePageResponse {
-        val doc = app.get("$mainUrl/s/${request.data}/$page").document
+        val doc = app.get("$mainUrl/s/${request.data}/$page", referer = "$mainUrl/s", timeout = 30L).document
         val homeResponse = doc.select("div.col-xl-4")
         val home = homeResponse.mapNotNull { post ->
             toResult(post)
@@ -57,18 +70,20 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
     }
 
     private fun toResult(post: Element): SearchResponse {
-        val url = mainUrl + (post.selectFirst("div > a:nth-child(1)")?.attr("href") ?: "")
+        val rawHref = post.selectFirst("div > a:nth-child(1)")?.attr("href") ?: ""
+        val url = if (rawHref.startsWith("http")) rawHref else mainUrl + rawHref
         val title = post.select("div.fcard > div:nth-child(2) > div:nth-child(1)").text()
-        return newMovieSearchResponse(title, url, TvType.Movie) {
-            this.posterUrl = post.selectFirst("img:nth-child(1)")?.attr("src")
+        return newMovieSearchResponse(title, url, TvType.TvSeries) {
+            this.posterUrl = fixImageUrl(post.selectFirst("img:nth-child(1)")?.attr("src"))
         }
     }
 
     private fun toSearchResult(post: Element): SearchResponse {
-        val url = mainUrl + (post.selectFirst("a")?.attr("href") ?: "")
+        val rawHref = post.selectFirst("a")?.attr("href") ?: ""
+        val url = if (rawHref.startsWith("http")) rawHref else mainUrl + rawHref
         val title = post.select("div.searchtitle").text()
-        return newMovieSearchResponse(title, url, TvType.Movie) {
-            this.posterUrl = post.selectFirst("img:nth-child(1)")?.attr("src")
+        return newMovieSearchResponse(title, url, TvType.TvSeries) {
+            this.posterUrl = fixImageUrl(post.selectFirst("img:nth-child(1)")?.attr("src"))
         }
     }
 
@@ -77,7 +92,7 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
             .add("term", query)
             .add("types", "s")
             .build()
-        val doc = app.post("$mainUrl/search", requestBody = requestBody).document
+        val doc = app.post("$mainUrl/search", referer = "$mainUrl/s", requestBody = requestBody, timeout = 30L).document
         val searchResponse = doc.select("div.moviesearchiteam > a")
         return searchResponse.mapNotNull { post ->
             toSearchResult(post)
@@ -85,9 +100,9 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val doc = app.get(url).document
+        val doc = app.get(url, referer = "$mainUrl/s", timeout = 30L).document
         val title = doc.select(".movie-detail-content-test > h3, .movie-detail-content > h3").text()
-        val img = doc.select(".movie-detail-banner > img:nth-child(1)").attr("src")
+        val img = fixImageUrl(doc.select(".movie-detail-banner > img:nth-child(1)").attr("src"))
 
         val episodesData = mutableListOf<Episode>()
         var seasonNum = 0
@@ -111,25 +126,29 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
         episodesData: MutableList<Episode>
     ) {
         var episodeNum = 0
-
-        val seasonUrl = mainUrl + season?.attr("href")
-        val seasonDoc = app.get(seasonUrl).document
-        seasonDoc.select("div.container:nth-child(6) > div").forEach { episode ->
-            val episodeName = episode.selectFirst("h4")?.childNode(0).toString()
-            val episodeImage =
-                episode.selectFirst("div")?.attr("style")?.let { extractBGImageUrl(it) }
-            val episodeDescription = episode.selectFirst("div.season_overview")?.text()
-            val episodeLink = episode.select("div.mt-2 >h5>a").attr("href")
-            episodeNum++
-            episodesData.add(
-                newEpisode(episodeLink) {
-                    this.name = episodeName
-                    this.posterUrl = episodeImage
-                    this.season = seasonNum
-                    this.episode = episodeNum
-                    this.description = episodeDescription
-                }
-            )
+        val rawHref = season?.attr("href") ?: ""
+        val seasonUrl = if (rawHref.startsWith("http")) rawHref else mainUrl + rawHref
+        val seasonDoc = app.get(seasonUrl, referer = "$mainUrl/s", timeout = 30L).document
+        seasonDoc.select("div.container:nth-child(6) > div, div[style*='background-image'], .card").forEach { episode ->
+            val episodeName = episode.selectFirst("h5, h4")?.text()?.trim() ?: "Episode"
+            val episodeStyle = episode.attr("style")
+            val rawImage = extractBGImageUrl(episodeStyle)
+            val episodeImage = fixImageUrl(rawImage)
+            val episodeDescription = episode.selectFirst("div.season_overview, .card-body, p")?.text()?.trim()
+            val episodeLink = episode.select("div.mt-2 > h5 > a, a.btn, h5 > a").attr("href")
+            if (episodeLink.isNotBlank()) {
+                episodeNum++
+                val fullEpLink = if (episodeLink.startsWith("http")) episodeLink else mainUrl + episodeLink
+                episodesData.add(
+                    newEpisode(fullEpLink) {
+                        this.name = episodeName
+                        this.posterUrl = episodeImage
+                        this.season = seasonNum
+                        this.episode = episodeNum
+                        this.description = episodeDescription
+                    }
+                )
+            }
         }
     }
 
@@ -140,13 +159,14 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
     }
 
     private fun actor(post: Element): ActorData {
-        val html = post.select("div.col-lg-2 > a:nth-child(1) > img:nth-child(1)")
-        val img = html.attr("src")
-        val name = html.attr("alt")
+        val imgTag = post.selectFirst("div.col-lg-2 > a:nth-child(1) > img:nth-child(1), img")
+        val img = fixImageUrl(imgTag?.attr("src"))
+        val name = imgTag?.attr("alt")?.ifBlank { post.select("p").firstOrNull()?.text() } ?: ""
+        val role = post.select("p.text-center.text-white, p:nth-of-type(2)").text()
         return ActorData(
             actor = Actor(
                 name, img
-            ), roleString = post.select("div.col-lg-2 > p.text-center.text-white").text()
+            ), roleString = role
         )
     }
 
