@@ -22,12 +22,8 @@ import com.lagradost.cloudstream3.utils.newExtractorLink
 import okhttp3.FormBody
 import org.jsoup.nodes.Element
 
-
-
-
-
 class DflixSeriesProvider : MainAPI() { // all providers must be an instance of MainAPI
-    override var mainUrl = "https://dflix.discoveryftp.net"
+    override var mainUrl = "https://movies.discoveryftp.net"
     override var name = "(BDIX) Dflix Series"
     override val hasMainPage = true
     override val hasDownloadSupport = true
@@ -49,20 +45,10 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
         "category/Dubbed" to "Dubbed"
     )
 
-    private var loginCookie: Map<String, String>? = null
-    private suspend fun login() {
-        if (loginCookie?.size != 2) {
-            val client =
-                app.get("https://dflix.discoveryftp.net/login/demo", allowRedirects = false)
-            loginCookie = client.cookies
-        }
-    }
-
     override suspend fun getMainPage(
         page: Int, request: MainPageRequest
     ): HomePageResponse {
-        login()
-        val doc = app.get("$mainUrl/s/${request.data}/$page", cookies = loginCookie!!).document
+        val doc = app.get("$mainUrl/s/${request.data}/$page").document
         val homeResponse = doc.select("div.col-xl-4")
         val home = homeResponse.mapNotNull { post ->
             toResult(post)
@@ -87,12 +73,11 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        login()
         val requestBody = FormBody.Builder()
             .add("term", query)
-            .add("types","s")
+            .add("types", "s")
             .build()
-        val doc = app.post("$mainUrl/search", cookies = loginCookie!!, requestBody = requestBody).document
+        val doc = app.post("$mainUrl/search", requestBody = requestBody).document
         val searchResponse = doc.select("div.moviesearchiteam > a")
         return searchResponse.mapNotNull { post ->
             toSearchResult(post)
@@ -100,9 +85,8 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
     }
 
     override suspend fun load(url: String): LoadResponse {
-        login()
-        val doc = app.get(url, cookies = loginCookie!!).document
-        val title = doc.select(".movie-detail-content-test > h3:nth-child(1)").text()
+        val doc = app.get(url).document
+        val title = doc.select(".movie-detail-content-test > h3, .movie-detail-content > h3").text()
         val img = doc.select(".movie-detail-banner > img:nth-child(1)").attr("src")
 
         val episodesData = mutableListOf<Episode>()
@@ -129,7 +113,7 @@ class DflixSeriesProvider : MainAPI() { // all providers must be an instance of 
         var episodeNum = 0
 
         val seasonUrl = mainUrl + season?.attr("href")
-        val seasonDoc = app.get(seasonUrl, cookies = loginCookie!!).document
+        val seasonDoc = app.get(seasonUrl).document
         seasonDoc.select("div.container:nth-child(6) > div").forEach { episode ->
             val episodeName = episode.selectFirst("h4")?.childNode(0).toString()
             val episodeImage =

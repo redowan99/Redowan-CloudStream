@@ -1,6 +1,5 @@
 package com.redowan
 
-
 import com.lagradost.cloudstream3.Actor
 import com.lagradost.cloudstream3.ActorData
 import com.lagradost.cloudstream3.HomePageResponse
@@ -23,12 +22,8 @@ import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
 
-
-
-
-
 class DflixMoviesProvider : MainAPI() { // all providers must be an instance of MainAPI
-    override var mainUrl = "https://dflix.discoveryftp.net"
+    override var mainUrl = "https://movies.discoveryftp.net"
     override var name = "(BDIX) Dflix Movies"
     override val hasMainPage = true
     override val hasDownloadSupport = true
@@ -47,21 +42,11 @@ class DflixMoviesProvider : MainAPI() { // all providers must be an instance of 
         "category/Others" to "Others"
     )
 
-    private var loginCookie: Map<String, String>? = null
-    private suspend fun login() {
-        if (loginCookie?.size != 2) {
-            val client =
-                app.get("https://dflix.discoveryftp.net/login/demo", allowRedirects = false)
-            loginCookie = client.cookies
-        }
-    }
-
     override suspend fun getMainPage(
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        login()
-        val doc = app.get("$mainUrl/m/${request.data}/$page", cookies = loginCookie!!).document
+        val doc = app.get("$mainUrl/m/${request.data}/$page").document
         val homeResponse = doc.select("div.card")
         val home = homeResponse.mapNotNull { post ->
             toResult(post)
@@ -88,8 +73,7 @@ class DflixMoviesProvider : MainAPI() { // all providers must be an instance of 
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        login()
-        val doc = app.get("$mainUrl/m/find/$query", cookies = loginCookie!!).document
+        val doc = app.get("$mainUrl/m/find/$query").document
         val searchResponse = doc.select("div.card:not(:has(div.poster.disable))")
         return searchResponse.mapNotNull { post ->
             toResult(post)
@@ -97,8 +81,7 @@ class DflixMoviesProvider : MainAPI() { // all providers must be an instance of 
     }
 
     override suspend fun load(url: String): LoadResponse {
-        login()
-        val doc = app.get(url, cookies = loginCookie!!).document
+        val doc = app.get(url).document
         val title = doc.select(".movie-detail-content > h3:nth-child(1)").text()
         val dataUrl = doc.select("div.col-md-12:nth-child(3) > div:nth-child(1) > a:nth-child(1)")
             .attr("href")
@@ -112,6 +95,7 @@ class DflixMoviesProvider : MainAPI() { // all providers must be an instance of 
             this.recommendations = doc.select("div.badge-outline > a").map { qualityRecommendations(it,title,img) }
         }
     }
+
     private fun qualityRecommendations(post: Element, title:String, imageLink:String): SearchResponse{
         val movieName = title +" "+ post.text()
         val movieUrl = mainUrl + post.attr("href")
@@ -149,12 +133,6 @@ class DflixMoviesProvider : MainAPI() { // all providers must be an instance of 
         return true
     }
 
-    /**
-     * Determines the search quality based on the presence of specific keywords in the input string.
-     *
-     * @param check The string to check for keywords.
-     * @return The corresponding `SearchQuality` enum value, or `null` if no match is found.
-     */
     private fun getSearchQuality(check: String?): SearchQuality? {
         val lowercaseCheck = check?.lowercase()
         if (lowercaseCheck != null) {
