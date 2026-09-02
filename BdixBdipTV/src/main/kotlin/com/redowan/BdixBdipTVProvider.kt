@@ -15,15 +15,10 @@ import com.lagradost.cloudstream3.newLiveSearchResponse
 import com.lagradost.cloudstream3.newLiveStreamLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
-import com.lagradost.cloudstream3.utils.newExtractorLink
+import com.lagradost.cloudstream3.utils.Qualities
 import org.jsoup.nodes.Element
 
-//suspend fun main() {
-//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(BdixBdipTVProvider())
-////    providerTester.testMainPage(verbose = true)
-////    providerTester.testLoad("http://tv.bdiptv.net/assets/images/sonyyay.jpg ; SONY YAY ; SONY-YAY")
-//    providerTester.testSearch("sports")
-//}
+
 
 open class BdixBdipTVProvider : MainAPI() {
     override var mainUrl = "http://tv.bdiptv.net/"
@@ -125,10 +120,12 @@ open class BdixBdipTVProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         callback.invoke(
-            newExtractorLink(
-                data,
-                this.name,
+            ExtractorLink(
+                source = this.name,
+                name = this.name,
                 url = "$liveServer$data",
+                referer = "",
+                quality = Qualities.Unknown.value,
                 type = ExtractorLinkType.M3U8
             )
         )

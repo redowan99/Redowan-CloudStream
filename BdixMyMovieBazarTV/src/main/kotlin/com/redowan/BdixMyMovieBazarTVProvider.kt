@@ -14,13 +14,9 @@ import com.lagradost.cloudstream3.newLiveSearchResponse
 import com.lagradost.cloudstream3.newLiveStreamLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
-import com.lagradost.cloudstream3.utils.newExtractorLink
+import com.lagradost.cloudstream3.utils.Qualities
 
-//suspend fun main() {
-//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(BdixMyMovieBazarTVProvider())
-//    providerTester.testMainPage(verbose = true)
-//    providerTester.testLoad("https://tv.mymoviebazar.net/stream/stream13.m3u8")
-//}
+
 
 class BdixMyMovieBazarTVProvider : MainAPI() {
     override var mainUrl = "https://tv.mymoviebazar.net"
@@ -101,22 +97,25 @@ class BdixMyMovieBazarTVProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         callback.invoke(
-            newExtractorLink(
-                data, this.name, url = data, type = ExtractorLinkType.M3U8
-            ){
-                this.referer = "$mainUrl/live-tv"
-            }
+            ExtractorLink(
+                source = this.name,
+                name = this.name,
+                url = data,
+                referer = "$mainUrl/live-tv",
+                quality = Qualities.Unknown.value,
+                type = ExtractorLinkType.M3U8
+            )
         )
         channels.map { channel ->
             callback.invoke(
-                newExtractorLink(
-                    channel["link"].toString(),
-                    channel["name"].toString(),
+                ExtractorLink(
+                    source = channel["name"].toString(),
+                    name = channel["name"].toString(),
                     url = channel["link"].toString(),
+                    referer = "$mainUrl/live-tv",
+                    quality = Qualities.Unknown.value,
                     type = ExtractorLinkType.M3U8
-                ) {
-                    this.referer = "$mainUrl/live-tv"
-                }
+                )
             )
         }
         return true

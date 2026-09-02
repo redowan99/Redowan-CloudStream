@@ -20,17 +20,11 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
-import com.lagradost.cloudstream3.utils.newExtractorLink
+import com.lagradost.cloudstream3.utils.Qualities
 import org.jsoup.nodes.Element
 
 
-//suspend fun main() {
-//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(DflixMoviesProvider())
-////    providerTester.testAll()
-//    providerTester.testMainPage(verbose = true)
-////    providerTester.testSearch(query = "gun",verbose = true)
-////    providerTester.testLoad("https://dflix.discoveryftp.net/m/view/34449")
-//}
+
 
 
 class DflixMoviesProvider : MainAPI() { // all providers must be an instance of MainAPI
@@ -145,10 +139,12 @@ class DflixMoviesProvider : MainAPI() { // all providers must be an instance of 
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         callback.invoke(
-            newExtractorLink(
-                data,
-                this.name,
+            ExtractorLink(
+                source = this.name,
+                name = this.name,
                 url = data,
+                referer = "",
+                quality = Qualities.Unknown.value,
                 type = ExtractorLinkType.VIDEO
             )
         )

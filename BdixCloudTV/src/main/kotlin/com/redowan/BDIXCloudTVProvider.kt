@@ -15,15 +15,9 @@ import com.lagradost.cloudstream3.newLiveSearchResponse
 import com.lagradost.cloudstream3.newLiveStreamLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
-import com.lagradost.cloudstream3.utils.newExtractorLink
+import com.lagradost.cloudstream3.utils.Qualities
 
-//suspend fun main() {
-//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(BDIXCloudTVProvider())
-////    providerTester.testAll()
-////    providerTester.testMainPage(verbose = true)
-////    providerTester.testSearch(query = "gun",verbose = true)
-//    providerTester.testLoad("http://172.19.178.180/play.php?id=1743012009583 ; T Sports ; http://172.19.178.178/tv/img/tsports.png")
-//}
+
 
 class BDIXCloudTVProvider : MainAPI() {
     override var mainUrl = "http://172.19.178.180/"
@@ -114,14 +108,14 @@ class BDIXCloudTVProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         callback.invoke(
-            newExtractorLink(
-                data,
-                this.name,
+            ExtractorLink(
+                source = this.name,
+                name = this.name,
                 url = data,
+                referer = tokenLink,
+                quality = Qualities.Unknown.value,
                 type = ExtractorLinkType.M3U8
-            ) {
-                this.referer = tokenLink
-            }
+            )
         )
         return true
     }

@@ -4,9 +4,10 @@ import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.extractors.StreamTape
 import com.lagradost.cloudstream3.utils.ExtractorApi
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
+import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.getAndUnpack
 import com.lagradost.cloudstream3.utils.httpsify
-import com.lagradost.cloudstream3.utils.newExtractorLink
 
 open class EmbedPk : ExtractorApi() {
     override var name = "EmbedPk"
@@ -19,10 +20,13 @@ open class EmbedPk : ExtractorApi() {
             getAndUnpack(this.text).let { unpackedText ->
                     val finalLink = unpackedText.substringAfter("sources:[{src:\"").substringBefore("\",")
                     return listOf(
-                        newExtractorLink(
-                            name,
-                            name,
-                            httpsify(finalLink)
+                        ExtractorLink(
+                            source = name,
+                            name = name,
+                            url = httpsify(finalLink),
+                            referer = "",
+                            quality = Qualities.Unknown.value,
+                            type = ExtractorLinkType.VIDEO
                         )
                     )
             }

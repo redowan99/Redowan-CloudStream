@@ -20,18 +20,13 @@ import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.AppUtils
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.newExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
+import com.lagradost.cloudstream3.utils.Qualities
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.jsoup.nodes.Element
 
-//suspend fun main() {
-//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(BdixICCFtpProvider())
-////    providerTester.testAll()
-////    providerTester.testMainPage(verbose = true)
-////   providerTester.testSearch(query = "dragon", verbose = true)
-//    providerTester.testLoad("http://10.16.100.244/player.php?play=40575")
-//}
+
 
 open class BdixICCFtpProvider : MainAPI() {
     override var mainUrl = "http://10.16.100.244/"
@@ -116,7 +111,7 @@ open class BdixICCFtpProvider : MainAPI() {
         if(!trailer.isNullOrEmpty()) {
             trailerData.add(
                 TrailerData(
-                    extractorUrl = trailer.toString(),
+                    extractorUrl = trailer,
                     raw = false,
                     referer = mainUrl
                 )
@@ -165,10 +160,13 @@ open class BdixICCFtpProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         callback.invoke(
-            newExtractorLink(
-                data,
-                this.name,
-                url = data
+            ExtractorLink(
+                source = this.name,
+                name = this.name,
+                url = data,
+                referer = "",
+                quality = Qualities.Unknown.value,
+                type = ExtractorLinkType.VIDEO
             )
         )
         return true

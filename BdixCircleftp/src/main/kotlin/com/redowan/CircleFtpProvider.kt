@@ -20,15 +20,10 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.AppUtils
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.newExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
+import com.lagradost.cloudstream3.utils.Qualities
 
-//suspend fun main() {
-//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(CircleFtpProvider())
-////    providerTester.testAll()
-////    providerTester.testMainPage(verbose = true)
-//    providerTester.testSearch(query = "gun",verbose = true)
-////    providerTester.testLoad("")
-//}
+
 
 class CircleFtpProvider : MainAPI() {
     override var mainUrl = "http://new.circleftp.net"
@@ -229,10 +224,13 @@ class CircleFtpProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         callback.invoke(
-            newExtractorLink(
+            ExtractorLink(
                 source = this.name,
                 name = this.name,
-                url = data
+                url = data,
+                referer = "",
+                quality = Qualities.Unknown.value,
+                type = ExtractorLinkType.VIDEO
             )
         )
         return true

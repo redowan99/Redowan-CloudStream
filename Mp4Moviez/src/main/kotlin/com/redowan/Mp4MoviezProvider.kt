@@ -14,9 +14,9 @@ import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.loadExtractor
-import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
 
 class Mp4MoviezProvider : MainAPI() {
@@ -101,13 +101,14 @@ class Mp4MoviezProvider : MainAPI() {
             val link = item.select("a").attr("href")
             if (!link.contains("links4mad.online")) {
                 callback.invoke(
-                    newExtractorLink(
-                        "FastxMp4",
-                        "FastxMp4",
+                    ExtractorLink(
+                        source = "FastxMp4",
+                        name = "FastxMp4",
                         url = link,
-                    ) {
-                        quality = getVideoQuality(link)
-                    }
+                        referer = "",
+                        quality = getVideoQuality(link),
+                        type = ExtractorLinkType.VIDEO
+                    )
                 )
             } else if (link.contains("links4mad.online")) {
                 val shortLinkUrl = item.select("a").attr("href")
