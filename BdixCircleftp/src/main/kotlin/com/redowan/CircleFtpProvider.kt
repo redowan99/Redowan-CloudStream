@@ -21,8 +21,7 @@ import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.AppUtils
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.newExtractorLink
-
-
+import com.lagradost.nicehttp.NiceResponse
 
 class CircleFtpProvider : MainAPI() {
     override var mainUrl = "http://new.circleftp.net"
@@ -63,25 +62,28 @@ class CircleFtpProvider : MainAPI() {
         "15" to "WWE"
     )
 
+    private suspend fun fetchApiJson(endpoint: String, cacheTimeMinutes: Int = 60): NiceResponse {
+        val cleanEndpoint = if (endpoint.startsWith("/")) endpoint else "/$endpoint"
+        return try {
+            app.get(
+                "$mainApiUrl$cleanEndpoint",
+                verify = false,
+                cacheTime = cacheTimeMinutes
+            )
+        } catch (_: Exception) {
+            app.get(
+                "$apiUrl$cleanEndpoint",
+                verify = false,
+                cacheTime = cacheTimeMinutes
+            )
+        }
+    }
+
     override suspend fun getMainPage(
         page: Int,
         request: MainPageRequest
     ): HomePageResponse {
-        val json = try {
-            app.get(
-                "$mainApiUrl/api/posts?categoryExact=${request.data}&page=$page&order=desc&limit=10",
-                verify = false,
-                cacheTime = 60
-            )
-            // First try mainApiUrl
-        } catch (_: Exception) {
-            app.get(
-                "$apiUrl/api/posts?categoryExact=${request.data}&page=$page&order=desc&limit=10",
-                verify = false,
-                cacheTime = 60
-            )
-            // Fallback to apiUrl
-        }
+        val json = fetchApiJson("/api/posts?categoryExact=${request.data}&page=$page&order=desc&limit=10")
         val home = AppUtils.parseJson<PageData>(json.text).posts.mapNotNull { post ->
             toSearchResult(post)
         }
@@ -109,43 +111,15 @@ class CircleFtpProvider : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val json = try {
-            app.get(
-                "$mainApiUrl/api/posts?searchTerm=$query&order=desc",
-                verify = false,
-                cacheTime = 60
-            )
-            // First try mainApiUrl
-        } catch (_: Exception) {
-            app.get(
-                "$apiUrl/api/posts?searchTerm=$query&order=desc",
-                verify = false,
-                cacheTime = 60
-            )
-            // Fallback to apiUrl
-        }
+        val json = fetchApiJson("/api/posts?searchTerm=$query&order=desc")
         return AppUtils.parseJson<PageData>(json.text).posts.mapNotNull { post ->
             toSearchResult(post)
         }
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val json = try {
-            app.get(
-                url.replace("$mainUrl/content/", "$mainApiUrl/api/posts/"),
-                verify = false,
-                cacheTime = 60
-            )
-            // First try mainApiUrl
-        } catch (_: Exception) {
-            app.get(
-                url.replace("$mainUrl/content/", "$apiUrl/api/posts/"),
-                verify = false,
-                cacheTime = 60
-            )
-            // Fallback to apiUrl
-        }
-        val urlCheck = json.url.contains(mainApiUrl)
+        val contentId = url.substringAfter("$mainUrl/content/")
+        val json = fetchApiJson("/api/posts/$contentId")
         val loadData = AppUtils.parseJson<Data>(json.text)
         val title = loadData.title
         val poster = "$apiUrl/uploads/${loadData.image}"
@@ -153,11 +127,9 @@ class CircleFtpProvider : MainAPI() {
         val year = selectUntilNonInt(loadData.year)
 
         if (loadData.type == "singleVideo") {
-            val movieUrl = json.parsed<Movies>().content
-            val link = if(urlCheck) movieUrl else linkToIp(movieUrl)
-            val duration =
-                getDurationFromString(loadData.watchTime)
-            return newMovieLoadResponse(title, url, TvType.Movie, link) {
+            val movieUrl = json.parsed<Movies>().content ?: ""
+            val duration = getDurationFromString(loadData.watchTime)
+            return newMovieLoadResponse(title, url, TvType.Movie, movieUrl) {
                 this.posterUrl = poster
                 this.year = year
                 this.plot = description
@@ -173,10 +145,8 @@ class CircleFtpProvider : MainAPI() {
                 season.episodes.forEach {
                     episodeNum++
                     val episodeUrl = it.link
-                    val link = if(urlCheck) episodeUrl else linkToIp(episodeUrl)
                     episodesData.add(
-                        newEpisode(link){
-                            //this.name = "Episode $episodeNum"
+                        newEpisode(episodeUrl) {
                             this.episode = episodeNum
                             this.season = seasonNum
                         }
@@ -222,32 +192,44 @@ class CircleFtpProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
+        val domainLink = data
+        val ipLink = linkToIp(data)
+
+        val customHeaders = mapOf(
+            "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Connection" to "close",
+            "Accept-Encoding" to "identity"
+        )
+
         callback.invoke(
             newExtractorLink(
                 source = this.name,
-                name = this.name,
-                url = data
-            )
+                name = "${this.name} [Domain]",
+                url = domainLink
+            ) {
+                this.headers = customHeaders
+            }
         )
+
+        if (ipLink.isNotBlank() && ipLink != domainLink) {
+            callback.invoke(
+                newExtractorLink(
+                    source = this.name,
+                    name = "${this.name} [Direct IP]",
+                    url = ipLink
+                ) {
+                    this.headers = customHeaders
+                }
+            )
+        }
+
         return true
     }
 
-    /**
-     * Extracts the initial numeric part of a string and returns it as an integer.
-     *
-     * @param string The input string.
-     * @return The initial numeric part as an integer, or `null` if the string doesn't start with a number or is null.
-     */
     private fun selectUntilNonInt(string: String?): Int? {
         return string?.let { Regex("^.*?(?=\\D|$)").find(it)?.value?.toIntOrNull() }
     }
 
-    /**
-     * Determines the search quality based on the presence of specific keywords in the input string.
-     *
-     * @param check The string to check for keywords.
-     * @return The corresponding `SearchQuality` enum value, or `null` if no match is found.
-     */
     private fun getSearchQuality(check: String?): SearchQuality? {
         val lowercaseCheck = check?.lowercase()
         if (lowercaseCheck != null) {
@@ -314,5 +296,4 @@ class CircleFtpProvider : MainAPI() {
     data class Movies(
         val content: String?
     )
-
 }
