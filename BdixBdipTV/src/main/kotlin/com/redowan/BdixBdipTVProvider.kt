@@ -10,6 +10,7 @@ import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.fixUrl
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newLiveSearchResponse
 import com.lagradost.cloudstream3.newLiveStreamLoadResponse
@@ -19,9 +20,8 @@ import com.lagradost.cloudstream3.utils.Qualities
 import org.jsoup.nodes.Element
 
 
-
 open class BdixBdipTVProvider : MainAPI() {
-    override var mainUrl = "http://tv.bdiptv.net/"
+    override var mainUrl = "http://tv.bdiptv.net"
     override var name = "(BDIX) BDIP TV"
     override var lang = "bn"
     override val hasMainPage = true
@@ -62,11 +62,12 @@ open class BdixBdipTVProvider : MainAPI() {
         return newHomePageResponse(home, hasNext = false)
     }
 
-    private val hrefRegex = Regex("play\\.php\\?stream=([^']+)")
+    private val hrefRegex = Regex("""play\.php\?stream=([^']+)""")
     private fun getResult(post: Element): LiveSearchResponse {
-        val imageLink = mainUrl + post.select("img").attr("src")
+        val imgRelative = post.select("img").attr("src")
+        val imageLink = fixUrl(imgRelative)
         val link = hrefRegex.find(post.select("a").attr("onclick"))?.groupValues?.get(1) ?: ""
-        val name = link.replace("-"," ")
+        val name = link.replace("-", " ")
         val joinedLink = "$imageLink ; $name ; $link"
         return newLiveSearchResponse(name, joinedLink) {
             this.posterUrl = imageLink
@@ -91,7 +92,8 @@ open class BdixBdipTVProvider : MainAPI() {
         val name = link.replace("-", " ")
         val distance = partialRatioLevenshtein(name.lowercase(), query.lowercase())
         if (distance >= 70) {
-            val imageLink = mainUrl + post.select("img").attr("src")
+            val imgRelative = post.select("img").attr("src")
+            val imageLink = fixUrl(imgRelative)
             val joinedLink = "$imageLink ; $name ; $link"
             searchResult.add(
                 newLiveSearchResponse(name, joinedLink, TvType.Live, true) {
@@ -101,15 +103,17 @@ open class BdixBdipTVProvider : MainAPI() {
         }
     }
 
-    private val tokenRegex = Regex("token=([^&]+)")
+    private val tokenRegex = Regex("""token=([^&"']+)""")
     override suspend fun load(url: String): LoadResponse {
         val splitLink = url.split(" ; ")
-        val url1 = "$mainUrl/play.php?stream=${splitLink[2]}"
-        val redirectUrl = app.get(url1, referer = mainUrl).text
-        val token = tokenRegex.find(redirectUrl)?.value.toString()
-        val m3uLink = "${splitLink[2]}/index.fmp4.m3u8?$token"
-        return newLiveStreamLoadResponse(name = splitLink[1], url = url, dataUrl = m3uLink) {
-            this.posterUrl = splitLink[0]
+        val stream = splitLink.getOrNull(2) ?: ""
+        val url1 = "$mainUrl/play.php?stream=$stream"
+        val res = app.get(url1, referer = mainUrl)
+        val textAndUrl = res.text + " " + res.url
+        val token = tokenRegex.find(textAndUrl)?.value ?: ""
+        val m3uLink = "$stream/index.fmp4.m3u8?$token"
+        return newLiveStreamLoadResponse(name = splitLink.getOrElse(1) { name }, url = url, dataUrl = m3uLink) {
+            this.posterUrl = splitLink.getOrNull(0)
         }
     }
 
@@ -133,7 +137,6 @@ open class BdixBdipTVProvider : MainAPI() {
     }
 
     private fun levenshteinDistance(s1: String, s2: String): Int {
-        // ... (same Levenshtein distance function as before)
         val m = s1.length
         val n = s2.length
         val dp = Array(m + 1) { IntArray(n + 1) }
@@ -169,7 +172,7 @@ open class BdixBdipTVProvider : MainAPI() {
         }
 
         val n = shorter.length
-        var minDistance = longer.length // Initialize with maximum possible distance
+        var minDistance = longer.length
 
         for (i in 0..longer.length - n) {
             val sub = longer.substring(i, i + n)
@@ -177,9 +180,6 @@ open class BdixBdipTVProvider : MainAPI() {
             minDistance = minOf(minDistance, distance)
         }
 
-        // Normalize the distance to a 0-100 scale
-        // A distance of 0 is a perfect match (score 100)
-        // The maximum possible distance for a partial match is the length of the shorter string
         val maxLength = shorter.length
         val similarity = ((maxLength - minDistance).toDouble() / maxLength) * 100
 
