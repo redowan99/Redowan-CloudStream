@@ -111,7 +111,7 @@ class CircleFtpProvider : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val json = fetchApiJson("/api/posts?searchTerm=$query&order=desc")
+        val json = fetchApiJson("/api/posts?searchTerm=$query&order=desc", cacheTimeMinutes = 0)
         return AppUtils.parseJson<PageData>(json.text).posts.mapNotNull { post ->
             toSearchResult(post)
         }
