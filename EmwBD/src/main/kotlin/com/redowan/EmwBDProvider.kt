@@ -20,12 +20,7 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
-//suspend fun main() {
-//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(EmwBDProvider())
-//    providerTester.testAll()
-////    providerTester.testMainPage(verbose = true)
-////    providerTester.testSearch(query = "gun",verbose = true)
-//}
+
 
 class EmwBDProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://www.emwbd1.fun/"

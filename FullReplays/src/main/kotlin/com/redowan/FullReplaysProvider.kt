@@ -19,13 +19,7 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
-//suspend fun main() {
-//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(FullReplaysProvider())
-////    providerTester.testAll()
-////    providerTester.testMainPage(verbose = true)
-////    providerTester.testSearch(query = "england",verbose = true)
-//    providerTester.testLoad("https://www.fullreplays.com/usa/major-league-soccer/inter-miami-vs-new-england-revolution-19-oct-2024/")
-//}
+
 
 class FullReplaysProvider : MainAPI() {
     override var mainUrl = "https://www.fullreplays.com"

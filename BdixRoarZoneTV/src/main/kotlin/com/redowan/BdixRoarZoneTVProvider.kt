@@ -18,12 +18,7 @@ import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.Qualities
 import org.jsoup.nodes.Element
 
-//suspend fun main() {
-//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(BdixRoarZoneTVProvider())
-////    providerTester.testAll()
-////    providerTester.testMainPage(verbose = true)
-//    providerTester.testLoad("http://tvassets.roarzone.info/images/4.png ; Channel 9 ; bk/4")
-//}
+
 
 class BdixRoarZoneTVProvider : MainAPI() {
     override var mainUrl = "http://tv.roarzone.info/"

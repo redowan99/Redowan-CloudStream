@@ -22,12 +22,7 @@ import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
-//suspend fun main() {
-//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(TheMoviesFlixProvider())
-//    providerTester.testAll()
-////    providerTester.testMainPage(verbose = true)
-////    providerTester.testSearch(query = "rome", verbose = true)
-//}
+
 
 class TheMoviesFlixProvider : MainAPI() {
     override var mainUrl = "https://themoviesflix.email"

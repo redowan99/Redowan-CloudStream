@@ -19,14 +19,7 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
-//suspend fun main() {
-//    val providerTester = com.lagradost.cloudstreamtest.ProviderTester(FootReplaysProvider())
-////    providerTester.testLoadLinks("https://checklinko.top/60382/")
-//    providerTester.testAll()
-////    providerTester.testMainPage(verbose = true)
-////    providerTester.testSearch(query = "rome", verbose = true)
-////    providerTester.testLoad("https://www.footreplays.com/england/premier-league/chelsea-vs-liverpool-04-05-2025/")
-//}
+
 
 class FootReplaysProvider : MainAPI() { // all providers must be an instance of MainAPI
     override var mainUrl = "https://www.footreplays.com"
