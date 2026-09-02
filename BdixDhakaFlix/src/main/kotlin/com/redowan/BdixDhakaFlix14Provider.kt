@@ -1,6 +1,5 @@
 package com.redowan
 
-
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.cloudstream3.Actor
 import com.lagradost.cloudstream3.Episode
@@ -82,9 +81,7 @@ open class BdixDhakaFlix14Provider : MainAPI() {
 
     private fun cleanTitle(title: String): String {
         return title
-            // 1. Remove Prefixes like "001. "
             .replace(Regex("""^\d{1,3}\.\s*"""), "")
-            // 2. Remove everything including the year block like (2024) or (TV Series 2024)
             .replace(Regex("""\s*\([^)]*?\d{4}.*?\).*$"""), "")
             .replace("  ", " ")
             .trim()
@@ -101,7 +98,7 @@ open class BdixDhakaFlix14Provider : MainAPI() {
                     "query" to clean
                 ),
                 timeout = 10,
-                cacheTime = 60 // Cache search results for 60 minutes
+                cacheTime = 60
             ).parsed<TmdbSearchResponse>().results?.firstOrNull()
 
             if (fullDetails && search?.id != null) {
@@ -119,6 +116,20 @@ open class BdixDhakaFlix14Provider : MainAPI() {
         }
     }
 
+    private suspend fun getLocalPoster(url: String): String? {
+        return try {
+            val doc = app.get(url, cacheTime = 60).document
+            val allImages = doc.select("td.fb-n > a[href~=(?i)\\.(png|jpe?g)]").map { it.attr("href") }
+            val posterPath = allImages.find { img ->
+                val lower = img.lowercase()
+                lower.contains("a_al_") || lower.contains("a11") || lower.contains("poster") || lower.contains("folder")
+            } ?: allImages.firstOrNull()
+            if (posterPath != null) mainUrl + posterPath else null
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     override suspend fun getMainPage(
         page: Int, request: MainPageRequest
     ): HomePageResponse = coroutineScope {
@@ -130,19 +141,23 @@ open class BdixDhakaFlix14Provider : MainAPI() {
         newHomePageResponse(request.name, home, false)
     }
 
-    private suspend fun getPostResult(post: Element): SearchResponse? {
-        val folderHtml = post.selectFirst("td.fb-n > a") ?: return null
+    private suspend fun getPostResult(post: Element): SearchResponse? = coroutineScope {
+        val folderHtml = post.selectFirst("td.fb-n > a") ?: return@coroutineScope null
         val name = folderHtml.text()
-        if (name.isBlank()) return null
+        if (name.isBlank()) return@coroutineScope null
         val url = mainUrl + folderHtml.attr("href")
         val isTv = containsAnyLoop(url, tvSeriesKeyword)
 
-        // Metadata Enrichment for Homepage
-        val meta = getExternalMetadata(name, isTv)
-        val tmdbPoster = meta?.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
+        val metaDeferred = async { getExternalMetadata(name, isTv) }
+        val localPosterDeferred = async { getLocalPoster(url) }
 
-        return newAnimeSearchResponse(name, url, if (isTv) TvType.TvSeries else TvType.Movie) {
-            this.posterUrl = tmdbPoster
+        val meta = metaDeferred.await()
+        val tmdbPoster = meta?.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
+        val localPoster = localPosterDeferred.await()
+        val finalPoster = tmdbPoster ?: localPoster
+
+        newAnimeSearchResponse(name, url, if (isTv) TvType.TvSeries else TvType.Movie) {
+            this.posterUrl = finalPoster
             this.score = Score.from10(meta?.voteAverage)
             addDubStatus(
                 dubExist = "Dual" in name,
@@ -167,12 +182,16 @@ open class BdixDhakaFlix14Provider : MainAPI() {
                     val url = if (href.startsWith("http")) href else mainUrl + href
                     val isTv = containsAnyLoop(url, tvSeriesKeyword)
                     
-                    // Metadata Enrichment for Search
-                    val meta = getExternalMetadata(name, isTv)
+                    val metaDeferred = async { getExternalMetadata(name, isTv) }
+                    val localPosterDeferred = async { getLocalPoster(url) }
+
+                    val meta = metaDeferred.await()
                     val tmdbPoster = meta?.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
+                    val localPoster = localPosterDeferred.await()
+                    val finalPoster = tmdbPoster ?: localPoster
 
                     newAnimeSearchResponse(name, url, if (isTv) TvType.TvSeries else TvType.Movie) {
-                        this.posterUrl = tmdbPoster
+                        this.posterUrl = finalPoster
                         this.score = Score.from10(meta?.voteAverage)
                         addDubStatus(
                             dubExist = "Dual" in name,
@@ -191,17 +210,19 @@ open class BdixDhakaFlix14Provider : MainAPI() {
         return name.toString()
     }
 
-    override suspend fun load(url: String): LoadResponse {
-        val doc = app.get(url).document
+    override suspend fun load(url: String): LoadResponse = coroutineScope {
         val rawName = nameFromUrl(url)
         val isTv = containsAnyLoop(url, tvSeriesKeyword)
 
-        // Metadata Enrichment - Request full details here
-        val meta = getExternalMetadata(rawName, isTv, fullDetails = true)
+        val docDeferred = async { app.get(url).document }
+        val metaDeferred = async { getExternalMetadata(rawName, isTv, fullDetails = true) }
+
+        val doc = docDeferred.await()
+        val meta = metaDeferred.await()
+
         val tmdbPoster = meta?.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
         val tmdbBackdrop = meta?.backdropPath?.let { "https://image.tmdb.org/t/p/w1280$it" }
         
-        // Local Poster Search
         val allImages = doc.select("td.fb-n > a[href~=(?i)\\.(png|jpe?g)]").map { it.attr("href") }
         val posterPath = allImages.find { img ->
             val lower = img.lowercase()
@@ -215,13 +236,17 @@ open class BdixDhakaFlix14Provider : MainAPI() {
 
         if (isTv) {
             val episodesData = mutableListOf<Episode>()
+            val seasonFolders = mutableListOf<Pair<String, Int>>()
             var seasonNum = 0
+
             tableHtml.forEach {
                 val aHtml = it.selectFirst("td.fb-n > a")
                 val link = mainUrl + aHtml?.attr("href")
                 if (it.selectFirst("td.fb-i > img")?.attr("alt") == "folder") {
                     seasonNum++
-                    seasonExtractor(link, episodesData, seasonNum)
+                    if (link.isNotBlank()) {
+                        seasonFolders.add(Pair(link, seasonNum))
+                    }
                 } else if (aHtml?.attr("href")?.contains(Regex("(?i)\\.(mkv|mp4)")) == true) {
                     val tittle = aHtml.text()
                     episodesData.add(
@@ -233,7 +258,19 @@ open class BdixDhakaFlix14Provider : MainAPI() {
                 }
             }
 
-            return newTvSeriesLoadResponse(rawName, url, TvType.TvSeries, episodesData) {
+            if (seasonFolders.isNotEmpty()) {
+                val extractedSeasons = seasonFolders.map { (seasonLink, sNum) ->
+                    async {
+                        val epList = mutableListOf<Episode>()
+                        seasonExtractor(seasonLink, epList, sNum)
+                        epList
+                    }
+                }.awaitAll()
+
+                extractedSeasons.forEach { episodesData.addAll(it) }
+            }
+
+            newTvSeriesLoadResponse(rawName, url, TvType.TvSeries, episodesData) {
                 this.posterUrl = finalPoster
                 this.backgroundPosterUrl = tmdbBackdrop
                 this.plot = meta?.overview
@@ -245,7 +282,7 @@ open class BdixDhakaFlix14Provider : MainAPI() {
         } else {
             val folderHtml = tableHtml.select("td.fb-n > a[href~=(?i)\\.(mkv|mp4)]")
             val link = mainUrl + folderHtml.attr("href")
-            return newMovieLoadResponse(rawName, url, TvType.Movie, link) {
+            newMovieLoadResponse(rawName, url, TvType.Movie, link) {
                 this.posterUrl = finalPoster
                 this.backgroundPosterUrl = tmdbBackdrop
                 this.plot = meta?.overview
@@ -281,11 +318,11 @@ open class BdixDhakaFlix14Provider : MainAPI() {
         if (!keyword.isNullOrEmpty()) {
             for (keyword in keyword) {
                 if (text.contains(keyword, ignoreCase = true)) {
-                    return true // Return immediately if a match is found
+                    return true
                 }
             }
         }
-        return false // Return false if no match is found after checking all keywords
+        return false
     }
 
     override suspend fun loadLinks(
