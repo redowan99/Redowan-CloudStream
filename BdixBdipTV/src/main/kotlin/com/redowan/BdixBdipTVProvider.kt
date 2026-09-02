@@ -82,7 +82,7 @@ open class BdixBdipTVProvider : MainAPI() {
                     HomePageList(
                         cat.value,
                         workingItems,
-                        isHorizontalImages = false
+                        isHorizontalImages = true
                     )
                 )
             }
