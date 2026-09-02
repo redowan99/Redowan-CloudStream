@@ -20,8 +20,7 @@ import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.AppUtils
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.ExtractorLinkType
-import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.jsoup.nodes.Element
@@ -160,13 +159,10 @@ open class BdixICCFtpProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         callback.invoke(
-            ExtractorLink(
-                source = this.name,
-                name = this.name,
-                url = data,
-                referer = "",
-                quality = Qualities.Unknown.value,
-                type = ExtractorLinkType.VIDEO
+            newExtractorLink(
+                data,
+                this.name,
+                url = data
             )
         )
         return true

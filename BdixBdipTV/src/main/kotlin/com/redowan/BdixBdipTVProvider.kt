@@ -16,7 +16,7 @@ import com.lagradost.cloudstream3.newLiveSearchResponse
 import com.lagradost.cloudstream3.newLiveStreamLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
-import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
 
 
@@ -124,12 +124,10 @@ open class BdixBdipTVProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         callback.invoke(
-            ExtractorLink(
-                source = this.name,
-                name = this.name,
+            newExtractorLink(
+                data,
+                this.name,
                 url = "$liveServer$data",
-                referer = "",
-                quality = Qualities.Unknown.value,
                 type = ExtractorLinkType.M3U8
             )
         )

@@ -17,9 +17,8 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.ExtractorLinkType
-import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.loadExtractor
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
 
 
@@ -238,13 +237,10 @@ class TheMoviesFlixProvider : MainAPI() {
                     1
                 )?.value.toString()
                 callback.invoke(
-                    ExtractorLink(
-                        source = "G-Direct",
-                        name = "G-Direct",
-                        url = gLink,
-                        referer = "",
-                        quality = Qualities.Unknown.value,
-                        type = ExtractorLinkType.VIDEO
+                    newExtractorLink(
+                        "G-Direct",
+                        "G-Direct",
+                        url = gLink
                     )
                 )
             } else {

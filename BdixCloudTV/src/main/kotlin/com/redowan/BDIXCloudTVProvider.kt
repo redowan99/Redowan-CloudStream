@@ -15,7 +15,7 @@ import com.lagradost.cloudstream3.newLiveSearchResponse
 import com.lagradost.cloudstream3.newLiveStreamLoadResponse
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
-import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.newExtractorLink
 
 
 
@@ -108,14 +108,14 @@ class BDIXCloudTVProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         callback.invoke(
-            ExtractorLink(
-                source = this.name,
-                name = this.name,
+            newExtractorLink(
+                data,
+                this.name,
                 url = data,
-                referer = tokenLink,
-                quality = Qualities.Unknown.value,
                 type = ExtractorLinkType.M3U8
-            )
+            ) {
+                this.referer = tokenLink
+            }
         )
         return true
     }

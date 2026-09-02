@@ -4,8 +4,7 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.utils.ExtractorApi
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.ExtractorLinkType
-import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import okhttp3.FormBody
 
 class GDFlix1 : GDFlix() {
@@ -53,13 +52,10 @@ open class GDFlix : ExtractorApi() {
                 val link=it.attr("href")
                 val trueurl=app.get("$mainUrl$link", timeout = 30L).document.selectFirst("a.btn-success")?.attr("href") ?:""
                 callback.invoke(
-                    ExtractorLink(
-                        source = "GDFlix[Fast Cloud]",
-                        name = "GDFLix[Fast Cloud] $tagquality",
-                        url = trueurl,
-                        referer = "",
-                        quality = Qualities.Unknown.value,
-                        type = ExtractorLinkType.VIDEO
+                    newExtractorLink(
+                        "GDFlix[Fast Cloud]",
+                        "GDFLix[Fast Cloud] $tagquality",
+                        trueurl
                     )
                 )
             }
@@ -101,13 +97,10 @@ open class GDFlix : ExtractorApi() {
                     downloadlink = downloadlink.replace("\\", "")
 
                     callback.invoke(
-                        ExtractorLink(
-                            source = "GDFlix[IndexBot](VLC)",
-                            name = "GDFlix[IndexBot](VLC) $tagquality",
-                            url = downloadlink,
-                            referer = "",
-                            quality = Qualities.Unknown.value,
-                            type = ExtractorLinkType.VIDEO
+                        newExtractorLink(
+                            "GDFlix[IndexBot](VLC)",
+                            "GDFlix[IndexBot](VLC) $tagquality",
+                            downloadlink
                         )
                     )
                 }
@@ -117,13 +110,10 @@ open class GDFlix : ExtractorApi() {
                 val instantLink = it.attr("href")
                 val link = app.get(instantLink, timeout = 30L, allowRedirects = false).headers["Location"]?.split("url=") ?. getOrNull(1) ?: ""
                 callback.invoke(
-                    ExtractorLink(
-                        source = "GDFlix[Instant Download]",
-                        name = "GDFlix[Instant Download] $tagquality",
-                        url = link,
-                        referer = "",
-                        quality = Qualities.Unknown.value,
-                        type = ExtractorLinkType.VIDEO
+                    newExtractorLink(
+                        "GDFlix[Instant Download]",
+                        "GDFlix[Instant Download] $tagquality",
+                        link
                     )
                 )
             }
