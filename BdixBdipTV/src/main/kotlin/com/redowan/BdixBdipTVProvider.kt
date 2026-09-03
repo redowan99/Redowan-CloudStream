@@ -50,10 +50,10 @@ open class BdixBdipTVProvider : MainAPI() {
         return withContext(Dispatchers.IO) {
             runCatching {
                 val playUrl = "$mainUrl/play.php?stream=$stream"
-                val doc = app.get(playUrl, referer = mainUrl, timeout = 2L).document
+                val doc = app.get(playUrl, referer = mainUrl, timeout = 1L, cacheTime = 60).document
                 val iframeSrc = doc.selectFirst("iframe")?.attr("src") ?: return@runCatching false
                 val m3uLink = iframeSrc.replace("embed.html", "index.fmp4.m3u8")
-                val res = app.get(m3uLink, referer = mainUrl, timeout = 1L)
+                val res = app.get(m3uLink, referer = mainUrl, timeout = 1L, cacheTime = 60)
                 res.isSuccessful && res.text.contains("#EXTM3U")
             }.getOrDefault(false)
         }
@@ -63,7 +63,7 @@ open class BdixBdipTVProvider : MainAPI() {
         page: Int,
         request: MainPageRequest
     ): HomePageResponse = coroutineScope {
-        val doc = app.get(mainUrl).document
+        val doc = app.get(mainUrl, cacheTime = 30).document
         val home = mutableListOf<HomePageList>()
         category.forEach { cat ->
             val posts = doc.select("div.item.${cat.key}")
@@ -103,7 +103,7 @@ open class BdixBdipTVProvider : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse>? {
-        val doc = app.get(mainUrl).document
+        val doc = app.get(mainUrl, cacheTime = 60).document
         val searchResult: MutableList<LiveSearchResponse> = mutableListOf()
         doc.select("div.item_content > a").mapNotNull { post ->
             getSearchResult(post, query, searchResult)
@@ -135,7 +135,7 @@ open class BdixBdipTVProvider : MainAPI() {
         val splitLink = url.split(" ; ")
         val stream = splitLink.getOrNull(2) ?: ""
         val playUrl = "$mainUrl/play.php?stream=$stream"
-        val doc = app.get(playUrl, referer = mainUrl).document
+        val doc = app.get(playUrl, referer = mainUrl, timeout = 15L).document
         val iframeSrc = doc.selectFirst("iframe")?.attr("src") ?: ""
         val m3uLink = iframeSrc.replace("embed.html", "index.fmp4.m3u8")
         val title = splitLink.getOrElse(1) { name }
