@@ -11,6 +11,7 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.fixUrl
+import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newLiveSearchResponse
 import com.lagradost.cloudstream3.newLiveStreamLoadResponse
@@ -26,7 +27,7 @@ import org.jsoup.nodes.Element
 
 open class BdixBdipTVProvider : MainAPI() {
     override var mainUrl = "http://tv.bdiptv.net"
-    override var name = "(BDIX) BDIP TV"
+    override var name = "(BDIX) BD IP TV"
     override var lang = "bn"
     override val hasMainPage = true
     override val hasDownloadSupport = false
@@ -34,7 +35,7 @@ open class BdixBdipTVProvider : MainAPI() {
     override val supportedTypes = setOf(TvType.Live)
     open val liveServer = "http://103.89.248.14:8082/"
 
-    private val category = mapOf(
+    override val mainPage = mainPageOf(
         "lsports" to "Live Sports",
         "sports" to "Sports",
         "news" to "News",
@@ -64,30 +65,25 @@ open class BdixBdipTVProvider : MainAPI() {
         request: MainPageRequest
     ): HomePageResponse = coroutineScope {
         val doc = app.get(mainUrl, cacheTime = 30).document
-        val home = mutableListOf<HomePageList>()
-        category.forEach { cat ->
-            val posts = doc.select("div.item.${cat.key}")
-            val workingItems = posts.map { post ->
-                async(Dispatchers.IO) {
-                    val result = getResult(post)
-                    val stream = result.url.split(" ; ").getOrNull(2) ?: ""
-                    if (stream.isNotBlank() && isChannelWorking(stream)) {
-                        result
-                    } else null
-                }
-            }.awaitAll().filterNotNull()
-
-            if (workingItems.isNotEmpty()) {
-                home.add(
-                    HomePageList(
-                        cat.value,
-                        workingItems,
-                        isHorizontalImages = true
-                    )
-                )
+        val posts = doc.select("div.item.${request.data}")
+        val workingItems = posts.map { post ->
+            async(Dispatchers.IO) {
+                val result = getResult(post)
+                val stream = result.url.split(" ; ").getOrNull(2) ?: ""
+                if (stream.isNotBlank() && isChannelWorking(stream)) {
+                    result
+                } else null
             }
-        }
-        newHomePageResponse(home, hasNext = false)
+        }.awaitAll().filterNotNull()
+
+        newHomePageResponse(
+            list = HomePageList(
+                name = request.name,
+                list = workingItems,
+                isHorizontalImages = false
+            ),
+            hasNext = false
+        )
     }
 
     private val hrefRegex = Regex("""play\.php\?stream=([^']+)""")
