@@ -1,13 +1,13 @@
 // use an integer for version numbers
-version = 9
+version = 10
 
 android {
     namespace = "com.redowan"
 }
 
 cloudstream {
-    description = "Included:10HitMovies"
-    authors = listOf("salman731","Dilip")
+    description = "Bangla & Hindi Movies"
+    authors = listOf("Redowan")
 
     /**
     * Status int as the following:
@@ -16,7 +16,7 @@ cloudstream {
     * 2: Slow
     * 3: Beta only
     * */
-    status = 0 // will be 3 if unspecified
+    status = 1 // will be 3 if unspecified
 
     // List of video source types. Users are able to filter for extensions in a given category.
     // You can find a list of available types here:
@@ -28,5 +28,5 @@ cloudstream {
     )
     language = "hi"
 
-    iconUrl = "https://9kmovies.claims/m/wp-content/uploads/2019/08/9kmovies.ico"
+    iconUrl = "https://9kmovies.llc/wp-content/uploads/2026/06/9kmovies-logo1.png"
 }

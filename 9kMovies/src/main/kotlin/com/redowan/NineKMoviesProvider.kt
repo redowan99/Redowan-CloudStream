@@ -9,6 +9,7 @@ import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.fixUrl
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
@@ -18,10 +19,8 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
-
-
 open class NineKMoviesProvider : MainAPI() {
-    override var mainUrl = "https://9kmovies.ren/m"
+    override var mainUrl = "https://9kmovies.llc"
     override var name = "9kMovies"
     override var lang = "en"
     override val hasMainPage = true
@@ -30,55 +29,81 @@ open class NineKMoviesProvider : MainAPI() {
     override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries, TvType.NSFW)
     override val mainPage = mainPageOf(
         "" to "Latest Movies",
-        "/category/18-movies/" to "18+ Movies",
-        "/category/bengali-movies/" to "Bengali",
-        "/category/dual-audio/" to "Dual Audio",
-        "/category/hindi-dubbed/" to "Hindi Dubbed",
-        "/category/hollywood-movies/" to "Hollywood",
-        "/category/tv-shows/" to "WWE",
-        "/category/original-web-series/" to "Web Series"
+        "/category/bollywood-top-movies/" to "Bollywood",
+        "/category/dual-audio-hindi-in-english/" to "Dual Audio",
+        "/category/hindi-dubbed-in-tamil-telugu/" to "Hindi Dubbed",
+        "/category/hollywood-latest-movies/" to "Hollywood",
+        "/category/bengali-hd-movie/" to "Bengali",
+        "/category/tamil-in-hindi-movies/" to "Tamil",
+        "/category/telugu-all-latest-movie/" to "Telugu",
+        "/category/web-series-nf-amzn-zee5/" to "Web Series",
+        "/category/tv-shows-indian-tv/" to "TV Shows & WWE",
+        "/category/18-movie-hd/" to "18+ Movies"
     )
 
     override suspend fun getMainPage(
         page: Int, request: MainPageRequest
     ): HomePageResponse {
-        val doc = app.get("$mainUrl${request.data}page/$page").document
-        val home = doc.select(".thumb.col-md-2.col-sm-4.col-xs-6").mapNotNull { toResult(it) }
+        val url = if (request.data.isBlank()) "$mainUrl/page/$page/" else "$mainUrl${request.data}page/$page/"
+        val doc = app.get(url, referer = "$mainUrl/").document
+        val home = doc.select(".thumb").mapNotNull { toResult(it) }.distinctBy { it.url }
         return newHomePageResponse(request.name, home, hasNext = true)
     }
 
-    private fun toResult(post: Element): SearchResponse {
-        val url = post.select("figure> figcaption> a").attr("href")
-        val title = post.select("figure> figcaption> a").text()
-        val imageUrl = post.select("figure img").attr("src")
+    private fun toResult(post: Element): SearchResponse? {
+        val aTag = post.selectFirst("figcaption a, a") ?: return null
+        val url = fixUrl(aTag.attr("href"))
+        val title = aTag.text().ifBlank { post.selectFirst("img")?.attr("alt") ?: "" }
+        if (title.isBlank() || url.isBlank()) return null
+        val imgTag = post.selectFirst("img")
+        val imageUrl = imgTag?.attr("src")?.ifBlank { imgTag.attr("data-src") }
         return newMovieSearchResponse(title, url, TvType.Movie) {
             this.posterUrl = imageUrl
-            this.posterHeaders = mapOf("Referer" to " https://9kmovies.ren/")
+            this.posterHeaders = mapOf("Referer" to "$mainUrl/")
         }
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val doc = app.get("$mainUrl/search/$query").document
-        val searchResponse = doc.select(".thumb.col-md-2.col-sm-4.col-xs-6")
-        return searchResponse.mapNotNull { toResult(it) }
+        val doc = app.get("$mainUrl/search/$query", referer = "$mainUrl/").document
+        val searchResponse = doc.select(".thumb")
+        return searchResponse.mapNotNull { toResult(it) }.distinctBy { it.url }
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val doc = app.get(url).document
-        val title = doc.select(".page-body h2").text()
-        val imageUrl = doc.select(".page-body > h2 > img").attr("src")
-        val story = doc.selectFirst(".page-body > p:nth-child(4)")?.html()
+        val doc = app.get(url, referer = "$mainUrl/").document
+        val title = doc.selectFirst("h1, h2, .entry-title")?.text()?.trim() ?: name
+        val imageUrl = doc.selectFirst(".page-body img, .entry-content img, article img")?.attr("src")
+        
+        val story = doc.select(".page-body p, .entry-content p, article p").mapNotNull { p ->
+            val cleanHtml = p.html()
+                .replace(Regex("(?i)<br\\s*/?>"), "<br>")
+                .replace(Regex("""</?(?!br\b)[a-z1-6]+[^>]*>""", RegexOption.IGNORE_CASE), "")
+                .trim()
+            if (cleanHtml.isNotBlank() && !cleanHtml.startsWith("1080") && !cleanHtml.startsWith("720") && !cleanHtml.startsWith("480")) {
+                cleanHtml
+            } else null
+        }.joinToString("<br><br>")
+
         val episodesData = mutableListOf<Episode>()
-        doc.select("a.buttn.direct").forEach {
-            episodesData.add(
-                newEpisode(it.attr("href")){
-                    this.name = it.text().replace(" Link 1", "")
-                }
-            )
+        
+        // Find all quality download links (pointing to uptobhai or direct download links)
+        val qualityLinks = doc.select("a[href*='uptobhai.blog'], a[href*='view'], a.buttn.direct")
+        
+        qualityLinks.forEach { aTag ->
+            val href = aTag.attr("href")
+            val linkText = aTag.text().trim()
+            if (href.isNotBlank()) {
+                episodesData.add(
+                    newEpisode(href) {
+                        this.name = if (linkText.isNotBlank()) linkText else "Download Link"
+                    }
+                )
+            }
         }
+
         return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodesData) {
             this.posterUrl = imageUrl
-            this.plot = story?.trim()
+            this.plot = story.trim()
         }
     }
 
@@ -88,10 +113,39 @@ open class NineKMoviesProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val doc = app.post(data).document
-        doc.select(".col-sm-8.col-sm-offset-2.well.view-well a").forEach {
-            val link = it.attr("href")//.replace("/v/","/e/")
-            loadExtractor(link, subtitleCallback, callback)
+        if (data.contains("uptobhai.blog")) {
+            val pageRes = app.get(data, referer = "$mainUrl/")
+            val form = pageRes.document.selectFirst("form")
+            
+            val params = mutableMapOf<String, String>()
+            form?.select("input")?.forEach { input ->
+                val name = input.attr("name")
+                val value = input.attr("value")
+                if (name.isNotBlank()) {
+                    params[name] = value
+                }
+            }
+
+            val unlockedDoc = if (params.isNotEmpty()) {
+                app.post(data, params = params, referer = data).document
+            } else {
+                pageRes.document
+            }
+
+            unlockedDoc.select("a[href]").forEach { aTag ->
+                val link = aTag.attr("href")
+                if (link.startsWith("http") && !link.contains("uptobhai.blog")) {
+                    loadExtractor(link, subtitleCallback, callback)
+                }
+            }
+        } else {
+            val doc = app.get(data).document
+            doc.select("a[href]").forEach { aTag ->
+                val link = aTag.attr("href")
+                if (link.startsWith("http")) {
+                    loadExtractor(link, subtitleCallback, callback)
+                }
+            }
         }
         return true
     }
