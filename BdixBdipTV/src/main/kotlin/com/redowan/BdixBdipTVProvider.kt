@@ -26,6 +26,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import org.jsoup.nodes.Element
+import java.util.concurrent.ConcurrentHashMap
 
 data class LiveChannelData(
     val poster: String,
@@ -55,6 +56,9 @@ open class BdixBdipTVProvider : MainAPI() {
         "music" to "Music"
     )
 
+    private val rowCache = ConcurrentHashMap<String, Pair<Long, HomePageList>>()
+    private val cacheTtlMs: Long = 30 * 60 * 1000L // 30 minutes
+
     private suspend fun isChannelWorking(stream: String): Boolean {
         return withContext(Dispatchers.IO) {
             runCatching {
@@ -72,6 +76,12 @@ open class BdixBdipTVProvider : MainAPI() {
         page: Int,
         request: MainPageRequest
     ): HomePageResponse = coroutineScope {
+        val now = System.currentTimeMillis()
+        val cached = rowCache[request.data]
+        if (cached != null && (now - cached.first) < cacheTtlMs) {
+            return@coroutineScope newHomePageResponse(cached.second, hasNext = false)
+        }
+
         val doc = app.get(mainUrl, cacheTime = 30).document
         val posts = doc.select("div.item.${request.data}")
         val workingItems = posts.map { post ->
@@ -88,14 +98,14 @@ open class BdixBdipTVProvider : MainAPI() {
             }
         }.awaitAll().filterNotNull()
 
-        newHomePageResponse(
-            list = HomePageList(
-                name = request.name,
-                list = workingItems,
-                isHorizontalImages = false
-            ),
-            hasNext = false
+        val homeList = HomePageList(
+            name = request.name,
+            list = workingItems,
+            isHorizontalImages = false
         )
+        rowCache[request.data] = Pair(now, homeList)
+
+        newHomePageResponse(homeList, hasNext = false)
     }
 
     private val hrefRegex = Regex("""play\.php\?stream=([^']+)""")
