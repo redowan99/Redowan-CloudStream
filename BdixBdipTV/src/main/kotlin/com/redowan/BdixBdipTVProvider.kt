@@ -15,6 +15,8 @@ import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newLiveSearchResponse
 import com.lagradost.cloudstream3.newLiveStreamLoadResponse
+import com.lagradost.cloudstream3.utils.AppUtils
+import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.newExtractorLink
@@ -24,6 +26,12 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import org.jsoup.nodes.Element
+
+data class LiveChannelData(
+    val poster: String,
+    val name: String,
+    val stream: String
+)
 
 open class BdixBdipTVProvider : MainAPI() {
     override var mainUrl = "http://tv.bdiptv.net"
@@ -69,7 +77,11 @@ open class BdixBdipTVProvider : MainAPI() {
         val workingItems = posts.map { post ->
             async(Dispatchers.IO) {
                 val result = getResult(post)
-                val stream = result.url.split(" ; ").getOrNull(2) ?: ""
+                val stream = try {
+                    AppUtils.parseJson<LiveChannelData>(result.url).stream
+                } catch (_: Exception) {
+                    result.url.split(" ; ").getOrNull(2) ?: ""
+                }
                 if (stream.isNotBlank() && isChannelWorking(stream)) {
                     result
                 } else null
@@ -92,52 +104,61 @@ open class BdixBdipTVProvider : MainAPI() {
         val imageLink = fixUrl(imgRelative)
         val link = hrefRegex.find(post.select("a").attr("onclick"))?.groupValues?.get(1) ?: ""
         val name = link.replace("-", " ")
-        val joinedLink = "$imageLink ; $name ; $link"
-        return newLiveSearchResponse(name, joinedLink) {
+        val payload = LiveChannelData(imageLink, name, link).toJson()
+        return newLiveSearchResponse(name, payload) {
             this.posterUrl = imageLink
         }
     }
 
-    override suspend fun search(query: String): List<SearchResponse>? {
+    override suspend fun search(query: String): List<SearchResponse> {
         val doc = app.get(mainUrl, cacheTime = 60).document
-        val searchResult: MutableList<LiveSearchResponse> = mutableListOf()
-        doc.select("div.item_content > a").mapNotNull { post ->
-            getSearchResult(post, query, searchResult)
-        }
-        return searchResult
-    }
-
-    private fun getSearchResult(
-        post: Element,
-        query: String,
-        searchResult: MutableList<LiveSearchResponse>
-    ) {
-        val link = hrefRegex.find(post.select("a").attr("onclick"))?.groupValues?.get(1) ?: ""
-        val name = link.replace("-", " ")
-        val distance = partialRatioLevenshtein(name.lowercase(), query.lowercase())
-        if (distance >= 70) {
-            val imgRelative = post.select("img").attr("src")
-            val imageLink = fixUrl(imgRelative)
-            val joinedLink = "$imageLink ; $name ; $link"
-            searchResult.add(
-                newLiveSearchResponse(name, joinedLink, TvType.Live, true) {
+        return doc.select("div.item_content > a").mapNotNull { post ->
+            val link = hrefRegex.find(post.attr("onclick"))?.groupValues?.get(1) ?: ""
+            if (link.isBlank()) return@mapNotNull null
+            val name = link.replace("-", " ")
+            if (name.contains(query, ignoreCase = true)) {
+                val imgRelative = post.select("img").attr("src")
+                val imageLink = fixUrl(imgRelative)
+                val payload = LiveChannelData(imageLink, name, link).toJson()
+                newLiveSearchResponse(name, payload, TvType.Live, true) {
                     this.posterUrl = imageLink
                 }
-            )
+            } else null
         }
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val splitLink = url.split(" ; ")
-        val stream = splitLink.getOrNull(2) ?: ""
-        val playUrl = "$mainUrl/play.php?stream=$stream"
-        val doc = app.get(playUrl, referer = mainUrl, timeout = 15L).document
-        val iframeSrc = doc.selectFirst("iframe")?.attr("src") ?: ""
-        val m3uLink = iframeSrc.replace("embed.html", "index.fmp4.m3u8")
-        val title = splitLink.getOrElse(1) { name }
-        val poster = splitLink.getOrNull(0)
-        return newLiveStreamLoadResponse(name = title, url = url, dataUrl = m3uLink) {
-            this.posterUrl = poster
+        val channelData = try {
+            AppUtils.parseJson<LiveChannelData>(url)
+        } catch (_: Exception) {
+            val parts = url.split(" ; ")
+            LiveChannelData(
+                poster = parts.getOrNull(0) ?: "",
+                name = parts.getOrElse(1) { name },
+                stream = parts.getOrNull(2) ?: ""
+            )
+        }
+
+        val playUrl = "$mainUrl/play.php?stream=${channelData.stream}"
+        val doc = try {
+            app.get(playUrl, referer = mainUrl, timeout = 15L).document
+        } catch (_: Exception) {
+            null
+        }
+
+        val iframeSrc = doc?.selectFirst("iframe")?.attr("src") ?: ""
+        val m3uLink = if (iframeSrc.isNotBlank()) {
+            iframeSrc.replace("embed.html", "index.fmp4.m3u8")
+        } else {
+            "$liveServer${channelData.stream}/index.fmp4.m3u8"
+        }
+
+        return newLiveStreamLoadResponse(
+            name = channelData.name.ifBlank { name },
+            url = url,
+            dataUrl = m3uLink
+        ) {
+            this.posterUrl = channelData.poster
         }
     }
 
@@ -156,55 +177,5 @@ open class BdixBdipTVProvider : MainAPI() {
             )
         )
         return true
-    }
-
-    private fun levenshteinDistance(s1: String, s2: String): Int {
-        val m = s1.length
-        val n = s2.length
-        val dp = Array(m + 1) { IntArray(n + 1) }
-
-        for (i in 0..m) {
-            dp[i][0] = i
-        }
-        for (j in 0..n) {
-            dp[0][j] = j
-        }
-
-        for (i in 1..m) {
-            for (j in 1..n) {
-                val cost = if (s1[i - 1] == s2[j - 1]) 0 else 1
-                dp[i][j] = minOf(dp[i - 1][j] + 1,
-                    dp[i][j - 1] + 1,
-                    dp[i - 1][j - 1] + cost)
-            }
-        }
-        return dp[m][n]
-    }
-
-    private fun partialRatioLevenshtein(s1: String, s2: String): Int {
-        val shorter: String
-        val longer: String
-
-        if (s1.length <= s2.length) {
-            shorter = s1
-            longer = s2
-        } else {
-            shorter = s2
-            longer = s1
-        }
-
-        val n = shorter.length
-        var minDistance = longer.length
-
-        for (i in 0..longer.length - n) {
-            val sub = longer.substring(i, i + n)
-            val distance = levenshteinDistance(shorter, sub)
-            minDistance = minOf(minDistance, distance)
-        }
-
-        val maxLength = shorter.length
-        val similarity = ((maxLength - minDistance).toDouble() / maxLength) * 100
-
-        return similarity.toInt()
     }
 }
